@@ -1,0 +1,471 @@
+{
+  "relationships_config": {
+    "groups": {
+      "eindproduct": [
+        {
+          "nodes": [
+            "mi_cb_vvb.dq_vvb_cb",
+            "mi_cb_vvb.vvb_mutaties_hist_new",
+            "mi_cb_vvb.vvb_selectie",
+            "mi_cb_vvb.vvb_selectie_old",
+            "mi_cb_vvb.vvvb_selectie_cb",
+            "nmi_cb_vvb.vvvb_selectie_cb_mendix"
+          ]
+        },
+        {
+          "legend_name": "Eindproduct"
+        },
+        {
+          "color": "#00857a"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "zelf_onsloten": [
+        {
+          "nodes": [
+            "mi_cmb.agrc_imat_bron",
+            "mi_cmb.agrc_mct_bron",
+            ",mi_cmb.agrc_rem_bron",
+            "mi_cmb.baten_product",
+            "mi_cmb.baten_product_12mnd",
+            "mi_cmb.producten",
+            "mi_cmb.smr_transaction",
+            "mi_cmb.sni",
+            "mi_cmb.snu"
+          ]
+        },
+        {
+          "legend_name": "Door CLAN Ontsloten"
+        },
+        {
+          "color": "#005e5d"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "LDM": [
+        {
+          "args": [
+            "mi_vm_ldm.",
+            "mi_ldm."
+          ]
+        },
+        {
+          "legend_name": "LDM-tabellen"
+        },
+        {
+          "color": "#54646c"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "nzdb": [
+        {
+          "args": [
+            "mi_vm_nzdb."
+          ]
+        },
+        {
+          "legend_name": "NZDB-Tabellen"
+        },
+        {
+          "color": "#006480"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "MIND_ontsloten": [
+        {
+          "nodes": [
+            "mi_vm_load.vtwk_3_faciliteiten",
+            "mi_vm_load.vtwk_3_jaarrekenin",
+            "mi_vm_load.vtwk_3_kenmerk_p_kr",
+            "mi_vm_load.vtwk_3_krd_v_stat",
+            "mi_vm_load.vtwk_3_krd_voorstel",
+            "mi_vm_load.vtwk_3_krediet_aanv",
+            "mi_vm_load.vtwk_3_prcdtl_krdvs",
+            "mi_vm_load.vtwk_3_wv_rekening"
+          ]
+        },
+        {
+          "legend_name": "Door MIND Ontsloten"
+        },
+        {
+          "color": "#94c23c"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "decom": [
+        {
+          "nodes": [
+            "mi_vm_info.vlu_fhh",
+            "mi_vm_info.vlu_pbnl",
+            "mi_vm_info.vm_pbnl_totaal",
+            "mi_sas_aa_mb_c_mb.ciaa_trc_rek_courant",
+            "mi_sas_aa_mb_c_mb.mia_commercial_clients",
+            "mi_sas_aa_mb_c_mb.mia_commercial_clients_new",
+            "mi_sas_aa_mb_c_mb.model_wegloop_hist"
+          ]
+        },
+        {
+          "legend_name": "Decom"
+        },
+        {
+          "color": "#bbbec3"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "Teradata_Systeemtabel": [
+        {
+          "args": [
+            "sys_"
+          ]
+        },
+        {
+          "legend_name": "Teradata Systeemtabel"
+        },
+        {
+          "color": "#b9b30f"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "tussen": [
+        {
+          "args": [
+            "mi_temp"
+          ]
+        },
+        {
+          "nodes": [
+            "mi_sas_aa_mb_c_mb.ahk_basis_new",
+            "mi_sas_aa_mb_c_mb.ciaa_beleggen_new",
+            "mi_sas_aa_mb_c_mb.ciaa_cube_baten_hist_new",
+            "mi_sas_aa_mb_c_mb.ciaa_mia_hist_new",
+            "mi_sas_aa_mb_c_mb.ciaa_mia_maandnr_new",
+            "mi_sas_aa_mb_c_mb.ciaa_part_zak_new",
+            "mi_sas_aa_mb_c_mb.cube_leads_hist_new",
+            "mi_sas_aa_mb_c_mb.cube_siebel_fin_prof_geleverd_new",
+            "mi_sas_aa_mb_c_mb.kem_aanvraag_det_new",
+            "mi_sas_aa_mb_c_mb.kem_pijplijn_new",
+            "mi_sas_aa_mb_c_mb.medewerker_security_new",
+            "mi_sas_aa_mb_c_mb.mia_businesscontacts_new",
+            "mi_sas_aa_mb_c_mb.mia_groepkoppelingen_hist_new",
+            "mi_sas_aa_mb_c_mb.mia_klantkoppelingen_hist_new",
+            "mi_sas_aa_mb_c_mb.mia_migratie_hist_new",
+            "mi_sas_aa_mb_c_mb.mia_sector_new",
+            "mi_sas_aa_mb_c_mb.siebel_act_participants_new",
+            "mi_sas_aa_mb_c_mb.siebel_activiteit_new",
+            "mi_sas_aa_mb_c_mb.siebel_contactpersoon_new",
+            "mi_sas_aa_mb_c_mb.siebel_cst_member_hist_new",
+            "mi_sas_aa_mb_c_mb.siebel_deal_new",
+            "mi_sas_aa_mb_c_mb.siebel_employee_new",
+            "mi_sas_aa_mb_c_mb.siebel_verkoopkans_contactpersoon_new",
+            "mi_sas_aa_mb_c_mb.siebel_verkoopkans_new",
+            "mi_sas_aa_mb_c_mb.siebel_verkoopkans_product_new",
+            "mi_sas_aa_mb_c_mb.siebel_verkoopteam_member_new",
+            "mi_sas_aa_mb_c_mb.verloop_trx_en_kred_gebruik_new",
+            "mi_sas_aa_mb_c_mb.vvb_workflow_new"
+          ]
+        },
+        {
+          "legend_name": "Tussentabellen"
+        },
+        {
+          "color": "#f3c000"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "afdelingstabel": [
+        {
+          "nodes": [
+            "mi_cmb.cif_complex",
+            "mi_cmb.cube_leadstatus_hist",
+            "mi_cmb.medewerkers",
+            "mi_sas_aa_mb_c_mb.agrc_imat_new",
+            "mi_sas_aa_mb_c_mb.agrc_mct_new",
+            "mi_sas_aa_mb_c_mb.agrc_rem_new",
+            "mi_sas_aa_mb_c_mb.ahk_basis",
+            "mi_sas_aa_mb_c_mb.ciaa_beleggen",
+            "mi_sas_aa_mb_c_mb.ciaa_cube_baten_hist",
+            "mi_sas_aa_mb_c_mb.ciaa_mia_hist",
+            "mi_sas_aa_mb_c_mb.ciaa_mia_maandnr",
+            "mi_sas_aa_mb_c_mb.ciaa_part_zak",
+            "mi_sas_aa_mb_c_mb.cube_leads_hist",
+            "mi_sas_aa_mb_c_mb.kem_aanvraag_det",
+            "mi_sas_aa_mb_c_mb.kem_pijplijn",
+            "mi_sas_aa_mb_c_mb.medewerker_security",
+            "mi_sas_aa_mb_c_mb.mia_businesscontacts",
+            "mi_sas_aa_mb_c_mb.mia_groepkoppelingen_hist",
+            "mi_sas_aa_mb_c_mb.mia_klantkoppelingen_hist",
+            "mi_sas_aa_mb_c_mb.mia_migratie_hist",
+            "mi_sas_aa_mb_c_mb.mia_periode_new",
+            "mi_sas_aa_mb_c_mb.mia_sector",
+            "mi_sas_aa_mb_c_mb.siebel_act_participants",
+            "mi_sas_aa_mb_c_mb.siebel_activiteit",
+            "mi_sas_aa_mb_c_mb.siebel_contactpersoon",
+            "mi_sas_aa_mb_c_mb.siebel_cst_member_hist",
+            "mi_sas_aa_mb_c_mb.siebel_deal",
+            "mi_sas_aa_mb_c_mb.siebel_employee",
+            "mi_sas_aa_mb_c_mb.siebel_verkoopkans",
+            "mi_sas_aa_mb_c_mb.siebel_verkoopkans_contactpersoon",
+            "mi_sas_aa_mb_c_mb.siebel_verkoopkans_product",
+            "mi_sas_aa_mb_c_mb.siebel_verkoopteam_member",
+            "mi_sas_aa_mb_c_mb.verloop_trx_en_kred_gebruik",
+            "mi_sas_aa_mb_c_mb.vvb_workflow"
+          ]
+        },
+        {
+          "legend_name": "Afdelingstabellen"
+        },
+        {
+          "color": "#00abe9"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "afdelinsview": [
+        {
+          "nodes": [
+            "mi_cmb.vcif_complex",
+            "mi_cmb.vcif_complex_mf",
+            "mi_cmb.vcif_drawing",
+            "mi_cmb.vcrm_employee_week",
+            "mi_cmb.vcube_baten",
+            "mi_cmb.vmia_businesscontacts",
+            "mi_cmb.vmia_hist",
+            "mi_cmb.vmia_kredieten_hfd",
+            "mi_cmb.vmia_periode",
+            "mi_cmb.vmia_sector",
+            "mi_cmb.vmia_week",
+            "mi_cmb.vpc_commercial_banking"
+          ]
+        },
+        {
+          "legend_name": "Afdelingsview"
+        },
+        {
+          "color": "#0067b2"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "voorloper_ldm": [
+        {
+          "nodes": [
+            "mi_vm.vclientgroep",
+            "mi_vm.vkalender",
+            "mi_vm.vlu_maand"
+          ]
+        },
+        {
+          "legend_name": "Voorloper LDM"
+        },
+        {
+          "color": "#94a596"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "mi_tb": [
+        {
+          "args": [
+            "mi_tb"
+          ]
+        },
+        {
+          "legend_name": "TransactionBanking"
+        },
+        {
+          "color": "#c4aa79"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "stuurtabel": [
+        {
+          "nodes": [
+            "mi_cmb.kredieten_ok_grv",
+            "mi_cmb.pc_commercial_clients",
+            "mi_sas_aa_mb_c_mb.cgc_basis",
+            "mi_sas_aa_mb_c_mb.cube_productdetail",
+            "mi_sas_aa_mb_c_mb.cube_producten",
+            "mi_sas_aa_mb_c_mb.kem_lu_funnel",
+            "mi_sas_aa_mb_c_mb.lu_complexe_producten",
+            "mi_sas_aa_mb_c_mb.mia_organisatie",
+            "mi_sas_aa_mb_c_mb.mia_organisatie_workaround",
+            "mi_sas_aa_mb_c_mb.mia_periode"
+          ]
+        },
+        {
+          "legend_name": "Stuurtabellen"
+        },
+        {
+          "color": "#1d2124"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "monitor": [
+        {
+          "nodes": [
+            "mi_sas_aa_mb_c_mb.cube_model"
+          ]
+        },
+        {
+          "legend_name": "Monitoring"
+        },
+        {
+          "color": "#FF6347"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "hulp": [
+        {
+          "nodes": [
+            "mi_sas_aa_mb_c_mb.ciaa_twk_3_fac"
+          ]
+        },
+        {
+          "legend_name": "Hulptabellen"
+        },
+        {
+          "color": "#FFA500"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "golden_sources": [
+        {
+          "nodes": [
+             "bcdb", "kvk", "bo", "sbt", "siebel", "ft", "twk", "mbb_ref", "mind data layer", "teradatakalender", "packages", "geo", "client (airmiles en beleggen)", "fair", "p&c", "frs", "efco", "ai_constants"
+          ]
+        },
+        {
+          "legend_name": "Golden Sources"
+        },
+        {
+          "color": "#FF00FF"
+        },
+        {
+          "weights_all": 1
+        }
+      ]
+    }
+  },
+  "network_config": [
+    {
+      "plot_width": 950
+    },
+    {
+      "plot_height": 600
+    },
+    {
+      "x_range": [
+        -2,
+        2
+      ]
+    },
+    {
+      "y_range": [
+        -2,
+        2
+      ]
+    },
+    {
+      "node_size_config": {
+        "10": [
+          0,
+          10
+        ],
+        "12": [
+          10,
+          20
+        ],
+        "14": [
+          20,
+          30
+        ],
+        "16": [
+          30,
+          40
+        ],
+        "18": [
+          40,
+          50
+        ],
+        "20": [
+          50,
+          60
+        ],
+        "22": [
+          60,
+          70
+        ],
+        "24": [
+          70,
+          80
+        ],
+        "26": [
+          80,
+          90
+        ],
+        "28": [
+          90,
+          100
+        ],
+        "30": [
+          100,
+          10000
+        ]
+      }
+    },
+    {
+      "golden_sources": [
+        "bcdb", "kvk", "bo", "sbt", "siebel", "ft", "twk", "mbb_ref", "mind data layer", "teradatakalender", "packages", "geo", "client (airmiles en beleggen)", "fair", "p&c", "frs", "efco", "ai_constants"
+      ]
+    }
+  ],
+  "button_config": {
+    "buttons": {
+      "object_name_root": {
+        "button_type": "text",
+        "type": "root",
+        "force": 1,
+        "title": "Find the root of an object"
+      },
+      "object_name_usage": {
+        "button_type": "text",
+        "type": "usage",
+        "force": 0,
+        "title": "Find the usage of an object"
+      },
+      "golden_source": {
+        "button_type": "dropdown",
+        "type": "usage",
+        "force": 0,
+        "title": "Choose a golden source"
+      }
+    }
+  }
+}

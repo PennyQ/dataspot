@@ -1,0 +1,214 @@
+{
+  "relationships_config": {
+    "groups": {
+      "mi_cmb": [
+        {
+          "args":["mi_cmb"]
+        },
+        {
+          "legend_name": "mi_cmb"
+        },
+        {
+          "color": "red"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "mi_temp": [
+        {
+          "args":["mi_temp"]
+        },
+        {
+          "legend_name": "mi_temp"
+        },
+        {
+          "color": "blue"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "mi_sas_aa_mb_c_mb": [
+        {
+          "args":["mi_sas_aa_mb_c_mb"]
+        },
+        {
+          "legend_name": "mi_sas_aa_mb_c_mb"
+        },
+        {
+          "color": "pink"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+       "mi_vm_ldm": [
+        {
+          "args":["mi_vm_ldm"]
+        },
+        {
+          "legend_name": "mi_vm_ldm"
+        },
+        {
+          "color": "green"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "mi_vm_nzdb": [
+        {
+          "args":["mi_vm_nzdb"]
+        },
+        {
+          "legend_name": "mi_vm_nzdb"
+        },
+        {
+          "color": "#006480"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "mi_vm": [
+        {
+          "args":["mi_vm."]
+        },
+        {
+          "legend_name": "mi_vm"
+        },
+        {
+          "color": "#006480"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "sys": [
+        {
+          "args":["sys_"]
+        },
+        {
+          "legend_name": "sys"
+        },
+        {
+          "color": "#006480"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "mi_vm_info": [
+        {
+          "args":["mi_vm_info"]
+        },
+        {
+          "legend_name": "mi_vm_info"
+        },
+        {
+          "color": "#006480"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "mi_vm_load": [
+        {
+          "args":["mi_vm_load"]
+        },
+        {
+          "legend_name": "mi_vm_load"
+        },
+        {
+          "color": "#006480"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "adw_dm_ku": [
+        {
+          "args":["adw_dm_ku"]
+        },
+        {
+          "legend_name": "adw_dm_ku"
+        },
+        {
+          "color": "#006480"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "mi_nemo": [
+        {
+          "args":["mi_nemo"]
+        },
+        {
+          "legend_name": "mi_nemo"
+        },
+        {
+          "color": "#006480"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "mi_tb": [
+        {
+          "args":["mi_tb"]
+        },
+        {
+          "legend_name": "mi_tb"
+        },
+        {
+          "color": "#006480"
+        },
+        {
+          "weights_all": 1
+        }
+      ],
+      "golden_sources": [
+        {
+          "nodes":["bcdb"]
+        },
+        {
+          "legend_name": "golden_sources"
+        },
+        {
+          "color": "#006480"
+        },
+        {
+          "weights_all": 1
+        }
+      ]
+    }
+  },
+  "network_config": [
+    {
+      "plot_width": 950
+    },
+    {
+      "plot_height": 600
+    },
+    {
+      "x_range": [-2, 2]
+    },
+    {
+      "y_range": [-2, 2]
+    },
+    {
+      "node_size_config": {"10": [0, 10], "12": [10, 20], "14": [20, 30], "16": [30, 40], "18": [40, 50], "20": [50, 60],
+                           "22": [60, 70 ], "24": [70, 80], "26": [80, 90], "28": [90, 100], "30": [100, 10000]}
+    },
+    {
+      "golden_sources": ["bcdb", "nzdb", "test"]
+    }
+  ],
+  "button_config": [
+    {
+      "buttons": {"object_name_root": {"button_type": "text", "type": "root", "force": 1, "title": "Find the root of an object"}, "object_name_usage":  {"button_type": "text", "type": "usage", "force": 0, "title": "Find the usage of an object"}, "golden_source": {"button_type": "dropdown", "type":"usage", "force": 0, "title": "Choose a golden source"}}
+    }
+  ]
+}

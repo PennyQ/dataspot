@@ -1,0 +1,16 @@
+{% extends base %}
+
+{% block title %}
+
+{% endblock %}
+{% block postamble %}
+  <style>
+    {% include 'styles.css' %}
+  </style>
+{% endblock %}
+{% block contents %}
+    <h1>DATASPOT</h1>
+
+{{ super() }}
+
+{% endblock %}

@@ -1,0 +1,38 @@
+{
+  "relationships_config": {
+    "groups": {
+      "general": [
+        {
+          "args":["general"]
+        },
+        {
+          "legend_name": "general"
+        },
+        {
+          "color": "#006480"
+        },
+        {
+          "weights_all": 1
+        }
+      ]
+    }
+  },
+  "network_config": [
+    {
+      "plot_width": 880
+    },
+    {
+      "plot_height": 880
+    },
+    {
+      "x_range": [-1.5, 1.5]
+    },
+    {
+      "y_range": [-1.5, 1.5]
+    },
+    {
+      "node_size_config": {"10": [0, 10], "15": [10, 20], "20": [20, 30], "25": [30, 40], "30": [40, 50], "35": [50, 60],
+                           "40": [50, 70 ], "45": [70, 80], "50": [80, 90], "55": [90, 100]}
+    }
+  ]
+}
