@@ -9,14 +9,17 @@ class ExcelImporter:
     def set_relationships(self, ws):
         relationships = self.__relationships
         for row in ws.iter_rows(values_only=True):
-            if row[0] in relationships:
+            if row[0].lower() in relationships:
+                print(row[0])
                 for ind, i in enumerate(row):
+                    print(1, i)
                     if ind > 0 and i is not None and i not in relationships[row[0]]:
                         relationships[row[0].lower()].append(i.lower())
             else:
+                relationships[row[0].lower()] = list()
                 for ind, source in enumerate(row):
                     if ind > 0 and source is not None:
-                        relationships[row[0].lower()] = list()
+                        print(1, source)
                         relationships[row[0].lower()].append(source.lower())
 
     def get_relationships(self):

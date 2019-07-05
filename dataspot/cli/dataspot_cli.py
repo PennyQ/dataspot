@@ -47,7 +47,7 @@ def cli(config_path, scripts_path,  manual, statistics):
     if manual:
         manual_relations_path = click.prompt('Please enter the full path to the file containing the manually determined '
                                              'relationships',
-                                             default=os.path.join(os.path.abspath('../../'), 'examples/clan_relationships_20190606_155918.json'),
+                                             default=os.path.join(os.path.abspath('../../'), 'examples/clan_relationships_20190613_092909.json'),
                                              type=click.Path(exists=True))
         f = open(manual_relations_path)
         manual_relationships = json.load(f)
