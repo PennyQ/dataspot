@@ -1,35 +1,29 @@
 Dataspot
 ==========
 
-sqlanalyer is a commandline tool for visualizing the usage of tables in sql statements.
+Dataspot is a commandline tool for visualizing the usage of tables in amongst other, sql statements.
 
 # Installation
-sqlanalyzer currently supports Python 3.6
+Dataspot currently supports Python 3.6
 
 ## Pre conditions
-Note: It is assumed that you have installed python3 and the teradata client on your machine.
-Note: In order to use pip you have to configure the abnamro proxy, see https://confluence.aws.abnamro.org/display/CLAN/Howto+configure+pip+using+the+abnamro+proxy
 
 
 ## Install of a release (windows)
-```
-$ pip install git+https://cbsp-abnamro.visualstudio.com/ClientAnalytics/_git/sqlanalyzer@1.0.0#egg=sqlanalyzer --upgrade
-```
+
 
 ## Install of the master branch (windows)
-```
-$ pip install git+https://cbsp-abnamro.visualstudio.com/ClientAnalytics/_git/sqlanalyzer#egg=sqlanalyzer --upgrade
-```
+
 
 
 ## Check that the installation worked
 
-Simply run `sqlanalyzer -r`.
+Simply run `Dataspot -r`.
 
 
 ## Set-up configuration
 
-sqlanalyzer takes a JSON formatted configuration file in order to customize the output and visualization.
+Dataspot takes a JSON formatted configuration file in order to customize the output and visualization.
 
 The following keys are accepted:
 <pre>
