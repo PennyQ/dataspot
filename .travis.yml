@@ -4,4 +4,6 @@ python:
   - "3.5"
   - "3.6"
 # command to run tests
-script: python dataspot/cli/dataspot.cli
+install:
+  pip install
+script: python dataspot/cli/dataspot_cli.py

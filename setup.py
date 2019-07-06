@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="dataspot",
-    version="0.0.1devl",
+    version="0.0.2devl",
     author="Patrick de Hoon",
     author_email="patrickdehoon@gmail.com",
     description="The script analyzer and visualizer",
@@ -20,7 +20,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     license='MIT',
-    install_requires=['bokeh', 'click', 'six', 'pyfiglet', 'termcolor'],
+    install_requires=['bokeh', 'click', 'six', 'pyfiglet', 'termcolor', 'scipy'],
     keywords='development database analyze',
     include_package_data=True,
     python_requires='>=3',
