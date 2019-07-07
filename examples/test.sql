@@ -2,14 +2,14 @@
 */
 
 INSERT INTO MI_TEMP.AACMB_Datum
+AS
 VALUES
     (
   CURRENT_DATE
     )
 ;
 
-CREATE TABLE Mi_temp.BC_bijzonder_beheer_ind
-AS
+CREATE TABLE Mi_temp.BC_bijzonder_beheer_ind AS
 (
 SEL
      a.Bc_nr (INTEGER) AS Bc_nr

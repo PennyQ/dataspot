@@ -1,0 +1,7 @@
+{
+  "td_parser": {
+    "sql_parser": {
+      "create": [["create table", "as"], [";"]],
+    }
+  }
+}

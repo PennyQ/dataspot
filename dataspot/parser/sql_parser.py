@@ -1,52 +1,36 @@
+from dataspot.parser.sql.create_as_parser import CreateAsParser
 
 
 class SQLParser:
 
-    def __init__(self):
-        pass
+    def __init__(self, lines, parser):
+        self.lines = lines
+        self.parser = parser
+        self.creates_as = None
 
-    @staticmethod
-    def list_creates(script, parser):
-        creates = list()
-        query_found = 0
-        query = ""
+    def set_creates_as(self):
+        self.creates_as = CreateAsParser(lines=self.lines).execute(parser=self.parser)
 
-        with open(script, 'r') as f:
-            f = f.readlines()
-            for i in f:
-                if i.lower().find(parser['create'][0]) != -1 and query_found == 0:
-                    query_found = 1
-                    query += i
-                elif query_found == 1 and i.lower().find(parser['create'][-1]) != -1:
-                    query += i
-                    if parser['create'][1] != ';' and query.lower().find(parser['create'][1]) != -1:
-                        creates.append(query)
-                        query = ""
-                        query_found = 0
-                    else:
-                        query = ""
-                        query_found = 0
-                elif query_found == 1:
-                    query += i
-                else:
-                    pass
-
-        with open(script, 'r') as f:
-            f = f.readlines()
-            for i in f:
-                pass
-
-        return creates
+    def execute(self):
+        self.set_creates_as()
 
 
-td_parser = {'create': ['create table', 'as', ';']}
-t_parser = {'create': ['select', 'into', ';']}
-ora_parser = {'create': ['create table', 'as', ';']}
 
-script = '/Users/patrickdehoon/PycharmProjects/Dataspot/examples/clan/scripts/1b.sql'
-print(td_parser['create'][0])
-
-result = SQLParser.list_creates(script=script, parser=td_parser)
-
-for i in result:
-    print(i)
+#
+# td_parser = {'create': [['create table', 'as'], [';']]}
+# t_parser = {'create': [['select', 'into',  'from'], [';']]}
+# ora_parser = {'create': [['create table', 'as'], [';']]}
+# ps_parser = {'create': [['create table', 'as'], [';']]}
+#
+# test_parser = {"sql_parser": {"create": [['create table', 'as'], [';']]}}
+# test2_parser = {'create': [['t_sql_parser'], ['select', 'into',  'from'], [';']]}
+#
+# script = open('/Users/patrickdehoon/Projecten/prive/dataspot/examples/test.sql')
+# lines = script.readlines()
+# # print(1, lines[0], 2)
+# result = SQLParser(lines=lines).execute(parser=td_parser)
+# script.close()
+# # result = SQLParser.list_creates(script=script, parser=td_parser)
+# # print(result)
+# for i in result:
+#     print(i)
