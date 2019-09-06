@@ -20,7 +20,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     license='MIT',
-    install_requires=['bokeh', 'click', 'six', 'pyfiglet', 'termcolor', 'scipy'],
+    install_requires=['bokeh', 'click', 'six', 'pyfiglet', 'termcolor', 'scipy', 'networkx'],
     keywords='development database analyze',
     include_package_data=True,
     python_requires='>=3',

@@ -1,15 +1,1079 @@
-/* #DATASPOT-TERADATA
+/*01b_C_MB_Basissets_tabellen.sql ****************************************************/
+/*************************************************************************************/
+/* SCRIPT  '01b_C_MB_Basissets_tabellen.sql'                                         */
+/*                                                                                   */
+/* Opbouw van Basis sets ten behoeve van het modelleren binnen SAS.                  */
+/* Het betreft tabellen met klantinfo op beschouwingsniveau commercieel)complex      */
+/*-----------------------------------------------------------------------------------*/
+/* Wijzigingen                                                                       */
+/*                                                                                   */
+/* Wie          | Datum      | Versie | Verandering(en)                              */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 04-09-2013 |   1.0  | Initiele versie                              */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 10-09-2013 |   1.1  | DROP statements naar afzonderlijk script     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 13-09-2013 |   1.2  | NEW-tabellen                                 */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 18-09-2013 |   1.3  | Beleggen zorgplichtsignaal 3maanden oud      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 24-09-2013 |   1.4  | 'PARTITION BY' op grote tabellen             */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 24-09-2013 |   1.5  | Mi_analyse.Miaz_interacties vervangen door   */
+/*              |            |        |  Mi_cmb.Mia_interacties_NEW                  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 30-09-2013 |   1.6  | Nieuw: MI_SAS_AA_MB_C_MB.KTV_CCC_Bedrijven   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 04-10-2013 |   1.7  | aanpassing MI_temp.CIAA_PFV_zak_kopp         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 05-11-2013 |   1.8  | Nieuw: Part_zak                              */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 08-11-2013 |   1.9  | KTV selectie : lead uitsl. afgelopen 7 dagen */
+/*--------------+------------+--------+----------------------------------------------*/
+/* HvH          | 13-11-2013 |   1.10 | BCDB SBI* als basis voor Sectorinformatie    */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 18-11-2013 |   1.11 | Correctie Sectorinformatie                   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 09-12-2013 |   1.12 | Toevoegen Part-zak gemachtigde part klant    */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 11-12-2013 |   1.13 | Gewijzigde kredieten tabel                   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VT           | 18-12-2013 |   1.14 | Tijdelijke wijziging CCA agri & BUN          */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 18-12-2013 |   1.15 | Tabel met draadatum vanuit script 6b         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VT           | 18-12-2013 |   1.16 | Toevoegen Sectorinformatie vanuit NZDB       */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 19-12-2013 |   1.17 | Wijzigingen kredieten tabel                  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 20-01-2014 |   1.18 | - verwijderen dubbelslag Part_zak            */
+/*              |            |        | - complexe producten obv MIND data           */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VT           | 22-01-2014 |   1.19 | Opbouw Mi_temp.Mia_week conform nieuwe namen */
+/*              |            |        | en gevolgen voor vervolg aangepast           */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 28-01-2014 |   1.20 | Complexe producten en veld CGC theoretisch   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VT           | 29-01-2014 |   1.21 | - Toevoegen Aantal_bcs_in_scope en           */
+/*              |            |        |   Bijzonder_beheer_ind aan Mi_temp.Mia_week  */
+/*              |            |        | - Verwijderen Mi_temp.Mia_klant_extrainfo    */
+/*              |            |        | - Tijdelijke update TPB                      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 29-01-2014 |   1.22 | Mia_klantkoppelingen_hist                    */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 31-01-2014 |   1.23 | Asterix voor MI_SAS_AA_MB_C_MB.CIAA_beleggen */
+/*              |            |        | - Complex prod: Maatwerktarifering betalvrkr */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VT           | 04-02-2014 |   1.24 | - Algemeen Datum_gegevens aangepast          */
+/*              |            |        | - Mi_temp.Signaal aangepast                  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VT           | 05-02-2014 |   1.25 | CUBe bedrijfstak aangepast                   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VT           | 09-02-2014 |   1.26 | Schoonheidsfoutje eruit gehaald              */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VT           | 12-02-2014 |   1.27 | Benchmarken en wegloopmodel toevoegen        */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 26-02-2014 |   1.28 | extra stats tbv MSTR                         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 28-02-2014 |   1.29 | compress velden kredieten tabel              */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VT           | 03-03-2014 |   1.30 | Aanpassingen ten behoeve van Beoordeeld      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VT           | 26-03-2014 |   1.31 | Aanpassingen ten behoeve van Beoordeeld      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 01-04-2014 |   1.32 | - Aantal mi_cmb vervangen door tabellen in   */
+/*              |            |        |   MI_SAS_AA_MB_C_MB                          */
+/*              |            |        | - gewijzigde CCA reeksen RM tbv. Beleggen    */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 04-04-2014 |   1.33 | Beleggen: aantal klanten met zorgplichtsign. */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 09-04-2014 |   1.34 | Complexe producten (eerste drie bij naam)    */
+/*              |            |        | en verwijderen tijdelijke update TPB         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 30-04-2014 |   1.35 | Correctie complexe producten                 */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 14-05-2014 |   1.36 | ZZP-AKW nieuwe AGIC                          */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 19-05-2014 |   1.37 | DWA heeft 'vreemde' karakters verwijderd &   */
+/*              |            |        | correctie  vergeten comma bij AKW SBI codes  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 23-05-2014 |   1.38 | Kleine wijziging complex prod GRV010/020/030 */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 27-05-2014 |   1.39 | - Betaal transacties ook voor CC             */
+/*              |            |        | - gewijzigde definitie Complex Arrang. kred. */
+/*              |            |        | - gewijzigde definitie Complex GRV010020030  */
+/*              |            |        | - Bijzonder_beheer_ind mede obv Kredieten FI */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 06-05-2014 |   1.40 | - gewijzigde definitie Complex GRV010        */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VT           | 08-07-2014 |   1.41 | Mia_businesscontacts toegevoegd              */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 15-07-2014 |   1.42 | Beleggen: BC zorgplicht actie vereist        */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 04-08-2014 |   1.43 | Beleggen: zorgplichtsign indien geen nul-dep */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 15-08-2014 |   1.44 | Retentie: oplossen discrepantie lopende mnd  */
+/*              |            |        | en laatste maand ingelezen leads.            */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 18-08-2014 |   1.45 | Afleiden nieuwe BO-structuur YBB klanten     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 29-08-2014 |   1.46 | - Internationaal segment nieuw in Mia_hist   */
+/*              |            |        | - CGC 1205 wordt businessline 'CC'           */
+/*              |            |        | - Clientgroep_theoretisch in Mia_hist vullen */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 05-09-2014 |   1.47 | Internationaal segment aanpassing            */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 18-09-2014 |   1.48 | Uitzetten CREATE TABLE KTV_CCC_Bedrijven_NEW */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 29-09-2014 |   1.49 | Aanzetten CREATE TABLE KTV_CCC_Bedrijven_NEW */
+/*              |            |        | Internat ind. obv volume pct ipv trx pct     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 15-10-2014 |   1.50 | Segment LC&MB aanpassen aan gewijzigde naam  */
+/*              |            |        | Corperate Client Units                       */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 20-10-2014 |   1.51 | CGC 1232 wordt businessline 'CC'             */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 20-10-2014 |   1.52 | Complex product 'EXECUTION ONLY'             */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 03-11-2014 |   1.52 | Voorloopnul toegevoegd aan KvK-nummer in     */
+/*              |            |        | Mia_businesscontacts                         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 10-11-2014 |   1.53 | Mi_vm.vClient vervangen door                 */
+/*              |            |        | MI_vm_Ldm.aKLANT_PROSPECT                    */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 18-11-2014 |   1.54 | correctie foutje bij bepalen Public voor CC  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 28-11-2014 |   1.55 | Cidat in MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 02-12-2014 |   1.56 | Afleiding Klantstatus aangepast              */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 21-01-2015 |   1.57 | - Afleiding Maatwerk tarifering betalings-   */
+/*              |            |        |   verkeer (Complex_prod_RC_mtwrk)            */
+/*              |            |        | - COLLECT STATISTICS toegevoegd              */
+/*              |            |        | - Maand_nr gewijzigd in Mia_businesscontacts */
+/*              |            |        | - SBI, AGIC en Sector informatie uit NZDB    */
+/*              |            |        |   (ipv Mi_cmb.hh_CMB_sector)                 */
+/*              |            |        | - Afleiding Dashboard (sub)doelgroepen gein- */
+/*              |            |        |   tegreerd in Mia_week                       */
+/*              |            |        | - Updates (remedy) supsects verwijderd       */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 26-01-2015 |   1.58 | - Kleine correctie op vorige wijzigingen     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 24-02-2015 |   1.59 | - Kleine correctie beleggen NZDB CC_nr       */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 25-02-2015 |   1.60 | Verwijderen Mi_cmb.Axl_cube_cbi              */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 30-03-2015 |   1.61 | Model_variant_id vervallen                   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 01-06-2015 |   1.62 | Vermijden dat script stuk loopt bij ontbreken*/
+/*              |            |        | tabel MI_cmb.TRC_REK_COURANT                 */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 03-06-2015 |   1.63 | CommentString toevoegen aan Mi_cmb tabellen  */
+/*              |            |        | welke worden gebruikt in het CIAA schedule   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 17-06-2015 |   1.64 | Signaal in Mia_week aangepast                */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 30-06-2015 |   1.65 | Aanpassen afleiding leidend BC               */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 02-07-2015 |   1.66 | toelichting tbv re-run                       */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 22-07-2015 |   1.67 | Aanpassen afleiding sector in Mia_week       */
+/*              |            |        | (tabel S tbv CIDAR Light klanten)            */
+/*              |            |        | ivm fout bij maandovergang                   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* PO           | 10-08-2015 |   1.68 | Aanpassen internationale - script deel       */
+/*              |            |        | Variabelenamen in sni/snu tabellen is        */
+/*              |            |        | veranderd                                    */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 17-08-2015 |   1.69 | 1. YBB heeft nieuwe CCA codes: opnemen in    */
+/*              |            |        | koppeling met Mi_vm_nzdb.vBO_teams zodat BO  */
+/*              |            |        | structuur wordt gevonden                     */
+/*              |            |        | 2. confrom afspraken met Mathon en Thomas    */
+/*              |            |        | worden klanten obv CGC naar business line    */
+/*              |            |        | RM / YBB ingedeeld                           */
+/*              |            |        | 3. ihkv Clientgroep_theoretisch werd tabel   */
+/*              |            |        | MI_SAS_AA_MB_C_MB.CIAA_Mia_hist geupdated,   */
+/*              |            |        | ik vermoed dat dit de '_NEW' tabel moet zijn */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 24-08-2015 |   1.70 | UPDATE MI_SAS_AA_MB_C_MB.CIAA_Mia_hist ihkv  */
+/*              |            |        | Clientgroep_theoretisch is te zwaar, nu een  */
+/*              |            |        | INSERT                                       */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 14-09-2015 |   1.71 | Mia_week bevatte CASESPECIFIC velden         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 17-09-2015 |   1.72 | nieuwe YBB CCA openemen                      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 24-09-2015 |   1.73 | Toevoegen SBI's in MI_SAS_AA_MB_C_MB.Mia_sector_NEW        */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 30-09-2015 |   1.74 | 1. Mia_businesscontacts: US Person indicator */
+/*              |            |        |    + omschrijving toegevoegd                 */
+/*              |            |        | 2. Mia_businesscontacts: Risicoscore Klant   */
+/*              |            |        |    toegevoegd                                */
+/*              |            |        |    3. Mia_bc_info/Mia_klant_info/Mia_week:   */
+/*              |            |        |       Surseance + Faillissement indicator    */
+/*              |            |        |       toegevoegd                             */
+/*              |            |        |    4. Mia_hist: Primary index op             */
+/*              |            |        |       business_contact_nr tbv performance    */
+/*              |            |        | 5. Mia_businesscontacts: MIFID Fitness test  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 12-10-2015 |   1.75 | 1. Mifid fitnesstest: diverse kleine         */
+/*              |            |        |    aanpassingen op format kolommen           */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 31-10-2015 |   1.76 | 1. Aanpassen naamgeving nieuwe velden        */
+/*              |            |        |    Mia_Businesscontacts naar BC_xxx (v1.74)  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB en VvT   | 11-11-2015 |   1.77 | 1. Aanpassen hele script aan nieuwe klant-   */
+/*              |            |        |    complexen BCDB / Siebel                   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 18-11-2015 |   1.78 | 1. Twee kleine aanpassingen:                 */
+/*              |            |        |    - Mia_week: kolommen uit voor CC en LC&MB */
+/*              |            |        |    - Toevoegen collect stats                 */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 23-11-2015 |   1.79 | 1. KEM afdelingstabellen opgenomen           */
+/*              |            |        | 2. f.Segment_id = 20 werkt niet meer         */
+/*              |            |        |    (TD update?) --> TRIM(f.Segment_id) = '20'*/
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 02-12-2015 |   1.80 | 1. Enkele correcties en verbeteringen n.a.v. */
+/*              |            |        |    wijzigingen in versie 1.77                */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT/BdB      | 10-12-2015 |   1.81 | 1. Omzetklasse uniek maken door extensie 'x' */
+/*              |            |        | 2. Mia_businesscontacts:                     */
+/*              |            |        | - FATCA indicator (J - classificatie aanw.   */
+/*              |            |        |   N - niet geclassificeerd)                  */
+/*              |            |        | - FATCA classificatie                        */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 28-12-2015 |   1.82 | Mia_businesscontacts:                        */
+/*              |            |        | COLLECT STATISTICS op PI en SI's             */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 17-01-2016 |   1.83 | Mia_week / CUBe_totaal verwijderd:           */
+/*              |            |        | Sector_agic, Subsector_agic,                 */
+/*              |            |        | Business_contact_nr1 tm5                     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB/SF       | 31-01-2016 |   1.84 | 1. Bron verwijderd uit alle afdelingstabellen*/
+/*              |            |        | 2. Contactinfo tijdelijk op NULL ivm Siebel: */
+/*              |            |        | - Datum_volgend_contact                      */
+/*              |            |        | - Datum_laatste_contact_pro_ftf              */
+/*              |            |        | - Aantal_contact_pro_ftf                     */
+/*              |            |        | - Aantal_contact_pro_tel                     */
+/*              |            |        | - Contactpersoon                             */
+/*              |            |        | - Emailadres                                 */
+/*              |            |        | 3. Cx_nr verwijderd uit:                     */
+/*              |            |        | - Mia_alle_bcs en Mia_business_contacts      */
+/*              |            |        | 4. Bepaling Leidend_bc_ind in Mia_alle_bcs   */
+/*              |            |        | gecorrigeerd                                 */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB/VvT      | 14-02-2016 |   1.85 | 1. Mia_hist/Mia_business_contacts/           */
+/*              |            |        | Mia_beleggen:                                */
+/*              |            |        | - House > Unit                               */
+/*              |            |        | - House_bo_br > Unit_bo_nr                   */
+/*              |            |        | 2. Mia_businesscontacts  toegevoegd:         */
+/*              |            |        | - Koppeling_id_CE                            */
+/*              |            |        | 3. Regio en regio_bo_nr nu ook beschikbaar   */
+/*              |            |        | voor businessline CC                         */
+/*              |            |        | 4. Mia_interacties uitgezet, wordt niet meer */
+/*              |            |        |    gebruikt                                  */
+/* VvT          | 15-02-2016 |   1.86 | Diverse correcties                           */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 15-02-2016 |   1.87 | stats Mi_temp.CUBe_benchmark_00x - tabellen  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 15-02-2016 |   1.88 | KEM CGC van BCnr per laatste stand aanvraag  */
+/* VvT          |            |        | Nieuwe insert Mi_temp.Mia_week               */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 16-02-2016 |   1.89 | Correctie afleiding Segment = 'Public'       */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 23-02-2016 |   1.90 | Statistics tbv VVB                           */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB/VvT      | 23-02-2016 |   1.91 | 1. Koppeling_id_CE toegevoegd aan            */
+/*              |            |        | Mia_klantkoppelingen                         */
+/*              |            |        | 2. Nieuwe segmentatie KZ/MB/GB/PSC/REC in    */
+/*              |            |        | Mia_hist                                     */
+/*              |            |        | 3. Nieuwe businesslines R&PB/CC/IC in        */
+/*              |            |        | Mia_klant_info                               */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 03-03-2016 |   1.92 | - CUBEbaten hersteld (businessline, segment) */
+/*              |            |        | - Commentaar altijd mbv  */  /*              */
+/*              |            |        | - Commentaar altijd einde van de regel, niet */
+/*              |            |        |   midden in een SQL statement                */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 03-03-2016 |   1.93 |   CUBE IC opgenomen (deels)                  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB/VvT      | 09-03-2016 |   1.94 | - Kolomdefinities LATIN CASESPECIFIC omgezet */
+/*              |            |        |   naar LATIN NOT CASESPECIFIC                */
+/*              |            |        | - Afleiding Relatiemanager, Team, Unit en    */
+/*              |            |        |   Regio voor vml Corporate Clients aangepast */
+/*              |            |        | - CUBe aangepast voor Commercial Clients     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 15-03-2016 |   1.95 |- Afleiding Relatiemanager, Team, Unit en     */
+/*              |            |        |  Regio voor vml Corporate Clients aangepast  */
+/*              |            |        |- CUBe aangepast voor Commercial Clients      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 15-03-2016 |   1.96 | - Toevoegen kolommen aan Mia_klantbaten      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 31-03-2016 |   1.97 | Comment Mia_baten_benchmarken_003 verwijderd */
+/*              |            |        | ivm vastlopen scheduled job in CIAA schedule */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 31-03-2016 |   1.98 | 1. Statistics toegevoegd aan:                */
+/*              |            |        |    -Mi_Temp.Mia_klanten                      */
+/*              |            |        |    -Mia_klant_baten_benchmarken              */
+/*              |            |        | 2. Koppeling_id_CG toegevoegd aan:           */
+/*              |            |        |    - Mia_bc_info                             */
+/*              |            |        |    - Mia_alle_bcs                            */
+/*              |            |        |    - Mia_businesscontacts                    */
+/*              |            |        | 3. Nieuwe tabel Mia_groepkoppelingen         */
+/*              |            |        |    toegevoegd                                */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 13-04-2016 |   1.99 | 1. Onderhoudstabel Mia_TableSize_Hist        */
+/*              |            |        |    toegevoegd met info over tabelgrootte en  */
+/*              |            |        |    tableskew                                 */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 14-04-2016 |   2.00 | Clientgroep 9001 uitgesloten bij             */
+/*              |            |        | Mia_businesscontacts                         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 26-04-2016 |   2.01 | 1. Contactinformatie Mia_week vanuit Siebel: */
+/*              |            |        |     - Datum_laatste_contact_pro_ftf          */
+/*              |            |        |     - Datum_volgend_contact                  */
+/*              |            |        |     - Aantal_contact_pro_tel                 */
+/*              |            |        |     - Aantal_contact_pro_ftf                 */
+/*              |            |        | 2. GSRI informatie toegevoegd aan            */
+/*              |            |        |    Mia_businesscontacts:                     */
+/*              |            |        |     - BC_Party_GSRI_berekend                 */
+/*              |            |        |     - BC_GSRI_Beoord_comment                 */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 02-05-2016 |   2.02 | 1. Integratie Siebel script:                 */
+/*              |            |        |     - Opbouw temp tabellen voor Mia_week     */
+/*              |            |        |     - Opbouw eindtabellen onder paragraaf 10 */
+/*              |            |        | 2. Opbouw onderhoudstabel Mia_tbl_size       */
+/*              |            |        |    verwijderd                                */
+/*              |            |        | 3. Koppeling_id_CG groepkoppelingen aangepast*/
+/*              |            |        | 4. GSRI informatie: zero length velden       */
+/*              |            |        |    geconverteerd naar NULL                   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 09-05-2016 |   2.03 | UPI MI_TEMP.Siebel_Verkoopkans_NEW           */
+/*              |            |        | aangepast naar PI                            */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 11-05-2016 |   2.05 | Lengte diverse Siebel velden aangepast naar  */
+/*              |            |        | lengte bron velden                           */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 18-05-2016 |   2.06 | 1. Stuurtabel CGC_basis als bron voor:       */
+/*              |            |        |     - business_line (mia_klant_info)         */
+/*              |            |        |     - segment (mia_week)                     */
+/*              |            |        | 2.LEFT() functie vervangen door SUBSTR()     */
+/*              |            |        |   in opbouw Siebel tabellen                  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 23-05-2016 |   2.07 | GSRI informatie tijdelijk op NULL ivm        */
+/*              |            |        | foutieve info LDM                            */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SS           | 23-05-2016 |   2.08 | Aanpassing bepaling Functie in               */
+/*              |            |        | Siebel_Employee                              */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 24-05-2016 |   2.09 | 1. JD28: Nieuwe indeling Omzetklasse_id      */
+/*              |            |        |    Mia_week/Mia_hist                         */
+/*              |            |        | 2. JD31 Toegevoegd aan Mia_business_contacts:*/
+/*              |            |        |    - Ultimate Legal Parent (ULP)             */
+/*              |            |        |    - Global BC (GBC)                         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 31-05-2016 |   2.10 | 1. ALC toegepast op diverse VARCHAR kolommen */
+/*              |            |        |    Mia_week/Mia_hist                         */
+/*              |            |        | 2. Blockcompressie toegepast op              */
+/*              |            |        |    Cube_leadstatus_hist                      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 31-05-2016 |   2.11 | 8. KTV YBC Bedrijven verwijderd uit script   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 15-06-2016 |   2.12 | Opbouw MI_SAS_AA_MB_C_MB.Mia_sector_NEW obv  */
+/*              |            |        | MI_SAS_AA_MB_C_MB.mdm_1721 + toegevoegd aan  */
+/*              |            |        | Mia_week/hist:                               */
+/*              |            |        |  - Subsector_code                            */
+/*              |            |        |  - Subsector_oms                             */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 16-06-2016 |   2.13 | Workaround ophalen team informatie IC        */
+/*              |            |        | geimplementeerd in opbouw Mia_week.          */
+/*              |            |        | Team en team_bo_nr nu beschikbaar in Mia_week*/
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 19-07-2016 |   2.14 | 1. Correctie opbouw Mia_week:                */
+/*              |            |        |   - afleiding Datum_laatste_contact_pro_ftf  */
+/*              |            |        |   - afvangen '-101' waarde velden            */
+/*              |            |        | 2. Error handling opbouw Mia_alle_bcs        */
+/*              |            |        | 3. US Person velden hernoemd:                */
+/*              |            |        |  Bc_US_Person_ind naar BC_SEC_US_Person_ind  */
+/*              |            |        |  Bc_US_Person_oms naar BC_SEC_US_Person_oms  */
+/*              |            |        |  Bc_FATCA_ind naar BC_FATCA_US_Person_ind    */
+/*              |            |        |  Bc_FATCA_class naar BC_FATCA_US_Person_ind  */
+/*              |            |        | 4. Klantindeling Siebel toegevoegd aan       */
+/*              |            |        |    Subsegment Mia_week/hist                  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 25-07-2016 |   2.15 | 1. Veld Extra_informatie toegevoegd aan      */
+/*              |            |        |   Siebel_verkoopkans_product (ivm KEM ref.)  */
+/*              |            |        | 2. GSRI velden weer gevuld nav fix           */
+/*              |            |        |   aParty_GSRI tabel                          */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 09-08-2016 |   2.16 | 1. Correctie afleiding CCA, team_bo_nr       */
+/*              |            |        | en team voor business_line IC                */
+/*              |            |        | 2. Regio voor business_line IC uit           */
+/*              |            |        | cidar_BO_Team                                */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 17-08-2016 |   2.17 | Siebel_Verkoopkans_Product:                  */
+/*              |            |        |  Baten_totaal gevuld                         */
+/*              |            |        | (Baten_eenmalig + baten_terugkerend)         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 22-08-2016 |   2.18 | Siebel_Verkoopkans_Product:                  */
+/*              |            |        |  Baten_totaal gecorrigeerd ivm NULL waarden  */
+/*              |            |        | zeroifnull(Baten_eenmalig) +                 */
+/*              |            |        | zeroifnull(baten_terugkerend)                */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 31-08-2016 |   2.19 | Siebel_Employee:                             */
+/*              |            |        |  -CCA toegevoegd                             */
+/*              |            |        |  -SQL voor ophalen Naam medewerker aangepast */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 05-09-2016 |   2.20 | Tabel Mi_cmb.Pvdv_offers vervangen door:     */
+/*              |            |        | Mi_cmb.TB_offers                             */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 06-09-2016 |   2.21 | Kolommen toegevoegd aan Mia_week/hist:       */
+/*              |            |        |  - Datum_laatste_contact_ftf                 */
+/*              |            |        |  - Aantal_contact_ftf                        */
+/*              |            |        |  - Aantal_contact_tel                        */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 09-09-2016 |   2.22 | 1. Correctie ophalen klant- en bc-nummer     */
+/*              |            |        |  Siebel tabellen voor Commerciele Groepen.   */
+/*              |            |        | 2. Bepaling klantstatus Mia_bc_info aangepast*/
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 09-09-2016 |   2.23 | 1. Correctie opbouw Siebel tabellen nav      */
+/*              |            |        |    laatste wijziging                         */
+/*              |            |        | 2. Siebel_act_participants:                  */
+/*              |            |        |    CTP_Unique_id van VARCHAR(10)             */
+/*              |            |        |    naar VARCHAR(13)                          */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 13-09-2016 |   2.24 | CUBe aanpassen mbt Siebel leads; betreft mn. */
+/*              |            |        | tabel Mi_temp.Mia_baten_benchmarken_005,     */
+/*              |            |        |  Mi_temp.Mia_baten_benchmarken_006,          */
+/*              |            |        |  MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW       */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 15-09-2016 |   2.25 | Aanpassen Baten_benchmark in de tabel        */
+/*              |            |        | Mi_temp.Mia_baten_benchmarken_003            */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 19-09-2016 |   2.26 | 1. Tijdelijke aanpassing ophalen KvK nummer  */
+/*              |            |        | Mia_alle_bcs ivm DQ issue MIND (INC1389382)  */
+/*              |            |        | 2. Nieuw veld Siebel Verkoopkans:            */
+/*              |            |        |    - Verkoopkans_naam                        */
+/*              |            |        | 3. Nieuwe velden Siebel Verkoopkans_product: */
+/*              |            |        |    - Datum_aangemaakt                        */
+/*              |            |        |    - Datum_laatst_gewijzigd                  */
+/*              |            |        |    - Revenue_ID                              */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 20-09-2016 |   2.27 | ook IC opnemen in tabel CIAA_beleggen        */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 26-09-2016 |   2.28 | Kleine aanpassing Baten_benchmark in de      */
+/*              |            |        | tabel Mi_temp.Mia_baten_benchmarken_003      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 26-09-2016 |   2.29 | Workaround opbouw Siebel_Employee ivm        */
+/*              |            |        | foutieve aanlevering BO nummers              */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 27-09-2016 |   2.30 | Aanpassingen Siebel_verkoopkans_product:     */
+/*              |            |        |  - Revenue_ID en Product_unique_ID           */
+/*              |            |        |  - Nieuwe kolom Baten_totaal_1ste_12mnd      */
+/*              |            |        |  - Nieuwe kolom Baten_totaal_looptijd        */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 29-09-2016 |   2.31 | Grotere aanpassingen CUBe:                   */
+/*              |            |        |  - Overgang op subsectoren (ipv AGIC)        */
+/*              |            |        |  - Aanpassing omzetcategorieen               */
+/*              |            |        |  - Productspecialist leads Rentederivaten    */
+/*              |            |        |    en Commodity derivatenverwijderd          */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 03-10-2016 |   2.32 | Tijdelijke workaround Mia_businesscontacts:  */
+/*              |            |        |  - qualify rank op kvkreg records            */
+/*              |            |        |  - qualify rank op JOIN met                  */
+/*              |            |        |  vEXTERNE_ORGANISATIE_BIK ivm primary key    */
+/*              |            |        |  violation                                   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 05-10-2016 |   2.33 | Change JD47 - nieuwe klantindicator IC:      */
+/*              |            |        | Klantindicator op 1 voor IC klanten met:     */
+/*              |            |        |  - met een crossref voor non CB contracten   */
+/*              |            |        |  in LDM                                      */
+/*              |            |        |  - CMS transacties in laatste 12 maanden     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 06-10-2016 |   2.34 | Correctie afleiding Naam Siebel_Employee:    */
+/*              |            |        | indien niet uniek langste naam selecteren    */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 11-10-2016 |   2.35 | Change SS54:                                 */
+/*              |            |        | kolom TB_consultant toegevoegd (indicator)   */
+/*              |            |        | Change BdB56:                                */
+/*              |            |        | Nieuwe bron Subsector Mia_week/Hist:         */
+/*              |            |        | mi_vm_ldm.vSBI_Plus_Industry_Rollup          */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 13-10-2016 |   2.36 | Change SS53, In- en uitstroomscript ,        */
+/*              |            |        | toegevoegd - tabellen:                       */
+/*              |            |        | - MI_SAS_AA_MB_C_MB.MI_migr_basis_hist       */
+/*              |            |        | - MI_SAS_AA_MB_C_MB.MI_migratie_analyse_hist */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 01-11-2016 |   2.37 | CUBe_Siebel_fin_prof_geleverd toegevoegd     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 01-11-2016 |   2.38 | CUBe_Siebel_fin_prof_geleverd: alleen 'C'    */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 08-11-2016 |   2.39 | Tijdelijke aanpassing selectie xrefs IC in   */
+/*              |            |        | afwachting van correctie crossref tabel NZDB */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 10-11-2016 |   2.40 | 1. Bron omzetgegevens IC en voorm.           */
+/*              |            |        | Corp. Clients aangepast van Cidar naar       */
+/*              |            |        | Mi_vm_nzdb.vCC_gecor_geschatte_afgel_omz.    */
+/*              |            |        | 2. Afleiding CMS_ind voor FXO transacties    */
+/*              |            |        | aangepast nav feedback business              */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 22-11-2016 |   2.41 | Bron maand_nrs mi_temp.MI_migr_periode       */
+/*              |            |        | aangepast naar                               */
+/*              |            |        | MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW       */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 24-11-2016 |   2.42 | 1. Correctie CUBE_Baten en CUBE_leadstatus   */
+/*              |            |        | 2. Mia_alle_bcs: filter op contracten        */
+/*              |            |        |    product_id 1259                           */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 28-11-2016 |   2.43 | GSRI velden toegevoegd aan Mia_alle_bcs,     */
+/*              |            |        | Mia_klant_info en Mia_week/hist:             */
+/*              |            |        | - GSRI_goedgekeurd                           */
+/*              |            |        | - GSRI_Assessment_resultaat                  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 04-12-2016 |   2.44 | Mia_bc_info aangepast nav nieuwe definitie   */
+/*              |            |        | mi_vm_NZDB.vGBC_CROSSREF                     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SS           | 06-12-2016 |   2.45 | 1. In- en uitstroomscript aangepast          */
+/*              |            |        | 2. statistics cidar_hbc_hist verwijderd      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 12-12-2016 |   2.46 | 1. Correctie fout bij COLLECT STATS (_NEW)   */
+/*              |            |        |    bij MI_SAS_AA_MB_C_MB.MI_migr_basis_hist  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 14-12-2016 |   2.47 | Correctie in- en uitstroom script            */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 03-01-2017 |   2.48 | Correctie KEM query                          */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 12-01-2017 |   2.49 | Nieuwe versie in- en uitstroom subscript     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 17-01-2017 |   2.50 | Nieuwe organisatie niveaus toegevoegd aan    */
+/*              |            |        | Mia_week/hist                                */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 17-01-2017 |   2.51 | Opbouw Mia_week aangepast aan nieuwe         */
+/*              |            |        | Mia_organisatie (integratie stuurtabellen    */
+/*              |            |        | CC en IC)                                    */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 25-01-2017 |   2.52 | 1.Toegevoegd aan Mia_week/hist:              */
+/*              |            |        | - nieuwe organisatie_niveaus 1 t/m 5         */
+/*              |            |        | - sectorcluster                              */
+/*              |            |        | - Geo_postcode en geo_niveaus 1 t/m 3        */
+/*              |            |        | 2.Nieuwe organisatie_niveaus 1 t/m 5         */
+/*              |            |        | toegevoegd aan CIAA_beleggen                 */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 08-02-2017 |   2.53 | Correctie organisatieniveaus Mia_week/hist   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 09-02-2017 |   2.54 | Aanpassing (verwijderen) complexe producten  */
+/*              |            |        | - Totaal OOE 250k plus                       */
+/*              |            |        | - Arrangement kredieten                      */
+/*              |            |        | - Treasury                                   */
+/*              |            |        | - Rentederivaten                             */
+/*              |            |        | - Valuraderivaten                            */
+/*              |            |        | - Commodity derivatives                      */
+/*              |            |        | - Private WSealth Management                 */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 27-02-2017 |   2.55 | Aanpassingen:                                */
+/*              |            |        | - Org_niveauX en Org_niveauX_bo_nr met       */
+/*              |            |        |   terugwerkende kracht gevuld (Mia_hist)     */
+/*              |            |        | - Toegevoegd afleiding Sectorcluster         */
+/*              |            |        |   aan de hand van workaround (Mia_week/hist) */
+/*              |            |        | - Sectorcluster met terugwerkende kracht     */
+/*              |            |        |   gevuld (Mia_hist)                          */
+/*              |            |        | - Bc_bo_bu_code, Bc_bo_bu_decode,            */
+/*              |            |        |   Bc_cca_am_bu_code, Bc_cca_am_bu_decode,    */
+/*              |            |        |   Bc_cca_rm_bu_code, Bc_cca_rm_bu_decode,    */
+/*              |            |        |   Bc_ringfence en Bc_klantlevenscyclus       */
+/*              |            |        |   toegevoegd (Mia_businesscontacts)          */
+/*              |            |        | - Bc_bo_bu_code, Bc_bo_bu_decode,            */
+/*              |            |        |   Bc_cca_bu_code en Bc_cca_bu_decode         */
+/*              |            |        |   toegevoegd (Mia_bc_info)                   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 08-03-2017 |   2.56 | - DROP TABLE verwijderen                     */
+/*              |            |        | - Wijziging Pakketafleiding                  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 23-03-2017 |   2.57 | Aanpassingen:                                */
+/*              |            |        | - Afleiding Klantstatus voor businessline CC */
+/*              |            |        |   gewijzigd (Mia_hist)                       */
+/*              |            |        | - Klantstatus met terugwerkende kracht       */
+/*              |            |        |   aangepast (Mia_hist)                       */
+/*              |            |        | - QUALIFY RANK aangepast in Mia_bc_info:     */
+/*              |            |        |   hierdoor geen mismatch met Mia_klant_info  */
+/*              |            |        |   en geen Klantstatus NULL meer in Mia_hist  */
+/*              |            |        | - Klantstatus NULL met terugwerkende kracht  */
+/*              |            |        |   aangepast (Mia_hist)                       */
+/*              |            |        | - In afleiding Mia_klant_info JOINen met     */
+/*              |            |        |   Mia_bc_info ipv LEFT OUTER JOIN            */
+/*              |            |        | - In- en uitstroom aangepast                 */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 24-03-2017 |   2.58 | Laatste aanpassingen In- en uitstroom        */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 06-04-2017 |   2.59 | Team IC opgegehaald vanuit NZDB (MIND-1707)  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 11-04-2017 |   2.60 | Org_niveau 3 tm 1 aangepast ivm MIND-1707    */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 17-05-2017 |   2.61 | Afleiding klant_ind IC aangepast:            */
+/*              |            |        | - tijdelijke crossref tabel mi_temp.xref     */
+/*              |            |        | - afleiding xref_ind Mia_bc_info aangepast   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 08-06-2017 |   2.62 | Siebel Financial Profile:                    */
+/*              |            |        | Clientgroep_theoretisch op NULL              */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 15-06-2017 |   2.63 | Mia_sector: bron tijdelijk omgezet van       */
+/*              |            |        | mi_vm_ldm.vSBI_plus_industry_RollUp naar     */
+/*              |            |        | mi_cmb.SBI_plus_industry_rollup              */
+/*              |            |        | mi_temp.xref: afleiding maand_nr aangepast   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 03-07-2017 |   2.64 | Correctie Siebel Verkoopkans_product:        */
+/*              |            |        | afleiding Eind_baten aangepast ivm ongeldige */
+/*              |            |        | einddatum door invullen te grote tenure      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 04-07-2017 |   2.65 | Oude BO structuur verwijderd uit:            */
+/*              |            |        | - Mia_week                                   */
+/*              |            |        | - CIAA_beleggen                              */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 05-07-2017 |   2.66 | Opbouw Mia_alle_bcs aangepast:               */
+/*              |            |        | - koppeling voor ophalen leidend_bc en       */
+/*              |            |        | commerciele entiteit met mi_vm_ldm.aparty    */
+/*              |            |        | - koppeling voor ophalen commerciele groep   */
+/*              |            |        | aangepast naar mi_vm_ldm.party_party_relatie */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 11-07-2017 |   2.67 | 1. Mia_sector: teruggezet naar               */
+/*              |            |        |    mi_vm_ldm.vSBI_plus_industry_RollUp       */
+/*              |            |        | 2. Overgebleven verwijzingen naar oude       */
+/*              |            |        |    org_niveaus verwijderd                    */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 19-07-2017 |   2.68 | Joins met vBO_teams, vBO_Houses en           */
+/*              |            |        | vBO_regio verwijderd                         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 25-07-2017 |   2.69 | Bron subsegment IC aangepast naar            */
+/*              |            |        | mi_vm_ldm.aCommercieel_complex_cb            */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 31-07-2017 |   2.70 | Tijdelijke workaround voor ophalen crossrefs */
+/*              |            |        | verwijderd. Bron omgezet naar vgbc_crossref  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 23-08-2017 |   2.71 | Verwijzingen naar clientgroepen, segmentatie */
+/*              |            |        | en business_lines aangepast naar nieuwe AO   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 06-09-2017 |   2.72 | Aanpassingen                                 */
+/*              |            |        | - Afleiding Benchmark_ind, Uitscoor_ind en   */
+/*              |            |        |   Bedrijfstak_id gewijzigd (Mia_klanten)     */
+/*              |            |        | - COLLECT STATISTICS toegevoegd aan          */
+/*              |            |        |   Mia_klanten ivm CUBe                       */
+/*              |            |        |   (Mia_baten_benchmarken_001)                */
+/*              |            |        | - INSERT-statements Mi_temp.Part_zak_t1_BC   */
+/*              |            |        |   gewijzigd:                                 */
+/*              |            |        |   - klantcomplexen CIB (vml IC) inmiddels    */
+/*              |            |        |     correct in NZDB (vanwege intro Siebel)   */
+/*              |            |        |   - verwijzing naar Business_line =          */
+/*              |            |        |     'Bedrijven'                              */
+/*              |            |        | - In- en uitstroom script gewijzigd:         */
+/*              |            |        |   - Mia_klanten_klantnr_anders (Stap 2E)     */
+/*              |            |        |     Business_line's Retail en PB samenge-    */
+/*              |            |        |     voegd tot R&PB                           */
+/*              |            |        |   - Mi_temp.Mia_klanten_andere_BL (Stap 2F)  */
+/*              |            |        |     Business_line's Retail en PB samenge-    */
+/*              |            |        |     voegd tot R&PB                           */
+/*              |            |        |   - Mi_temp.Mia_migratie_totaal (Stap 3)     */
+/*              |            |        |     ten behoeve van september 2017 rekening  */
+/*              |            |        |     houden met veranderde organisatie        */
+/*              |            |        |     (herkenbaar aan de comment eenmalig)     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 14-09-2017 |   2.73 | correctie afleiding org_niveau3 CIB Mia_week */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 18-09-2017 |   2.74 | COLLECT STATS op Mia_hist_test verwijderd    */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 20-09-2017 |   2.75 | CUBe_Siebel_fin_prof_geleverd :              */
+/*              |            |        |  - filter obv nieuwe benamingen BL en Segment*/
+/*              |            |        |  - NPS anoniem uitsluiten                    */
+/*              |            |        |  - NPS 2016 en recenter meeleveren           */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 20-09-2017 |   2.76 | Wegloopmodel nieuwe benamingen BL en Segment */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 20-09-2017 |   2.77 | CUBe_Siebel_fin_prof: NPS '0' toevoegen      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 10-10-2017 |   2.78 | Opbouw Mi_temp.Mia_alle_bcs naar voren       */
+/*              |            |        | gehaald, ter voorbereiding op nieuwe         */
+/*              |            |        | CST_Member tabel Siebel.                     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 12-10-2017 |   2.79 | Opbouw Siebel_commercieel_complex (OBIE)     */
+/*              |            |        | verwijderd.                                  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 17-10-2017 |   2.80 | Diverse wijzigingen nav metadatadag          */
+/*              |            |        | 1.Mia_week/hist verwijderd:                  */
+/*              |            |        |  - Dashboard_doelgroep                       */
+/*              |            |        |  - Dashboard_subdoelgroep                    */
+/*              |            |        |  - Klantsegment                              */
+/*              |            |        |  - Bedrijfstak_id                            */
+/*              |            |        | 2.Cube_baten_hist gewijzigd:                 */
+/*              |            |        | CBI_baten gewijzigd naar Buitenland_CBI_baten*/
+/*              |            |        | 3.Cube_leadstatus_hist: diverse kolommen     */
+/*              |            |        |   verwijderd                                 */
+/*              |            |        | 4.Opbouw CIAA_Betalen_trx verwijderd         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 18-10-2017 |   2.81 | CIAA_beleggen: subsector_oms ipv             */
+/*              |            |        | bedrijfstak_oms.                             */
+/*              |            |        | Siebel_fin_prof_geleverd: subsector_oms uit  */
+/*              |            |        | Mia_hist en Beoordeeld op "N"                */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 20-10-2017 |   2.82 | - bijzonder beheer obv CIF informatie        */
+/*              |            |        | - aanpassingen nav nieuwe Siebel Cube tabel  */
+/*              |            |        |   Mi_vm_ldm.vOutboundCUBeLead_cb             */
+/*              |            |        | - extra statistics Mia_week                  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 23-10-2017 |   2.83 | Opbouw Siebel_commercieel_complex verwijderd */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 24-10-2017 |   2.84 | Mia_baten_benchmarken_001 JOINS op segment   */
+/*              |            |        | en subsegment verwijderd tbv performance     */
+/*--------------+------------+--------+----------------------------------------------*/
+
+/* BdB          | 06-11-2017 |   2.85 | Workaround Mia_sector: bron tijdelijk        */
+/*              |            |        | gewijzigd naar                               */
+
+/*              |            |        | mi_cmb.SBI_plus_industry_RollUp ivm fout in  */
+
+/*              |            |        | bron                                         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 09-11-2017 |   2.86 | Wijziging bijzonder beheer indicatie         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 15-11-2017 |   2.87 | Tijdelijke workaround Mia_organisatie        */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 22-11-2017 |   2.88 | - Aanpassing tijdelijke workaround           */
+/*              |            |        |   Mia_organisatie                            */
+/*              |            |        | - Aanpassing SQL MI_TEMP.Siebel_Employee_NEW */
+/*              |            |        |   ivm duplicate unique primary key error     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 29-11-2017 |   2.89 | Mia_periode en Mia_sector voortaan opgebouwd */
+/*              |            |        | als permanente tabellen in MI_SAS_AA_MB_C_MB */
+/*              |            |        | Mia_sector inclusief tijdelijkse workaround  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 30-11-2017 |   2.90 | Siebel testtabellen MIND inteface toegevoegd */
+/*              |            |        | ter voorbereiding op afronding migratie      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BdB          | 04-12-2017 |   2.91 | Verwijzigingen mi_temp.mia_periode en        */
+/*              |            |        | mi_temp.mia_sector naar  MI_SAS_AA_MB_C_MB.  */
+/*              |            |        | Mia_periode_NEW en .Mia_sector_NEW           */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 11-12-2017 |   2.92 | Correcties op voorgaande wijziging           */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 11-12-2017 |   2.93 | Toevoegen nieuwe Kleinbedrijf CCA's          */
+/*              |            |        | (53570801, 53572601 en 53572701)             */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 19-01-2018 |   2.94 | Aanpassingen als gevolg van introductie van  */
+/*              |            |        | de segmenten SME® en SME (als vervanging van */
+/*              |            |        | KZ en KB)                                    */
+/*              |            |        | Aanpassingen Siebel: overgang op structurele */
+/*              |            |        | MIND aanlevering (vervolg op wijziging 2.90) */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 25-01-2018 |   2.95 | Herstel contactinformatie in Mia_week en     */
+/*              |            |        | flinke punten op de i bij aanpassingen       */
+/*              |            |        | Siebel (nav wijziging 2.94)                  */
+/*              |            |        | Verwijzing naar 'CBCTCX' verwijderd          */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 29-01-2018 |   2.96 | Laatste aanpassing als gevolg van aanpas-    */
+/*              |            |        | singen Siebel (nav wijziging 2.94)           */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 05-03-2018 |   2.97 | Aanpassingen bijzonder beheer indicatie      */
+/*              |            |        | (nav wijziging 2.86)                         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 20-03-2018 |   2.98 | Vermijden dat KEM gegevens ontbreken agv     */
+/*              |            |        | lege view mi_vm_load.vTWK_3_FACILITEITEN     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 09-04-2018 |   2.99 | Toevoegen gedeelte AHK script tbv rapportage */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SF           | 25-04-2018 |   2.100| Mia_kredieten_hfd vervangen door CIF         */
+/*              |            |        | gevolgen voor complexe producten:            */
+/*              |            |        |   Maatwerk Krediet--> obv NPL indicatie      */
+/*              |            |        |   OBSI limiet --> NIET MEER TE BEPALEN       */
+/*--------------+------------+--------+----------------------------------------------*/
+/* PH           | 24-05-2-18 |   2.101|Mi_vm_load.vCcd_waarde, en de bijbehorende    */
+/*		|            |        |outer join uit mia_week gehaald               */
+/*--------------+------------+--------+----------------------------------------------*/
+/* PH           | 24-05-2-18 |   2.102|CLAN-51: Geo_variabelen test tabel toegevoegd */
+/*--------------+------------+--------+----------------------------------------------*/
+/* PH           | 16-07-2-18 |   2.103|Mi_vm_ldm.vBo_mi_part_zak: bo_nr gewijzigd    */
+/*		|            |	      |naar party_id, plus aliassen toegevoegd.	     */
+/*		|            |	      |bo_nr_regio_mkb, bo_naam_regio_mkb &          */
+/*		|            |	      |bo_naam_regio_part verwijderd en vervangen    */
+/*		|            |        |door null				     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* PH           | 25-07-18   |   2.104|TB_consultant toegevoegd aan mia_alle_bcs en  */
+/*		|	     |	      |mia_business_contacts. Geo_variabelen 	     */
+/*		|	     |        |toegevoegd aan mia_week.	                     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BBO          | 02-10-18   |   2.105|organisatie_niveau0 toegevoegd                */
+/*              |            |        |  + Mia_businesscontacts_NEW toegevoegd       */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VVT          | 15-10-18   |   2.106| Tijdelijke workaround Mia_sector uitgefa-    */
+/*              |            |        | seerd en weer gebaseerd op Mi_vm_ldm         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VVT          | 17-10-18   |   2.107| Format BC_CCA_TB gewijzigd in INTEGER        */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BBO          | 17-10-18   |   2.108| Trust- en franchisecomplex toegevoegd        */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BBO          | 25-10-18   |   2.109| Medewerker_Security                          */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BBO          | 26-10-18   |   2.110| AGRC toegevoegd                              */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BBO          | 31-10-18   |   2.111| AGRC bug gefixed                             */
+/*--------------+------------+--------+----------------------------------------------*/
+/* PH           | 05-11-18   |   2.112| AGRC_MCT bug gefixed                         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BBO          | 12-11-18   |   2.113| AGRC_MCT bug gefixed                         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* PH		| 23-11-18   |   2.114| Medewerkers tabel toegevoegd		     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 04-12-2018 |  2.114 | Aanpassing aan Mi_temp.Mia_bc_info vanwege   */
+/*              |            |        | duplicates: fix in MI_VM_LDM.aparty_gsri     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* PH		| 05-12-2018 |  2.115 | Blockcompression verwijderd	             */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BBO		| 10-12-2018 |  2.116 | Blockcompression toegevoegd                  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BBO		| 10-01-2019 |  2.117 | Aanpassing PB in Mi_temp.Mia_alle_bcs        */
+/*              |            |        |  + Mia_businesscontacts                      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 15-01-2019 |  2.118 | Toevoeging Datum_gegevens aan                */
+/*              |            |        | Mia_businesscontacts                         */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 23-01-2019 |  2.119 | Bug gefixed Mia_businesscontacts             */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 24-01-2019 |  2.120 | Toevoegen Mia_week_PB en aanpassingen aan    */
+/*              |            |        | Mia_week                                     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* PH           | 14-02-2019 |  2.121 | Dagsaldi Toegevoegd                          */
+/*              |            |        | 		                             */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 20-02-2019 |  2.122 | Bugfixes Dagsaldi en Gespreksrapport_id be-  */
+/*              |            |        | schikbaar gemaakt in Siebel_Activiteit       */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BBO          | 25-02-2019 |  2.123 | Ctrack toegevoegd                            */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 25-02-2019 |  2.124 | Bugfixes op de bugfix Dagsaldi               */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BBO          | 28-02-2019 |  2.125 | Vervang LDM Bedrijfsonderdeel door Party_BO  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* SS/VvT       | 28-02-2019 |  2.126 | Dagsaldi Gb uitgebreid met PSC en REC        */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 07-03-2019 |  2.127 | Bugfix op Ctrack: COLLECT STATISTICS AS      */
+/*              |            |        | ST_280212161439_0_CTrack_OpenActions         */
+/*              |            |        | werkt niet op een reeds bestaande tabel      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BBO          | 20-03-2019 |  2.128 | Bugfix Ctrack                                */
+/*--------------+------------+--------+----------------------------------------------*/
+/* PDH          | 01-04-2019 |  2.129 | mi_temp.medewerker_email                     */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 08-04-2019 |  2.130 | Bugfix op Ctrack: voorkomen duplicate error  */
+/*              |            |        | MI_SAS_AA_MB_C_MB.CTrack_Portfolio_Hist_NEW  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 10-04-2019 |  2.131 | Scripts CIB klantbeeld toegevoegd en         */
+/*              |            |        | COMMENT-statements aangepast                 */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 15-04-2019 |  2.132 | Bugfix op CIB klantbeeld: statistics op      */
+/*              |            |        | MI_TB tabellen voorlopig naar script 1a      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 16-04-2019 |  2.133 | Nieuwe tabel Siebel_Activiteit_TB_revisies   */
+/*              |            |        | en wijziging afleiding in Mia_week(_pb)      */
+/*--------------+------------+--------+----------------------------------------------*/
+/* PDH          | 01-04-2019 |  2.134 | Revisie 2.129 aangepast naar mi_sas + _NEW   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* BBO          | 02-05-2019 |  2.135 | Aanpassing cib_klantbeeld_klanten_NEW        */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 09-05-2019 |  2.136 | Dagsaldi tabellen verwijderd                 */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 12-05-2019 |  2.137 | Org_niveau's in Mia_week_PB aangevuld        */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 05-06-2019 |  2.138 | Wijziging in CIB klantbeeld:                 */
+/*              |            |        | - mi_sas_aa_mb_c_mb.cib_klantbeeld_lnd       */
+/*              |            |        | - MI_SAS_AA_MB_C_MB.cib_klantbeeld_gmo       */
+/*              |            |        | - mi_sas_aa_mb_c_mb.cib_klantbeeld_dpc       */
+/*              |            |        | - mi_sas_aa_mb_c_mb.cib_klantbeeld_dpo       */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 13-06-2019 |  2.139 | - Workaround tbv segmentomschrijvingen       */
+/*              |            |        |   MI_TEMP.aSegment                           */
+/*              |            |        | - Kolom Producten2 toegevoegd                */
+/*              |            |        |   Siebel_Verkoopkans_Product                 */
+/*              |            |        | - Zakelijk-Particuliere koppelingen          */
+/*              |            |        |   verwijderd (CIAA_Part_zak)                 */
+/*              |            |        | - Internationaal indicatie verwijderd        */
+/*              |            |        |   (Mi_temp.Internationale)                   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 05-07-2019 |  2.140 | - Workaround tbv segmentomschrijvingen       */
+/*              |            |        |   MI_TEMP.aSegment aangepast                 */
+/*--------------+------------+--------+----------------------------------------------*/
+/* PDH          | 12-07-2019 |  2.141 | Siebel kolommen toegevoegd aan               */
+/*              |            |        | MI_SAS_AA_MB_C_MB.Siebel_Activiteit          */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 24-07-2019 |  2.142 | 5 nieuwe cib_klantbeeld tabellen en          */
+/*              |            |        | Productboom_rationalisatie tabel toegevoegd  */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 25-07-2019 |  2.143 | Tabellen Bedrijfstype en Gekoppelde_personen */
+/*              |            |        | toegevoegd                                   */
+/*--------------+------------+--------+----------------------------------------------*/
+/* VvT          | 25-07-2019 |  2.144 | - Workaround tbv segmentomschrijvingen       */
+/*              |            |        |   MI_TEMP.aSegment aangepast                 */
+/*--------------+------------+--------+----------------------------------------------*/
+/*************************************************************************************/
+
+
+/*
+   1. Opbouw Mia_week
+   2. Wegloopmodel
+   3. CUBe Baten en stoplichten
+   4. Advanced Analytics
+   5. Zakelijk-Particuliere koppelingen --VERWIJDERD--
+   6. Beleggen
+   7. Kredieten         --VERWIJDERD--
+   8. KTV YBC Bedrijven --VERWIJDERD--
+   9. KEM pijplijn
+  10. Opbouw Siebel CRM
+  11. In- en uitstroom
+  12. Siebel Financial Profile
+  13. Siebel test tabellen MIND interface
 */
 
+
+
+/* CommentString toevoegen aan Mi_cmb tabellen welke worden gebruikt in het CIAA schedule */
+COMMENT ON Mi_cmb.Producten                     AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2010_product            AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2011_product            AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2012_product            AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2013_product            AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2014_product            AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2015_product            AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2016_product            AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2017_product            AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2018_product            AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2019_product            AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2010                    AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2011                    AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2012                    AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2013                    AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2014                    AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2015                    AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2016                    AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2017                    AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2018                    AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_2019                    AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.Baten_product                 AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.baten_product_12mnd           AS 'NIET VERWIJDEREN - Zelf ontsloten brontabel in schedulescript';
+COMMENT ON Mi_cmb.LU_Complexe_producten         AS 'NIET VERWIJDEREN - Stuurtabel in schedulescript';
+COMMENT ON Mi_cmb.Tb_offers                     AS 'NIET VERWIJDEREN - wordt gebruikt in CIAA schedule';
+COMMENT ON Mi_cmb.Sni                           AS 'NIET VERWIJDEREN - wordt gebruikt in CIAA schedule';
+COMMENT ON Mi_cmb.Snu                           AS 'NIET VERWIJDEREN - wordt gebruikt in CIAA schedule';
+COMMENT ON Mi_cmb.CUBe_collector_datum          AS 'NIET VERWIJDEREN - wordt gebruikt in CIAA schedule';
+COMMENT ON Mi_cmb.mia_markets_lnd_verkoopkansen AS 'NIET VERWIJDEREN - wordt gebruikt in CIAA schedule';
+COMMENT ON Mi_cmb.CUBe_leads_hist               AS 'NIET VERWIJDEREN - Afdelingstabel in schedulescript (CUBe)';
+COMMENT ON Mi_cmb.CUBe_RM_oordeel               AS 'NIET VERWIJDEREN - wordt gebruikt in CIAA schedule';
+COMMENT ON Mi_cmb.CUBe_leadstatus_hist          AS 'NIET VERWIJDEREN - Afdelingstabel in schedulescript (CUBe)';
+COMMENT ON Mi_cmb.Model_tabel_cmb               AS 'NIET VERWIJDEREN - wordt gebruikt in CIAA schedule tbv Mi_sas_aa_c_mb.tModel_c_mb';
+
+/*Blockcompressie aan*/
+SET QUERY_BAND = 'BLOCKCOMPRESSION=YES;' FOR SESSION;
+
+
+/*************************************************************************************
+
+    Opbouw Tabel met draaidatum tbv. uiteindelijke uitscoren
+
+*************************************************************************************/
+
+/* aanmaken tabel met datum van vandaag. Deze datum wordt gebruikt voor datum to be used en de score datum zodat deze dezelfde zijn
+    ,zelfs als verschillend process stappen niet op dezelfde dag draaien
+*/
+
+CREATE SET TABLE MI_TEMP.AACMB_Datum ,NO FALLBACK ,
+     NO BEFORE JOURNAL,
+     NO AFTER JOURNAL,
+     CHECKSUM = DEFAULT,
+     DEFAULT MERGEBLOCKRATIO
+     (
+      Draai_Datum DATE FORMAT 'yyyy-mm-dd')
+UNIQUE PRIMARY INDEX ( Draai_Datum );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
 INSERT INTO MI_TEMP.AACMB_Datum
-AS
 VALUES
     (
   CURRENT_DATE
     )
 ;
 
-CREATE TABLE Mi_temp.BC_bijzonder_beheer_ind AS
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+COLLECT STATISTICS ON MI_TEMP.AACMB_Datum INDEX (Draai_Datum);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/*************************************************************************************
+
+   1. Opbouw Mia_week
+
+*************************************************************************************/
+
+/*-------------------------------------------------------------*/
+/* STUURTABELLEN                                               */
+/*                                                             */
+/* Al bestaande tabellen:                                      */
+/* Mi_analyse.CUBe_productdetail                               */
+/* Mi_analyse.CUBe_producten                                   */
+/* Mi_analyse.CUBe_bedrijfstakken                              */
+/* Mi_analyse.CUBe_correctiefactor                             */
+/*-------------------------------------------------------------*/
+
+
+/*************************************************************************************
+
+    BASIS SET tabel Mia_periode
+
+*************************************************************************************/
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.Mia_periode_NEW
+AS (
+SELECT B.Maand_nr,
+       D.Datum_gegevens,
+       A.Maand AS Maand_nr_laatste_finance,
+       E.Maand_L12 AS Maand_begin_jaar_ervoor,
+       A.Maand_L12 AS Maand_begin_jaar,
+       A.Maand AS Maand_einde_jaar,
+       NULL /* Mi_analyse.CUBe_collector_datum.DateLastModified in script 05 */ AS Datum_leads,
+       EXTRACT(YEAR FROM ADD_MONTHS(C.Maand_startdatum, -1))*100 + EXTRACT(MONTH FROM ADD_MONTHS(C.Maand_startdatum, -1)) AS Maand_nr_vm1,
+       EXTRACT(YEAR FROM ADD_MONTHS(C.Maand_startdatum, -2))*100 + EXTRACT(MONTH FROM ADD_MONTHS(C.Maand_startdatum, -2)) AS Maand_nr_vm2,
+       EXTRACT(YEAR FROM ADD_MONTHS(C.Maand_startdatum, -3))*100 + EXTRACT(MONTH FROM ADD_MONTHS(C.Maand_startdatum, -3)) AS Maand_nr_vm3,
+       1 AS Lopende_maand_ind
+  FROM Mi_vm_nzdb.vLu_maand A
+  JOIN Mi_vm_nzdb.vLu_maand_runs B
+    ON 1 = 1 AND B.Lopende_maand_ind = 1
+  JOIN Mi_vm_nzdb.vLu_maand C
+    ON B.Maand_nr = C.Maand
+  JOIN (SELECT XA.Maand_nr,
+               XA.CC_Samenvattings_datum-1 AS Datum_gegevens
+          FROM Mi_vm_nzdb.vCommercieel_cluster XA
+          JOIN Mi_vm_nzdb.vLU_Maand_Runs XX
+            ON XA.Maand_nr = XX.Maand_nr AND XX.Lopende_maand_ind = 1
+         GROUP BY 1, 2) AS D
+    ON B.Maand_nr = D.Maand_nr
+  JOIN Mi_vm_nzdb.vLu_maand E
+    ON A.Maand_L12 = E.Maand
+ WHERE A.Maand IN (SELECT MAX(X.Maand_nr) FROM Mi_cmb.Producten X)
+ ) WITH DATA
+UNIQUE PRIMARY INDEX ( Maand_nr )
+INDEX ( Maand_begin_jaar_ervoor )
+INDEX ( Maand_begin_jaar )
+INDEX ( Maand_einde_jaar );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_periode_NEW COLUMN (PARTITION);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_periode_NEW COLUMN (Maand_nr, Datum_gegevens);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+CREATE TABLE Mi_temp.BC_bijzonder_beheer_ind
+AS
 (
 SEL
      a.Bc_nr (INTEGER) AS Bc_nr
@@ -41,11 +1105,12 @@ FROM ( -- faciliteiten
 
       UNION
 
+       -- Drawings
       SEL
            c.Draw_Bc_nr (INTEGER) AS Bc_nr
           ,MAX(CASE WHEN b.Bijzonder_beheer_type LIKE '%Lindorff%' THEN 1 ELSE 2 END) AS Ind_soort_bijz_beheer
       FROM
-        (
+           (    -- actieve Master faciliteiten met OOE ongelijk aan €0,- waarbij minimaal 1 onderliggende actieve faciliteit onder bijzonder beheer valt
             SEL
                  Master_faciliteit_ID
                 ,Maand_nr
@@ -75,6 +1140,52 @@ GROUP BY 1
 ) WITH DATA
 UNIQUE PRIMARY INDEX (Bc_nr)
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS Mi_temp.BC_bijzonder_beheer_ind COLUMN (BC_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.Mia_bc_info
+      (
+       Klant_nr INTEGER,
+       Business_contact_nr DECIMAL(12,0),
+       Koppeling_id_CC CHAR(15),
+       Koppeling_id_CE CHAR(15),
+       Koppeling_id_CG CHAR(15),
+       Deelnemer_rol BYTEINT,
+       Clientgroep CHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Crg BYTEINT,
+       Bo_nr INTEGER,
+       Bo_bu_code CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bo_bu_decode_mi VARCHAR(60) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Validatieniveau BYTEINT,
+       Cca INTEGER,
+       Cca_bu_code CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Cca_bu_decode VARCHAR(60) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Relatiecategorie SMALLINT,
+       Verschijningsvorm SMALLINT,
+       DB_ind BYTEINT,
+       Solveon_ind BYTEINT,
+       FRenR_ind BYTEINT,
+       Surseance_ind BYTEINT,
+       Faillissement_ind BYTEINT,
+       Leidend_bc_ind BYTEINT,
+       In_nzdb BYTEINT,
+       Xref_ind BYTEINT,
+       CMS_ind BYTEINT,
+       GSRI_goedgekeurd VARCHAR(8) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('High','Low','Medium'),
+       GSRI_goedgekeurd_lvl BYTEINT,
+       GSRI_Assessment_resultaat VARCHAR(9) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('ABOVE PAR','ON PAR','BELOW PAR'),
+       GSRI_Assessment_resultaat_lvl BYTEINT
+     )
+UNIQUE PRIMARY INDEX ( Klant_nr, Business_contact_nr )
+INDEX ( Klant_nr )
+INDEX ( Business_contact_nr )
+INDEX ( Bo_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_bc_info
 SELECT A.Gerelateerd_party_id AS Klant_nr,
@@ -185,12 +1296,16 @@ SELECT A.Gerelateerd_party_id AS Klant_nr,
     ON A.Party_id = I.Party_id
   LEFT OUTER JOIN Mi_vm_ldm.vBo_mi_part_zak J
     ON D.Gerelateerd_party_id = J.Party_id
+
+/* Bijzonder_beheer obv Fiatterende Instantie: BC met contract binnen kredietcomplex met FI Lindorff of FR&R */
   LEFT OUTER JOIN Mi_temp.BC_bijzonder_beheer_ind K
     ON K.Bc_nr = A.Party_id
 
   LEFT OUTER JOIN  mi_vm_ldm.aExterne_Organisatie L
     ON A.party_id = L.party_id
    AND A.party_sleutel_type = L.party_sleutel_type
+
+/* Ophalen Koppeling_ID Commerciele Entiteit */
   LEFT OUTER JOIN (SELECT XA.Party_id,
                           XA.koppeling_id,
                           MAX(CASE WHEN XA.Party_deelnemer_rol = 1 THEN 1 ELSE NULL END) AS Party_deelnemer_rol
@@ -200,6 +1315,8 @@ SELECT A.Gerelateerd_party_id AS Klant_nr,
                  QUALIFY RANK() OVER (PARTITION BY XA.Party_id ORDER BY XA.Koppeling_id) = 1
                    GROUP BY 1,2) AS M
     ON A.Party_id = M.Party_id
+
+/* Ophalen Koppeling_ID Commerciele Groep */
   LEFT OUTER JOIN (SELECT XA.Party_id,
                           XA.koppeling_id,
                           MAX(CASE WHEN XA.Party_deelnemer_rol = 1 THEN 1 ELSE NULL END) AS Party_deelnemer_rol
@@ -209,6 +1326,9 @@ SELECT A.Gerelateerd_party_id AS Klant_nr,
                  QUALIFY RANK() OVER (PARTITION BY XA.Party_id ORDER BY XA.Koppeling_id) = 1
                    GROUP BY 1,2) AS N
     ON A.Gerelateerd_party_id = N.Party_id
+
+-- Check op Cross-refs
+
   LEFT OUTER JOIN  (SELECT party_id, 1 AS xref_ind
                FROM mi_vm_NZDB.vGBC_CROSSREF
                WHERE maand_nr = (SEL maand_nr FROM MI_SAS_AA_MB_C_MB.Mia_periode_NEW)
@@ -216,6 +1336,9 @@ SELECT A.Gerelateerd_party_id AS Klant_nr,
                AND party_sleutel_type = 'BC'
                GROUP BY 1,2) O
     ON A.Party_id = O.party_id
+
+/* Check op CMS transacties */
+
    LEFT OUTER JOIN (SEL bc_nr, MAX(
                     CASE WHEN product_group_code = 'FXO' AND ZEROIFNULL(margin) <> 0 THEN 1
                     WHEN product_group_code <> 'FXO' AND product_group_code IS NOT NULL THEN 1
@@ -226,6 +1349,9 @@ SELECT A.Gerelateerd_party_id AS Klant_nr,
 
                 GROUP BY 1) P
     ON A.Party_id = P.bc_nr
+
+  /* GSRI informatie uit FAIR */
+
   LEFT JOIN
         (SELECT  Party_id
         ,CASE WHEN LENGTH(TRIM(Party_GSRI_goedgekeurd)) = 0 THEN NULL
@@ -243,9 +1369,45 @@ SELECT A.Gerelateerd_party_id AS Klant_nr,
         FROM MI_VM_LDM.aparty_gsri
      QUALIFY RANK() OVER (PARTITION BY Party_id ORDER BY Party_gsri_SDAT DESC, Gsri_expiratie_datum DESC) = 1) Q
     ON A.Party_id = Q.Party_id
+
  WHERE A.Party_sleutel_type = 'bc'
    AND A.Party_relatie_type_code = 'CBCTCC'
 QUALIFY RANK() OVER (PARTITION BY A.Party_id ORDER BY A.Party_party_relatie_sdat DESC, A.Koppeling_id) = 1;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_bc_info COLUMN ( IN_NZDB );
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_periode_NEW COLUMN ( Lopende_maand_ind);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+CREATE TABLE Mi_temp.Mia_klant_info
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Datum_gegevens DATE FORMAT 'YYYYMMDD',
+       Clientgroep CHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Business_line VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Klantstatus CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Klant_ind BYTEINT,
+       Aantal_bcs INTEGER,
+       Aantal_bcs_in_scope INTEGER,
+       Bijzonder_beheer_ind BYTEINT,
+       Surseance_ind BYTEINT,
+       Faillissement_ind BYTEINT,
+       GSRI_goedgekeurd_lvl BYTEINT,
+       GSRI_Assessment_resultaat_lvl BYTEINT,
+       Leidend_bc_ind BYTEINT,
+       Leidend_bc_nr DECIMAL(12,0),
+       Cca INTEGER
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_klant_info
 SELECT A.Cc_nr AS Klant_nr,
@@ -297,6 +1459,35 @@ SELECT A.Cc_nr AS Klant_nr,
   LEFT OUTER JOIN MI_SAS_AA_MB_C_MB.CGC_BASIS E
     ON A.Cc_client_groep_code = E.Clientgroep;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_bc_info COLUMN CLIENTGROEP;
+COLLECT STATISTICS Mi_temp.Mia_bc_info COLUMN (IN_NZDB);
+COLLECT STATISTICS Mi_temp.Mia_klant_info COLUMN (CLIENTGROEP);
+COLLECT STATISTICS Mi_temp.Mia_klant_info COLUMN (BUSINESS_LINE);
+COLLECT STATISTICS Mi_temp.Mia_klant_info COLUMN (KLANTSTATUS,KLANT_IND);
+COLLECT STATISTICS Mi_temp.Mia_klant_info COLUMN (KLANT_NR, MAAND_NR);
+COLLECT STATISTICS Mi_temp.Mia_klant_info COLUMN (KLANT_NR);
+COLLECT STATISTICS Mi_temp.Mia_klant_info COLUMN CCA;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.Mia_klantkoppelingen
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Business_contact_nr DECIMAL(12,0),
+       Koppeling_id_CC CHAR(15),
+       Koppeling_id_CE CHAR(15),
+       Volgorde INTEGER
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr, Business_contact_nr )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr )
+INDEX ( Business_contact_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.Mia_klantkoppelingen
 SELECT A.Klant_nr,
        A.Maand_nr,
@@ -312,6 +1503,50 @@ SELECT A.Klant_nr,
     ON A.Klant_nr = B.Klant_nr
    AND B.In_nzdb = 1
  GROUP BY 1, 2;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_klantkoppelingen COLUMN (KLANT_NR, MAAND_NR);
+COLLECT STATISTICS Mi_temp.Mia_klantkoppelingen COLUMN (KLANT_NR);
+COLLECT STATISTICS Mi_temp.Mia_klantkoppelingen COLUMN VOLGORDE;
+COLLECT STATISTICS Mi_cmb.Baten_2010_product COLUMN (Banktype, Party_sleutel_type, Party_id, Maand_nr);
+COLLECT STATISTICS Mi_cmb.Baten_2011_product COLUMN (Banktype, Party_sleutel_type, Party_id, Maand_nr);
+COLLECT STATISTICS Mi_cmb.Baten_2012_product COLUMN (Banktype, Party_sleutel_type, Party_id, Maand_nr);
+COLLECT STATISTICS mi_cmb.baten_2013_product COLUMN (Banktype, Party_sleutel_type, Party_id, Maand_nr);
+COLLECT STATISTICS mi_cmb.baten_2014_product COLUMN (Banktype, Party_sleutel_type, Party_id, Maand_nr);
+COLLECT STATISTICS mi_cmb.baten_2015_product COLUMN (Banktype, Party_sleutel_type, Party_id, Maand_nr);
+COLLECT STATISTICS mi_cmb.baten_2016_product COLUMN (Banktype, Party_sleutel_type, Party_id, Maand_nr);
+COLLECT STATISTICS mi_cmb.baten_2017_product COLUMN (Banktype, Party_sleutel_type, Party_id, Maand_nr);
+COLLECT STATISTICS mi_cmb.baten_product_2010_12mnd COLUMN (PARTY_SLEUTEL_TYPE,MAAND_NR);
+COLLECT STATISTICS mi_cmb.baten_product_2011_12mnd COLUMN (PARTY_SLEUTEL_TYPE,MAAND_NR);
+COLLECT STATISTICS mi_cmb.baten_product_2012_12mnd COLUMN (PARTY_SLEUTEL_TYPE,MAAND_NR);
+COLLECT STATISTICS mi_cmb.baten_product_2013_12mnd COLUMN (PARTY_SLEUTEL_TYPE,MAAND_NR);
+COLLECT STATISTICS mi_cmb.baten_product_2014_12mnd COLUMN (PARTY_SLEUTEL_TYPE,MAAND_NR);
+COLLECT STATISTICS mi_cmb.baten_product_2015_12mnd COLUMN (PARTY_SLEUTEL_TYPE,MAAND_NR);
+COLLECT STATISTICS mi_cmb.baten_product_2016_12mnd COLUMN (PARTY_SLEUTEL_TYPE,MAAND_NR);
+COLLECT STATISTICS mi_cmb.baten_product_2017_12mnd COLUMN (PARTY_SLEUTEL_TYPE,MAAND_NR);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS COLUMN (LEIDEND_BC_IND ,IN_NZDB ,KLANT_NR) ON Mi_temp.Mia_bc_info;
+COLLECT STATISTICS COLUMN (LEIDEND_BC_IND ,IN_NZDB) ON Mi_temp.Mia_bc_info;
+COLLECT STATISTICS COLUMN (KLANT_NR) ON Mi_temp.Mia_bc_info;
+COLLECT STATISTICS COLUMN (LEIDEND_BC_IND) ON Mi_temp.Mia_bc_info;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.Mia_groepkoppelingen
+     (
+      Groep_nr INTEGER,
+      Maand_nr INTEGER,
+      Klant_nr INTEGER,
+      Leidende_klant_ind BYTEINT,
+      Koppeling_id_CC CHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL,
+      Koppeling_id_CG CHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL
+     )
+UNIQUE PRIMARY INDEX ( Groep_nr, Maand_nr, Klant_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_groepkoppelingen
 SELECT
@@ -338,6 +1573,134 @@ LEFT OUTER JOIN Mi_temp.Mia_bc_info C
    ON A.Party_id = C.Klant_nr
    AND C.In_nzdb = 1
    AND C.Leidend_bc_ind = 1;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*************************************************************************************
+
+    BEGIN TIJDELIJKE WORKAROUND SEGMENT
+
+*************************************************************************************/
+
+CREATE TABLE MI_TEMP.aSegment
+      (
+       Segment_Id VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC NOT NULL,
+       Segment_Type_Code CHAR(6) CHARACTER SET LATIN NOT CASESPECIFIC NOT NULL,
+       Segment_Type_Volgnr SMALLINT NOT NULL,
+       Segment_SDAT DATE FORMAT 'YYYY/MM/DD' NOT NULL,
+       Segment_Oms VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC NOT NULL,
+       Creatie_Datum DATE FORMAT 'YYYY/MM/DD' COMPRESS ,
+       Segment_EDAT DATE FORMAT 'YYYY/MM/DD' COMPRESS
+      )
+UNIQUE PRIMARY INDEX ( Segment_Id, Segment_Type_Code );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+INSERT INTO MI_TEMP.aSegment
+SELECT COALESCE(B.Segment_Id, A.Segment_Id),
+       COALESCE(B.Segment_Type_Code, A.Segment_Type_Code),
+       COALESCE(B.Segment_Type_Volgnr, A.Segment_Type_Volgnr),
+       COALESCE(B.Segment_SDAT, A.Segment_SDAT),
+       COALESCE(B.Segment_Oms, A.Segment_Oms),
+       COALESCE(B.Creatie_Datum, A.Creatie_Datum),
+       COALESCE(B.Segment_EDAT, A.Segment_EDAT)
+  FROM MI_SAS_AA_MB_C_MB.aSegment A
+  FULL OUTER JOIN (SELECT XA.*
+                     FROM Mi_vm_ldm.aSegment XA
+                    WHERE XA.Segment_id NE '   1'
+                      AND XA.Segment_type_code NE 'CGA'
+                  QUALIFY RANK () OVER (PARTITION BY XA.Segment_type_code ORDER BY COALESCE(XA.Segment_EDAT, (1991231 (DATE))) DESC) = 1) AS B
+    ON A.Segment_type_code = B.Segment_type_code
+   AND A.Segment_id = B.Segment_id
+   AND A.Segment_id NE '   1'
+   AND ((A.Segment_EDAT = B.Segment_EDAT) OR (A.Segment_EDAT IS NULL AND B.Segment_EDAT IS NULL));
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*************************************************************************************
+
+    EINDE TIJDELIJKE WORKAROUND SEGMENT
+
+*************************************************************************************/
+
+CREATE TABLE Mi_temp.Mia_alle_bcs
+      (
+       Business_contact_nr DECIMAL(12,0),
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Bc_naam VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Bc_startdatum DATE FORMAT 'YYYYMMDD',
+       Bc_clientgroep CHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_crg BYTEINT,
+       Bc_bo_nr INTEGER,
+       Bc_bo_naam VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Bc_bo_bu_code CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_bo_bu_decode VARCHAR(60) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_validatieniveau BYTEINT,
+       Bc_cca_am INTEGER,
+       Bc_cca_rm INTEGER,
+       Bc_cca_am_bu_code CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_cca_am_bu_decode VARCHAR(60) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_cca_rm_bu_code CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_cca_rm_bu_decode VARCHAR(60) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_cca_pb INTEGER,
+       Bc_relatiecategorie SMALLINT,
+       Bc_verschijningsvorm SMALLINT,
+       Bc_kvk_nr CHAR(12),
+       Bc_postcode CHAR(6),
+       Bc_sbi_code_bcdb CHAR(6) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_sbi_code_kvk CHAR(6) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_contracten BYTEINT,
+       Bc_klantlevenscyclus VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('ACTIVE', 'DECLINED (FOR FUTURE USE)', 'DORMANT (FOR FUTURE USE)', 'FORMER', 'POTENTIAL (FOR FUTURE USE)', 'PROSPECTIVE', 'REJECTED'),
+       Leidend_bc_ind BYTEINT,
+       Leidend_bc_pb_ind BYTEINT,
+       Cc_nr INTEGER,
+       Koppeling_id_CC CHAR(15),
+       Koppeling_id_CE CHAR(15),
+       Koppeling_id_CG CHAR(15),
+       Fhh_nr INTEGER,
+       Pcnl_nr INTEGER,
+       Bc_Lindorff_ind BYTEINT,
+       Bc_FRenR_ind BYTEINT,
+       Bc_in_nzdb BYTEINT,
+       DB_ind BYTEINT,
+       RBS_ind BYTEINT,
+       Bc_SEC_US_Person_ind BYTEINT COMPRESS (1,0,NULL),
+       Bc_SEC_US_Person_oms VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('Geen SEC US Person','SEC US Person - Counterparties', 'SEC          US Person - U.S. Instituti','Geen SEC US Person - Accredite','Niet gereviewed op SEC US Pers',' Geen SEC US Person - Represent','SEC          US Person'),
+       Bc_FATCA_US_Person_ind BYTEINT COMPRESS (1,0, NULL),
+       Bc_FATCA_US_Person_class VARCHAR(46) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('Subject to Tax in US', 'P-NFFE', 'IGA_FFI', 'To be determined', 'NFFE', 'E-NFFE', 'Recalcitrant (applicable for Entities as well)', 'US', 'FFI', 'Not Subject to Tax in US'),
+       Bc_ringfence VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('Alleen Maat / Vennoot (ihkv VVB review)', 'Alleen Swift Key relatie', 'Alleen T24 relatie',
+                                                                               'Garantsteller/ov. betrokkene (ikv VVB)', 'Geen nieuwe diensten - zie E-archief', 'Integriteitsgevoelig.',
+                                                                               'klant afgewezen, zie klantbeeld', 'klant in faillissement / in surseance', 'Klant Levenscyclus Status Former',
+                                                                               'Klantacceptatie niet volledig doorlopen', 'Landenbeleid restrictie afzet producten',
+                                                                               'landenbeleid verbod op afzet producten', 'Rechtspersoon zonder actieve producten'),
+       Bc_Risico_score VARCHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('00'),
+       BC_Risico_klasse_oms VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_WtClas VARCHAR(16) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('Non Professional', 'Professional', 'ECP'),
+       Bc_AAClas VARCHAR(16) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('Non Professional', 'Professional', 'ECP'),
+       Bc_Rente_drv VARCHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_Comm_drv VARCHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_Valuta_drv VARCHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_Overig_cms VARCHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+       BC_GSRI_goedgekeurd CHAR(8) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('High', 'Medium', 'Low'),
+       BC_GSRI_Assessment_resultaat CHAR (10) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('ABOVE PAR', 'BELOW PAR'),
+       BC_GBC_nr DECIMAL(12,0),
+       BC_GBC_Naam VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       BC_ULP_nr DECIMAL(12,0),
+       BC_ULP_Naam VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       BC_CCA_TB INTEGER,
+       BC_CCA_TB_NAAM VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       BC_CCA_TB_TEAM VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Trust_complex_nr DECIMAL(12,0),
+       Franchise_complex_nr DECIMAL(12,0)
+      )
+UNIQUE PRIMARY INDEX ( Business_contact_nr, Klant_nr, Maand_nr )
+INDEX ( Business_contact_nr )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr )
+INDEX ( Bc_bo_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_alle_bcs
 SELECT X.Party_id AS Business_contact_nr,
@@ -368,8 +1731,8 @@ SELECT X.Party_id AS Business_contact_nr,
        CASE WHEN O.Aantal_rekeningen > 0 THEN 1 ELSE 0 END AS Bc_contracten,
        AJ.Segment_oms AS Bc_klantlevenscyclus,
        CASE WHEN T.Party_deelnemer_rol = 1 THEN 1 ELSE 0 END AS Leidend_bc_ind,
-      CASE WHEN AP.Party_deelnemer_rol = 1 THEN 1 ELSE 0 END AS Leidend_bc_pb_ind ,
-	   A.Cc_nr,
+       CASE WHEN AP.Party_deelnemer_rol = 1 THEN 1 ELSE 0 END AS Leidend_bc_pb_ind ,
+       A.Cc_nr,
        T.Koppeling_id AS Koppeling_id_CC,
        Y.Koppeling_id AS Koppeling_id_CE,
        Z.Koppeling_id AS Koppeling_id_CG,
@@ -380,45 +1743,56 @@ SELECT X.Party_id AS Business_contact_nr,
        CASE WHEN I.Party_id IS NOT NULL THEN 1 ELSE 0 END AS Bc_in_nzdb,
        CASE WHEN J.Bu_code IN ('1R', '1C') THEN 1 ELSE 0 END AS DB_ind,
        CASE WHEN M.Naam =  'RBS_KLANT' THEN 1 ELSE 0 END AS RBS_ind,
+-- US Persons
        CASE
        WHEN U.Segment_Id  IN ('02','03','06','07') THEN 0
        WHEN U.Segment_Id  IN ('01','04','05') THEN 1
-       ELSE NULL END AS Bc_SEC_US_Person_ind,
+       ELSE NULL
+       END AS Bc_SEC_US_Person_ind,
        TRIM(V.Segment_Oms) AS Bc_SEC_US_Person_oms,
+-- FATCA
        CASE
        WHEN AG.fatca_status_code_party_oms IS NULL THEN 0
        WHEN AG.fatca_status_code_party = '09' THEN 0
-       ELSE 1 END AS Bc_FATCA_US_Person_ind,
+       ELSE 1
+       END AS Bc_FATCA_US_Person_ind,
        TRIM(AG.fatca_status_code_party_oms) AS Bc_FATCA_US_Person_class,
+-- Ringfence
+       AK.Segment_oms AS Bc_ringfence,
+-- Risico score
        W.Klant_risico_score AS Bc_Risico_score,
-	CASE
-	WHEN lower(Bc_Risico_score) = '?' then 'Risicomodel niet nodig'
-        WHEN lower(Bc_Risico_score) = '00' then 'Geen hit'
-        WHEN lower(Bc_Risico_score) is null then 'Leeg'
-        WHEN lower(Bc_Risico_score) in ('2c','1c') then 'Neutraal risico'
-        WHEN lower(Bc_Risico_score) in ('1b','2b','3b','4b','5b','9b')  then 'Verhoogd risico'
-        WHEN lower(Bc_Risico_score) in ('1a','2a','10','20') then 'Onacceptabel risico'
-        ELSE 'CHECK'
-    	END AS BC_Risico_klasse_oms,
+       CASE
+       WHEN lower(Bc_Risico_score) = '?' then 'Risicomodel niet nodig'
+       WHEN lower(Bc_Risico_score) = '00' then 'Geen hit'
+       WHEN lower(Bc_Risico_score) is null then 'Leeg'
+       WHEN lower(Bc_Risico_score) in ('2c','1c') then 'Neutraal risico'
+       WHEN lower(Bc_Risico_score) in ('1b','2b','3b','4b','5b','9b')  then 'Verhoogd risico'
+       WHEN lower(Bc_Risico_score) in ('1a','2a','10','20') then 'Onacceptabel risico'
+       ELSE 'CHECK'
+       END AS BC_Risico_klasse_oms,
+-- Fitness test Mifid
        AA.Segment_oms AS Bc_WtClas,
        AB.Segment_oms AS Bc_AAClas,
        CASE WHEN TRIM(AD.Segment_oms) = 'Geen' THEN 'No' ELSE  SUBSTR(AD.Segment_oms,11,1) END AS Bc_Rente_drv,
        CASE WHEN TRIM(AC.Segment_oms) = 'Geen' THEN 'No' ELSE  SUBSTR(AC.Segment_oms,11,1) END AS Bc_Comm_drv,
        CASE WHEN TRIM(AE.Segment_oms) = 'Geen' THEN 'No' ELSE  SUBSTR(AE.Segment_oms,11,1) END AS Bc_Valuta_drv,
        CASE
-       WHEN  AF.Segment_oms IS NULL THEN NULL
-       WHEN SUBSTR(AF.Segment_oms,1,4) = 'Geen' THEN 'N' ELSE  'Y' END AS Bc_Overig_cms,
+       WHEN AF.Segment_oms IS NULL THEN NULL
+       WHEN SUBSTR(AF.Segment_oms,1,4) = 'Geen' THEN 'N' ELSE  'Y' END
+       AS Bc_Overig_cms,
+-- GSRI FAIR
        AH.BC_GSRI_Goedgekeurd AS BC_GSRI_Goedgekeurd, --tijdelijk op NULL ivm foutieve informatie LDM
        AH.BC_GSRI_Assessment_resultaat AS BC_GSRI_Assessment_resultaat, --tijdelijk op NULL ivm foutieve informatie LDM
        AI.GBC_nr AS BC_GBC_nr,
        AI.GBC_Naam AS BC_GBC_Naam,
        AI.ULP_BC_nr AS BC_ULP_nr,
        AI.ULP_Naam AS BC_ULP_Naam,
-			 AL.CCA as BC_CCA_TB,
-			 CASE WHEN AM.Naam IS NULL OR AM.Naam = '' THEN 'Geen naam'
-            ELSE ((CASE WHEN TRIM(AM.Voorletters) LIKE ANY ('', '-') THEN '' ELSE TRIM(AM.Voorletters)||' ' END)||
-                  (CASE WHEN TRIM(AM.Voorvoegsels) = '' THEN '' ELSE TRIM(AM.Voorvoegsels)||' ' END)|| TRIM(AM.Naam))
-            END AS BC_CCA_TB_NAAM,
+       AL.CCA as BC_CCA_TB,
+       CASE
+       WHEN AM.Naam IS NULL OR AM.Naam = '' THEN 'Geen naam'
+       ELSE ((CASE WHEN TRIM(AM.Voorletters) LIKE ANY ('', '-') THEN '' ELSE TRIM(AM.Voorletters)||' ' END)||
+             (CASE WHEN TRIM(AM.Voorvoegsels) = '' THEN '' ELSE TRIM(AM.Voorvoegsels)||' ' END)|| TRIM(AM.Naam))
+       END AS BC_CCA_TB_NAAM,
        AN.Bo_naam AS BC_CCA_TB_TEAM,
        TR.Trust_complex_nr,
        FR.Franchise_complex_nr
@@ -459,7 +1833,7 @@ SELECT X.Party_id AS Business_contact_nr,
                      LEFT OUTER JOIN Mi_vm_ldm.vBo_mi_part_zak XB
                        ON SUBSTR(XA.Gerelateerd_party_id, 7, 6) = XB.Party_id
                     WHERE XA.Party_relatie_type_code = 'cltadv'
-                    GROUP BY 1,2,3
+                    GROUP BY 1, 2, 3
                   QUALIFY RANK (XA.Party_party_relatie_sdat DESC) = 1) F
     ON X.Party_id = F.Party_id
    AND X.Party_sleutel_type = F.Party_sleutel_type
@@ -479,12 +1853,11 @@ SELECT X.Party_id AS Business_contact_nr,
     ON X.Party_id = I.Party_id
   LEFT OUTER JOIN Mi_vm_ldm.vBo_mi_part_zak J
     ON D.Gerelateerd_party_id = J.Party_id
-
-  LEFT OUTER JOIN (SELECT Party_id, Gerelateerd_party_id,  Party_sleutel_type, PARTY_PARTY_RELATIE_SDAT
-                     FROM mi_vm_ldm.aParty_party_relatie
-                     WHERE Party_relatie_type_code = 'kvkreg'
-                     GROUP BY 1,2,3,4
-                     QUALIFY RANK () OVER (PARTITION BY PARTY_ID ORDER BY PARTY_PARTY_RELATIE_SDAT, GERELATEERD_PARTY_ID DESC) = 1) k
+  LEFT OUTER JOIN (SELECT XA.Party_id, XA.Gerelateerd_party_id, XA.Party_sleutel_type, XA.Party_party_relatie_sdat
+                     FROM Mi_vm_ldm.aParty_party_relatie XA
+                    WHERE XA.Party_relatie_type_code = 'kvkreg'
+                    GROUP BY 1, 2, 3, 4
+                  QUALIFY RANK () OVER (PARTITION BY XA.Party_id ORDER BY XA.Party_party_relatie_sdat, XA.Gerelateerd_party_id DESC) = 1) AS K
     ON X.Party_id = K.Party_id
    AND X.Party_sleutel_type = K.Party_sleutel_type
   LEFT OUTER JOIN Mi_vm_ldm.aParty_naam M
@@ -493,7 +1866,7 @@ SELECT X.Party_id AS Business_contact_nr,
   LEFT OUTER JOIN Mi_vm_ldm.aParty_post_adres N
     ON X.Party_id = N.Party_id
    AND X.Party_sleutel_type = N.Party_sleutel_type
-   LEFT OUTER JOIN (SELECT XA.Party_id,
+  LEFT OUTER JOIN (SELECT XA.Party_id,
                           COUNT(*) AS Aantal_rekeningen
                      FROM Mi_vm_ldm.aParty_contract XA
                      JOIN Mi_vm_ldm.aContract XB
@@ -511,13 +1884,14 @@ SELECT X.Party_id AS Business_contact_nr,
     ON X.Party_id = P.Party_id
    AND X.Party_sleutel_type = P.Party_sleutel_type
    AND P.Segment_type_code = 'sbi'
-  LEFT OUTER JOIN (SELECT party_id, Party_sleutel_type, branche_code, ext_org_branche_sdat
-                     FROM Mi_vm_ldm.vExterne_organisatie_bik
-                     WHERE ext_org_branche_edat IS  NULL
-                     AND Primary_branche_ind = 1
-                     QUALIFY RANK() OVER (PARTITION BY party_id ORDER BY ext_org_branche_sdat, branche_code) = 1)  Q
+  LEFT OUTER JOIN (SELECT XA.Party_id, XA.Party_sleutel_type, XA.Branche_code, XA.Ext_org_branche_sdat
+                     FROM Mi_vm_ldm.vExterne_organisatie_bik XA
+                    WHERE XA.Ext_org_branche_edat IS NULL
+                      AND XA.Primary_branche_ind = 1
+                  QUALIFY RANK() OVER (PARTITION BY XA.Party_id ORDER BY XA.Ext_org_branche_sdat, XA.Branche_code) = 1) AS Q
     ON X.Party_id = Q.Party_id
    AND X.Party_sleutel_type = Q.Party_sleutel_type
+/* Bijzonder_beheer obv Fiatterende Instantie: BC met contract binnen kredietcomplex met FI Lindorff of FR&R */
   LEFT OUTER JOIN Mi_temp.BC_bijzonder_beheer_ind R
     ON X.Party_id = R.Bc_nr
   LEFT OUTER JOIN (SELECT XA.Party_id,
@@ -537,200 +1911,243 @@ SELECT X.Party_id AS Business_contact_nr,
    AND S.Party_relatie_type_code = 'relman'
   LEFT OUTER JOIN Mi_temp.Mia_klantkoppelingen YY
     ON X.Party_id = YY.Business_contact_nr
-  LEFT OUTER JOIN (
-                   SELECT XA.Party_id,
-                          XA.koppeling_id,
+    /* Bepalen Leidend_BC */
+  LEFT OUTER JOIN (SELECT XA.Party_id,
+                          XA.Koppeling_id,
                           MAX(CASE WHEN XA.Party_deelnemer_rol = 1 THEN 1 ELSE NULL END) AS Party_deelnemer_rol
                      FROM Mi_vm_ldm.aParty_party_relatie XA
                     WHERE XA.Party_sleutel_type = 'BC'
                       AND XA.Party_relatie_type_code = 'CBCTCC'
                   QUALIFY RANK() OVER (PARTITION BY XA.Party_id ORDER BY XA.Koppeling_id) = 1
-                    GROUP BY 1,2
-                  ) AS T
-  ON X.Party_id = T.Party_id
+                    GROUP BY 1, 2) AS T
+    ON X.Party_id = T.Party_id
+    /* Ophalen Koppeling_ID Commerciele Entiteit */
   LEFT OUTER JOIN (SELECT XA.Party_id,
-                          XA.koppeling_id,
+                          XA.Koppeling_id,
                           MAX(CASE WHEN XA.Party_deelnemer_rol = 1 THEN 1 ELSE NULL END) AS Party_deelnemer_rol
-                   FROM Mi_vm_ldm.aParty_party_relatie XA
-                   WHERE XA.Party_sleutel_type = 'BC'
-                     AND XA.Party_relatie_type_code = 'CBCTCE'
-                 QUALIFY RANK() OVER (PARTITION BY XA.Party_id ORDER BY XA.Koppeling_id) = 1
-                   GROUP BY 1,2) AS Y
-  ON X.Party_id = Y.Party_id
- LEFT OUTER JOIN (SELECT XA.Party_id,
-                          XA.koppeling_id,
+                     FROM Mi_vm_ldm.aParty_party_relatie XA
+                    WHERE XA.Party_sleutel_type = 'BC'
+                      AND XA.Party_relatie_type_code = 'CBCTCE'
+                  QUALIFY RANK() OVER (PARTITION BY XA.Party_id ORDER BY XA.Koppeling_id) = 1
+                    GROUP BY 1, 2) AS Y
+    ON X.Party_id = Y.Party_id
+/* Ophalen Koppeling_ID Commerciele Groep */
+  LEFT OUTER JOIN (SELECT XA.Party_id,
+                          XA.Koppeling_id,
                           MAX(CASE WHEN XA.Party_deelnemer_rol = 1 THEN 1 ELSE NULL END) AS Party_deelnemer_rol
-                   FROM Mi_vm_ldm.aParty_party_relatie XA
-                   WHERE XA.Party_sleutel_type = 'CC'
-                     AND XA.Party_relatie_type_code = 'CCTCG'
-                 QUALIFY RANK() OVER (PARTITION BY XA.Party_id ORDER BY XA.Koppeling_id) = 1
-                   GROUP BY 1,2) AS Z
- ON A.CC_NR = Z.Party_id
+                     FROM Mi_vm_ldm.aParty_party_relatie XA
+                    WHERE XA.Party_sleutel_type = 'CC'
+                      AND XA.Party_relatie_type_code = 'CCTCG'
+                  QUALIFY RANK() OVER (PARTITION BY XA.Party_id ORDER BY XA.Koppeling_id) = 1
+                    GROUP BY 1, 2) AS Z
+    ON A.CC_NR = Z.Party_id
+   /* US Persons */
   LEFT OUTER JOIN Mi_vm_ldm.aSegment_klant U
-     ON X.Party_id = U.Party_id
-    AND X.Party_sleutel_type = U.Party_sleutel_type
-    AND U.Segment_Type_Code = 'USPERS'
-  LEFT OUTER JOIN Mi_vm_ldm.aSegment V
-     ON U.Segment_Id = V.Segment_Id
-    AND U.Segment_Type_Code = V.Segment_Type_Code
+    ON X.Party_id = U.Party_id
+   AND X.Party_sleutel_type = U.Party_sleutel_type
+   AND U.Segment_Type_Code = 'USPERS'
+  LEFT OUTER JOIN MI_TEMP.aSegment V
+    ON U.Segment_Id = V.Segment_Id
+   AND U.Segment_Type_Code = V.Segment_Type_Code
+  /* FATCA */
   LEFT OUTER JOIN mi_vm_ldm.aparty_fatca AG
-     ON X.party_id = AG.party_id
-    AND X.party_sleutel_type = AG.party_sleutel_type
+    ON X.party_id = AG.party_id
+   AND X.party_sleutel_type = AG.party_sleutel_type
+  /* BC Risico Score */
   LEFT OUTER JOIN Mi_vm_ldm.aklant_prospect W
-     ON X.party_id = W.party_id
-    AND X.party_sleutel_type = W.party_sleutel_type
-  LEFT OUTER JOIN (SELECT a.Party_id, a.Party_sleutel_type, b.Segment_oms
-                   FROM Mi_vm_ldm.aSegment_klant a
-                   LEFT OUTER JOIN Mi_vm_ldm.aSEGMENT b
-                   ON a.Segment_Id= b.Segment_Id
-                   AND a.Segment_Type_Code = b.Segment_Type_Code
-                   WHERE  a.segment_type_code IN ('wtclas')
-                   ) AA
-     ON X.Party_id = AA.Party_id
-    AND X.Party_sleutel_type = AA.Party_sleutel_type
-  LEFT OUTER JOIN (SELECT a.Party_id, a.Party_sleutel_type, b.Segment_oms
-                   FROM Mi_vm_ldm.aSegment_klant a
-                   LEFT OUTER JOIN Mi_vm_ldm.aSEGMENT b
-                   ON a.Segment_Id= b.Segment_Id
-                   AND a.Segment_Type_Code = b.Segment_Type_Code
-                   WHERE  a.segment_type_code IN ('aaclas')
-                   ) AB
-     ON X.Party_id = AB.Party_id
-    AND X.Party_sleutel_type = AB.Party_sleutel_type
-  LEFT OUTER JOIN (SELECT a.Party_id, a.Party_sleutel_type, b.Segment_oms
-                   FROM Mi_vm_ldm.aSegment_klant a
-                   LEFT OUTER JOIN Mi_vm_ldm.aSEGMENT b
-                   ON a.Segment_Id= b.Segment_Id
-                   AND a.Segment_Type_Code = b.Segment_Type_Code
-                   WHERE  a.segment_type_code IN ('rntdrv')
-                   ) AD
-     ON X.Party_id = AD.Party_id
-    AND X.Party_sleutel_type = AD.Party_sleutel_type
-  LEFT OUTER JOIN (SELECT a.Party_id, a.Party_sleutel_type, b.Segment_oms
-                   FROM Mi_vm_ldm.aSegment_klant a
-                   LEFT OUTER JOIN Mi_vm_ldm.aSEGMENT b
-                   ON a.Segment_Id= b.Segment_Id
-                   AND a.Segment_Type_Code = b.Segment_Type_Code
-                   WHERE  a.segment_type_code IN ('comdrv')
-                   ) AC
-     ON X.Party_id = AC.Party_id
-    AND X.Party_sleutel_type = AC.Party_sleutel_type
-  LEFT OUTER JOIN (SELECT a.Party_id, a.Party_sleutel_type, b.Segment_oms
-                   FROM Mi_vm_ldm.aSegment_klant a
-                   LEFT OUTER JOIN Mi_vm_ldm.aSEGMENT b
-                   ON a.Segment_Id= b.Segment_Id
-                   AND a.Segment_Type_Code = b.Segment_Type_Code
-                   WHERE  a.segment_type_code IN ('valdrv')
-                   ) AE
-     ON X.Party_id = AE.Party_id
-    AND X.Party_sleutel_type = AE.Party_sleutel_type
-  LEFT OUTER JOIN (SELECT a.Party_id, a.Party_sleutel_type, b.Segment_oms
-                   FROM Mi_vm_ldm.aSegment_klant a
-                   LEFT OUTER JOIN Mi_vm_ldm.aSEGMENT b
-                   ON a.Segment_Id= b.Segment_Id
-                   AND a.Segment_Type_Code = b.Segment_Type_Code
-                   WHERE  a.segment_type_code IN ('ovmkpr')
-                   ) AF
-     ON X.Party_id = AF.Party_id
-    AND X.Party_sleutel_type = AF.Party_sleutel_type
-  LEFT JOIN
-        (SELECT  Party_id
-        ,CASE WHEN LENGTH(TRIM(Party_GSRI_goedgekeurd)) = 0 THEN NULL ELSE TRIM(Party_GSRI_goedgekeurd) END AS BC_GSRI_Goedgekeurd
-        ,CASE WHEN LENGTH(TRIM(Party_Assessment_resultaat)) = 0 THEN NULL ELSE TRIM(Party_Assessment_resultaat) END AS BC_GSRI_Assessment_resultaat
-        FROM MI_VM_LDM.aparty_gsri
-       QUALIFY RANK() OVER (PARTITION BY Party_id ORDER BY Party_gsri_SDAT DESC, Gsri_expiratie_datum DESC) = 1) AH
+    ON X.party_id = W.party_id
+   AND X.party_sleutel_type = W.party_sleutel_type
+  /* MIFID Wettelijke client classificatie */
+  LEFT OUTER JOIN (SELECT XA.Party_id, XA.Party_sleutel_type, XB.Segment_oms
+                     FROM Mi_vm_ldm.aSegment_klant XA
+                     LEFT OUTER JOIN MI_TEMP.aSegment XB
+                       ON XA.Segment_Id = XB.Segment_Id
+                      AND XA.Segment_Type_Code = XB.Segment_Type_Code
+                    WHERE XA.Segment_type_code IN ('wtclas')) AS AA
+    ON X.Party_id = AA.Party_id
+   AND X.Party_sleutel_type = AA.Party_sleutel_type
+  /* MIFID ABNAMRO client classificatie */
+  LEFT OUTER JOIN (SELECT XA.Party_id, XA.Party_sleutel_type, XB.Segment_oms
+                     FROM Mi_vm_ldm.aSegment_klant XA
+                     LEFT OUTER JOIN MI_TEMP.aSegment XB
+                       ON XA.Segment_Id = XB.Segment_Id
+                      AND XA.Segment_Type_Code = XB.Segment_Type_Code
+                    WHERE XA.Segment_type_code IN ('aaclas')) AS AB
+    ON X.Party_id = AB.Party_id
+   AND X.Party_sleutel_type = AB.Party_sleutel_type
+  /* MIFID Fitness test Rente derivaten */
+  LEFT OUTER JOIN (SELECT XA.Party_id, XA.Party_sleutel_type, XB.Segment_oms
+                     FROM Mi_vm_ldm.aSegment_klant XA
+                     LEFT OUTER JOIN MI_TEMP.aSegment XB
+                       ON XA.Segment_Id = XB.Segment_Id
+                      AND XA.Segment_Type_Code = XB.Segment_Type_Code
+                    WHERE XA.Segment_type_code IN ('rntdrv')) AD
+    ON X.Party_id = AD.Party_id
+   AND X.Party_sleutel_type = AD.Party_sleutel_type
+  /* MIFID Fitness test commodity derivaten */
+  LEFT OUTER JOIN (SELECT XA.Party_id, XA.Party_sleutel_type, XB.Segment_oms
+                     FROM Mi_vm_ldm.aSegment_klant XA
+                     LEFT OUTER JOIN MI_TEMP.aSegment XB
+                       ON XA.Segment_Id = XB.Segment_Id
+                      AND XA.Segment_Type_Code = XB.Segment_Type_Code
+                    WHERE XA.Segment_type_code IN ('comdrv')) AC
+    ON X.Party_id = AC.Party_id
+   AND X.Party_sleutel_type = AC.Party_sleutel_type
+  /* MIFID Fitness test Valuta derivaten */
+  LEFT OUTER JOIN (SELECT XA.Party_id, XA.Party_sleutel_type, XB.Segment_oms
+                     FROM Mi_vm_ldm.aSegment_klant XA
+                     LEFT OUTER JOIN MI_TEMP.aSegment XB
+                       ON XA.Segment_Id = XB.Segment_Id
+                      AND XA.Segment_Type_Code = XB.Segment_Type_Code
+                    WHERE XA.Segment_type_code IN ('valdrv')) AE
+    ON X.Party_id = AE.Party_id
+   AND X.Party_sleutel_type = AE.Party_sleutel_type
+  /* MIFID Fitness test Overige Markets Producten */
+  LEFT OUTER JOIN (SELECT XA.Party_id, XA.Party_sleutel_type, XB.Segment_oms
+                     FROM Mi_vm_ldm.aSegment_klant XA
+                     LEFT OUTER JOIN MI_TEMP.aSegment XB
+                       ON XA.Segment_Id = XB.Segment_Id
+                      AND XA.Segment_Type_Code = XB.Segment_Type_Code
+                    WHERE XA.Segment_type_code IN ('ovmkpr')) AF
+    ON X.Party_id = AF.Party_id
+   AND X.Party_sleutel_type = AF.Party_sleutel_type
+  /* GSRI informatie uit FAIR */
+  LEFT OUTER JOIN (SELECT XA.Party_id,
+                          CASE
+                          WHEN LENGTH(TRIM(XA.Party_GSRI_goedgekeurd)) = 0 THEN NULL
+                          ELSE TRIM(XA.Party_GSRI_goedgekeurd)
+                          END AS BC_GSRI_Goedgekeurd,
+                          CASE
+                          WHEN LENGTH(TRIM(XA.Party_Assessment_resultaat)) = 0 THEN NULL
+                          ELSE TRIM(XA.Party_Assessment_resultaat)
+                          END AS BC_GSRI_Assessment_resultaat
+                     FROM MI_VM_LDM.aparty_gsri XA
+                  QUALIFY RANK() OVER (PARTITION BY XA.Party_id ORDER BY XA.Party_gsri_SDAT DESC, XA.Gsri_expiratie_datum DESC) = 1) AS AH
     ON X.Party_id = AH.Party_id
-   AND x.Party_sleutel_type = 'BC'
-
-  LEFT OUTER JOIN (SELECT a.party_id, a.GBC_nr, b.GBC_naam, c.ULP_BC_nr, d.ULP_naam
-                   FROM
-                    (SELECT XA.Party_id, XA.gerelateerd_party_id AS GBC_nr
-                     FROM Mi_vm_ldm.aParty_party_relatie XA
-                     WHERE XA.Party_sleutel_type = 'BC'
-                     AND XA.Party_relatie_type_code = 'CBCGBC'
-                     GROUP BY 1,2
-                    ) A
-                  LEFT OUTER JOIN
-                    (SELECT party_id, TRIM(Naamregel_1)||TRIM(Naamregel_2)||TRIM(Naamregel_3) AS GBC_naam
-                    FROM Mi_vm_ldm.aParty_naam
-                    WHERE Party_sleutel_type = 'BC'
-                    ) B
-                  ON A.GBC_nr = B.party_id
-                  LEFT OUTER JOIN
-                    (SELECT  XA.Party_id, XA.gerelateerd_party_id AS ULP_BC_nr
-                     FROM Mi_vm_ldm.aParty_party_relatie XA
-                     WHERE XA.Party_relatie_type_code = 'GBCUP'
-                     AND Party_sleutel_type = 'GB'
-                     GROUP BY 1,2
-                    ) C
-                  ON A.GBC_nr = C.party_id
-                  LEFT OUTER JOIN
-                    (SELECT party_id, TRIM(Naamregel_1)||TRIM(Naamregel_2)||TRIM(Naamregel_3) AS ULP_naam
-                     FROM Mi_vm_ldm.aParty_naam
-                     WHERE Party_sleutel_type = 'BC'
-                    ) D
-                  ON C.ULP_BC_nr = D.PARTY_ID
-  ) AS AI
-  ON X.Party_id = AI.Party_id
+    /* Global Business Contact en Ultimate Legal Parent */
+  LEFT OUTER JOIN (SELECT XA.party_id, XA.GBC_nr, XB.GBC_naam, XC.ULP_BC_nr, XD.ULP_naam
+                     FROM (SELECT XXA.Party_id, XXA.gerelateerd_party_id AS GBC_nr
+                             FROM Mi_vm_ldm.aParty_party_relatie XXA
+                            WHERE XXA.Party_sleutel_type = 'BC'
+                              AND XXA.Party_relatie_type_code = 'CBCGBC'
+                            GROUP BY 1, 2) AS XA
+                     LEFT OUTER JOIN (SELECT XXA.Party_id, TRIM(XXA.Naamregel_1)||TRIM(XXA.Naamregel_2)||TRIM(XXA.Naamregel_3) AS GBC_naam
+                                        FROM Mi_vm_ldm.aParty_naam XXA
+                                       WHERE XXA.Party_sleutel_type = 'BC') AS XB
+                       ON XA.GBC_nr = XB.Party_id
+                     LEFT OUTER JOIN (SELECT XXA.Party_id, XXA.gerelateerd_party_id AS ULP_BC_nr
+                                        FROM Mi_vm_ldm.aParty_party_relatie XXA
+                                       WHERE XXA.Party_relatie_type_code = 'GBCUP'
+                                         AND XXA.Party_sleutel_type = 'GB'
+                                       GROUP BY 1, 2) AS XC
+                       ON XA.GBC_nr = XC.Party_id
+                     LEFT OUTER JOIN (SELECT XXA.Party_id, TRIM(XXA.Naamregel_1)||TRIM(XXA.Naamregel_2)||TRIM(XXA.Naamregel_3) AS ULP_naam
+                                        FROM Mi_vm_ldm.aParty_naam XXA
+                                       WHERE XXA.Party_sleutel_type = 'BC') AS XD
+                       ON XC.ULP_BC_nr = XD.Party_id) AS AI
+    ON X.Party_id = AI.Party_id
+  /* Customerlifecycle */
   LEFT OUTER JOIN (SELECT XA.Party_id, XA.Party_sleutel_type, XA.Segment_id, XB.Segment_oms
                      FROM Mi_vm_ldm.aSegment_klant XA
-                     LEFT OUTER JOIN Mi_vm_ldm.aSegment XB
+                     LEFT OUTER JOIN MI_TEMP.aSegment XB
                        ON XA.Segment_Id = XB.Segment_Id
                       AND XA.Segment_Type_Code = XB.Segment_Type_Code
                     WHERE XA.Segment_type_code = 'CULICY') AJ
-     ON X.Party_id = AJ.Party_id
-    AND X.Party_sleutel_type = AJ.Party_sleutel_type
+    ON X.Party_id = AJ.Party_id
+   AND X.Party_sleutel_type = AJ.Party_sleutel_type
+  /* Ringfence */
   LEFT OUTER JOIN (SELECT XA.Party_id, XA.Party_sleutel_type, XA.Segment_id, XB.Segment_oms
                      FROM Mi_vm_ldm.aSegment_klant XA
-                     LEFT OUTER JOIN Mi_vm_ldm.aSegment XB
+                     LEFT OUTER JOIN MI_TEMP.aSegment XB
                        ON XA.Segment_Id = XB.Segment_Id
                       AND XA.Segment_Type_Code = XB.Segment_Type_Code
                     WHERE XA.Segment_type_code = 'RIFENC') AK
-     ON X.Party_id = AK.Party_id
-    AND X.Party_sleutel_type = AK.Party_sleutel_type
+    ON X.Party_id = AK.Party_id
+   AND X.Party_sleutel_type = AK.Party_sleutel_type
+  /* Transaction Banking */
   LEFT OUTER JOIN (SELECT XA.Party_id AS Business_contact_nr,
-                                  XA.Gerelateerd_party_id AS CCA
-                             FROM Mi_vm_ldm.aParty_party_relatie XA
-                            WHERE XA.Party_relatie_type_code = 'CTSCT'
-                              AND XA.Gerelateerd_party_sleutel_type = 'AM'
-                           QUALIFY RANK () OVER (PARTITION BY XA.Party_id ORDER BY XA.Gerelateerd_party_id DESC) = 1) AL
+                          XA.Gerelateerd_party_id AS CCA
+                     FROM Mi_vm_ldm.aParty_party_relatie XA
+                    WHERE XA.Party_relatie_type_code = 'CTSCT'
+                      AND XA.Gerelateerd_party_sleutel_type = 'AM'
+                  QUALIFY RANK () OVER (PARTITION BY XA.Party_id ORDER BY XA.Gerelateerd_party_id DESC) = 1) AL
     ON X.Party_id = AL.Business_contact_nr
   LEFT OUTER JOIN Mi_vm_ldm.aParty_naam AM
     ON AL.CCA = AM.Party_id AND AM.Party_sleutel_type = 'AM'
   LEFT OUTER JOIN Mi_vm_ldm.vBo_mi_part_zak AN
     ON SUBSTR(AL.CCA, 7, 6) = AN.Party_id
-  LEFT JOIN (SELECT  R.party_id,
-        R.Gerelateerd_party_id AS Trust_complex_nr
-        FROM MI_VM_LDM.aPARTY_PARTY_RELATIE R
-        WHERE   R.party_relatie_type_code  = 'DVNTTK') AS TR
-   ON TR.party_id = X.Party_id
-   LEFT JOIN (SELECT  R.party_id,
-        R.Gerelateerd_party_id AS Franchise_complex_nr
-        FROM MI_VM_LDM.aPARTY_PARTY_RELATIE R
-        WHERE   R.party_relatie_type_code = 'FRNCSE') AS FR
-   ON FR.party_id = X.Party_id
-LEFT OUTER JOIN (SELECT XA.Party_id,
+ /* Trust kantoren */
+  LEFT OUTER JOIN (SELECT XA.Party_id,
+                          XA.Gerelateerd_party_id AS Trust_complex_nr
+                     FROM Mi_vm_ldm.aParty_party_relatie XA
+                    WHERE XA.Party_relatie_type_code  = 'DVNTTK') AS TR
+   ON X.Party_id = TR.Party_id
+ /* Franchise kantoren */
+  LEFT OUTER JOIN (SELECT XA.Party_id,
+                          XA.Gerelateerd_party_id AS Franchise_complex_nr
+                     FROM Mi_vm_ldm.aParty_party_relatie XA
+                    WHERE XA.Party_relatie_type_code  = 'FRNCSE') AS FR
+   ON X.Party_id = FR.Party_id
+ /* Private Banking CCA (Client Contact) */
+  LEFT OUTER JOIN (SELECT XA.Party_id,
                           XA.Party_sleutel_type,
                           XA.Party_relatie_type_code,
                           XA.Gerelateerd_party_id AS Gerelateerd_party_id
                      FROM Mi_vm_ldm.aParty_party_relatie XA
                      WHERE XA.Party_relatie_type_code = 'PRVBNK'
-                    GROUP BY 1,2,3
-                  QUALIFY RANK (XA.Party_party_relatie_sdat DESC) = 1)  AO
+                    GROUP BY 1, 2, 3
+                  QUALIFY RANK (XA.Party_party_relatie_sdat DESC) = 1) AS AO
     ON X.Party_id = AO.Party_id
    AND X.Party_sleutel_type = AO.Party_sleutel_type
-  LEFT OUTER JOIN (
-                   SELECT XA.Party_id,
+ /* Bepalen Leidend Private Banking BC Indicator */
+  LEFT OUTER JOIN (SELECT XA.Party_id,
                           XA.koppeling_id,
                           MAX(CASE WHEN XA.Party_deelnemer_rol = 1 THEN 1 ELSE NULL END) AS Party_deelnemer_rol
                      FROM Mi_vm_ldm.aParty_party_relatie XA
                     WHERE XA.Party_sleutel_type = 'BC'
                       AND XA.Party_relatie_type_code = 'LDPCNL'
                   QUALIFY RANK() OVER (PARTITION BY XA.Party_id ORDER BY XA.Koppeling_id) = 1
-                    GROUP BY 1,2
-                  ) AS AP
-  ON X.Party_id = AP.Party_id
+                    GROUP BY 1, 2) AS AP
+    ON X.Party_id = AP.Party_id
  WHERE X.Party_sleutel_type = 'BC';
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_alle_bcs COLUMN (BC_CLIENTGROEP);
+COLLECT STATISTICS Mi_temp.Mia_alle_bcs COLUMN (BC_VERSCHIJNINGSVORM);
+COLLECT STATISTICS Mi_temp.Mia_alle_bcs COLUMN (DB_IND, RBS_IND);
+COLLECT STATISTICS Mi_temp.Mia_alle_bcs COLUMN (BC_CCA_RM);
+COLLECT STATISTICS Mi_temp.Mia_alle_bcs COLUMN (BC_CCA_AM);
+COLLECT STATISTICS Mi_temp.Mia_alle_bcs COLUMN (BC_BO_NR);
+COLLECT STATISTICS Mi_temp.Mia_alle_bcs COLUMN (BC_RELATIECATEGORIE);
+COLLECT STATISTICS Mi_temp.Mia_alle_bcs COLUMN (BUSINESS_CONTACT_NR);
+COLLECT STATISTICS Mi_temp.Mia_alle_bcs COLUMN (DB_IND ,RBS_IND ,BC_CONTRACTEN);
+COLLECT STATISTICS Mi_temp.Mia_alle_bcs COLUMN (BC_CONTRACTEN);
+COLLECT STATISTICS Mi_temp.Mia_alle_bcs COLUMN (KLANT_NR);
+COLLECT STATISTICS Mi_temp.Mia_alle_bcs COLUMN (BC_SBI_CODE_BCDB);
+COLLECT STATISTICS Mi_temp.Mia_alle_bcs COLUMN (BC_VALIDATIENIVEAU);
+COLLECT STATISTICS Mi_temp.Mia_alle_bcs COLUMN (BC_VALIDATIENIVEAU, DB_IND, RBS_IND, BC_CONTRACTEN);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.Mia_baten_product
+      (
+       Party_id DECIMAL(12,0),
+       Party_sleutel_type CHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Maand_nr INTEGER,
+       Banktype CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Combiproductlevel CHAR(8) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Prod_naam CHAR(35) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Baten DECIMAL(18,2)
+      )
+PRIMARY INDEX ( Party_id, Party_sleutel_type, Maand_nr, Banktype, Combiproductlevel )
+INDEX ( Party_id )
+INDEX ( Party_sleutel_type )
+INDEX ( Maand_nr )
+INDEX ( Banktype )
+INDEX ( Combiproductlevel );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_baten_product
 SELECT A.Party_id,
@@ -743,6 +2160,37 @@ SELECT A.Party_id,
   FROM Mi_cmb.baten_product A
   JOIN MI_SAS_AA_MB_C_MB.Mia_periode_NEW X
     ON A.Maand_nr >= X.Maand_begin_jaar_ervoor AND A.Maand_nr <= X.Maand_einde_jaar;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_baten_product    COLUMN ( Party_sleutel_type );
+COLLECT STATISTICS Mi_temp.Mia_baten_product    COLUMN ( PARTY_ID, COMBIPRODUCTLEVEL );
+COLLECT STATISTICS Mi_temp.Mia_klantkoppelingen COLUMN ( Klant_nr);
+COLLECT STATISTICS Mi_temp.Mia_klantkoppelingen COLUMN ( Klant_nr, Maand_nr );
+COLLECT STATISTICS Mi_temp.Mia_klantkoppelingen COLUMN ( Klant_nr, Maand_nr, Volgorde);
+COLLECT STATISTICS Mi_temp.Mia_klantkoppelingen COLUMN ( Business_contact_nr);
+COLLECT STATISTICS Mi_temp.Mia_klantkoppelingen COLUMN ( Volgorde );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.Mia_baten_detail
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       CUBe_product_id INTEGER,
+       Baten_maand INTEGER,
+       Volgorde INTEGER,
+       Datum_baten DATE FORMAT 'YYYYMMDD',
+       Baten_totaal DECIMAL(18,2)
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr, CUBe_product_id, Baten_maand, Volgorde )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr )
+INDEX ( CUBe_product_id )
+INDEX ( Baten_maand )
+INDEX ( Volgorde );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_baten_detail
 SELECT A.Klant_nr,
@@ -773,6 +2221,54 @@ SELECT A.Klant_nr,
   LEFT OUTER JOIN Mi_vm.vLu_maand G
     ON E.Maand_nr = G.Maand
  GROUP BY 1, 2, 3, 4, 5, 6;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_baten_detail COLUMN ( Klant_nr, CUBe_product_id );
+COLLECT STATISTICS Mi_temp.Mia_klant_info   COLUMN ( Klant_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CUBe_producten COLUMN (CUBe_product_id, CUBe_product_oms);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CUBe_producten COLUMN Min_verhouding;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.Mia_baten
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       CUBe_product_id INTEGER,
+       Baten DECIMAL(18,2),
+       Baten_jaar_ervoor DECIMAL(18,2),
+       Baten_mnd24 DECIMAL(18,2),
+       Baten_mnd23 DECIMAL(18,2),
+       Baten_mnd22 DECIMAL(18,2),
+       Baten_mnd21 DECIMAL(18,2),
+       Baten_mnd20 DECIMAL(18,2),
+       Baten_mnd19 DECIMAL(18,2),
+       Baten_mnd18 DECIMAL(18,2),
+       Baten_mnd17 DECIMAL(18,2),
+       Baten_mnd16 DECIMAL(18,2),
+       Baten_mnd15 DECIMAL(18,2),
+       Baten_mnd14 DECIMAL(18,2),
+       Baten_mnd13 DECIMAL(18,2),
+       Baten_mnd12 DECIMAL(18,2),
+       Baten_mnd11 DECIMAL(18,2),
+       Baten_mnd10 DECIMAL(18,2),
+       Baten_mnd09 DECIMAL(18,2),
+       Baten_mnd08 DECIMAL(18,2),
+       Baten_mnd07 DECIMAL(18,2),
+       Baten_mnd06 DECIMAL(18,2),
+       Baten_mnd05 DECIMAL(18,2),
+       Baten_mnd04 DECIMAL(18,2),
+       Baten_mnd03 DECIMAL(18,2),
+       Baten_mnd02 DECIMAL(18,2),
+       Baten_mnd01 DECIMAL(18,2)
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr, CUBe_product_id )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr )
+INDEX ( CUBe_product_id );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_baten
 SELECT A.Klant_nr,
@@ -810,6 +2306,53 @@ SELECT A.Klant_nr,
   LEFT OUTER JOIN Mi_temp.Mia_baten_detail C
     ON A.Klant_nr = C.Klant_nr AND B.CUBe_product_id = C.CUBe_product_id
  GROUP BY 1, 2, 3;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_klant_info     COLUMN ( Klant_nr, Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+CREATE TABLE Mi_temp.Mia_klantbaten
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Baten DECIMAL(18,2),
+       Baten_jaar_ervoor DECIMAL(18,2),
+       Baten_mnd24 DECIMAL(18,2),
+       Baten_mnd23 DECIMAL(18,2),
+       Baten_mnd22 DECIMAL(18,2),
+       Baten_mnd21 DECIMAL(18,2),
+       Baten_mnd20 DECIMAL(18,2),
+       Baten_mnd19 DECIMAL(18,2),
+       Baten_mnd18 DECIMAL(18,2),
+       Baten_mnd17 DECIMAL(18,2),
+       Baten_mnd16 DECIMAL(18,2),
+       Baten_mnd15 DECIMAL(18,2),
+       Baten_mnd14 DECIMAL(18,2),
+       Baten_mnd13 DECIMAL(18,2),
+       Baten_mnd12 DECIMAL(18,2),
+       Baten_mnd11 DECIMAL(18,2),
+       Baten_mnd10 DECIMAL(18,2),
+       Baten_mnd09 DECIMAL(18,2),
+       Baten_mnd08 DECIMAL(18,2),
+       Baten_mnd07 DECIMAL(18,2),
+       Baten_mnd06 DECIMAL(18,2),
+       Baten_mnd05 DECIMAL(18,2),
+       Baten_mnd04 DECIMAL(18,2),
+       Baten_mnd03 DECIMAL(18,2),
+       Baten_mnd02 DECIMAL(18,2),
+       Baten_mnd01 DECIMAL(18,2),
+       N_maanden_baten INTEGER,
+       Baten_gecorrigeerd DECIMAL(18,2)
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_klantbaten
 SELECT A.Klant_nr,
@@ -859,6 +2402,74 @@ SELECT A.Klant_nr,
   FROM Mi_temp.Mia_baten A
  GROUP BY 1, 2;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_klantbaten       COLUMN ( Klant_nr, Maand_nr );
+COLLECT STATISTICS Mi_temp.Mia_klant_info       COLUMN ( Klant_nr, Maand_nr );
+COLLECT STATISTICS Mi_temp.Mia_klantkoppelingen COLUMN ( Maand_nr, Business_contact_nr );
+COLLECT STATISTICS Mi_temp.Mia_klantkoppelingen COLUMN ( Klant_nr, Maand_nr );
+COLLECT STATISTICS Mi_temp.Mia_klantkoppelingen COLUMN ( Klant_nr, Maand_nr );
+COLLECT STATISTICS Mi_temp.Mia_klantkoppelingen COLUMN ( Klant_nr, Maand_nr, Volgorde);
+COLLECT STATISTICS Mi_temp.Mia_klantkoppelingen COLUMN ( Business_contact_nr);
+COLLECT STATISTICS Mi_temp.Mia_klant_info       COLUMN (Leidend_bc_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+
+
+/*****************************************************
+
+    Complexe producten
+
+A    Totaal OOE 250k plus
+B    Maatwerk krediet                                            --> obv NPL indicatie CIF ipv Risk indicatie MK
+C    Arrangement kredieten
+D    Treasury
+E    AOL
+F    Rentecompensatie
+G    OBSI limiet                                                --> NIET MEER TE BEPALEN
+H    EURIBOR Rekening Courant
+I    Maatwerktarifering betalingsverkeer
+J    GRV 010 - particulier RC altijd als complex beschouwen
+K    --   (was :Corporate Payment Services, wordt niet bepaald)
+L    Beleggen serviceconcept anders dan Direct Beleggen
+
+
+    Complex indien afgelopen 12 maanden baten op een complex product:
+U    GKDB    01.03.00    Rollovers
+V    GKDB    01.06.00    Kasgeld
+W    -- (was: GKDB    03.01.00    Rentederivaten, wordt niet bepaald 20170209)
+X    -- (was: GKDB    03.02.00    Valutaderivaten, wordt niet bepaald 20170209)
+Y    GKDB    03.04.00    Equity Capital Markets GMK
+Z    -- (was: GKDB    03.05.00    Commodity Derivatives, wordt niet bepaald 20170209)
+0    GKDB    05.02.00    Documentary credit
+1    GKDB    05.03.00    Documentary collection
+2    GKDB    06.01.00    Corporate Finance
+3    GKDB    06.02.00    Equity Capital Markets CF
+4    GKDB    07.01.00    Loan Syndications
+5    GKDB    07.02.00    Structured Finance
+6    GKDB    07.03.00    Acquisition & Leveraged Finance
+7    GKDB    07.04.00    Export & Project Finance
+8    GKDB    11.01.00    Factoring
+9    -- (was: GKDB    12.01.00    Private wealth Management, wordt niet bepaald 20170209)
+
+*****************************************************/
+
+/*------------------------------------
+De complexe producten vanuit de GKDB
+------------------------------------
+
+Stuurtabel met de GKDB producten welke als complex worden aangemerkt:  Mi_cmb.LU_Complexe_producten
+*/
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.LU_Complexe_producten COLUMN (CODE_COMPLEX_PRODUCT,PRODUCTLEVEL2DESCRIPTION);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
 CREATE TABLE Mi_temp.Complex_prod_GKDB_12mnd
 AS
 (
@@ -887,6 +2498,18 @@ GROUP BY 1,2,3,6
 ) WITH DATA
 PRIMARY INDEX(BC_nr)
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS ON Mi_temp.Complex_prod_GKDB_12mnd COLUMN BC_nr;
+
+
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*-----------------------------------------
+AOL contracten
+-----------------------------------------*/
 
 CREATE TABLE Mi_temp.Complex_prod_MIND
 AS
@@ -919,6 +2542,19 @@ GROUP BY 1,2,3
 PRIMARY INDEX(BC_nr)
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS ON Mi_temp.Complex_prod_MIND COLUMN BC_nr;
+COLLECT STATISTICS Mi_temp.Complex_prod_MIND COLUMN (CODE_COMPLEX_PRODUCT,PRODUCT_NAAM);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/*-----------------------------------------
+Maatwerk geldrekeningvormen 010: GRV010 particulier RC altijd als complex beschouwen
+
+-----------------------------------------*/
+
 CREATE TABLE Mi_temp.Complex_GRV102030
 AS
 (
@@ -931,12 +2567,14 @@ SEL   b.Party_id AS BC_nr
      ,COUNT(DISTINCT a.Contract_nr) AS N_contracten
      ,MAX(a.Contract_nr)            AS MAX_contract_nr
 FROM Mi_vm_ldm.aContract    a
+
 INNER JOIN Mi_vm_ldm.aParty_contract    b
    ON b.Contract_nr = a.Contract_nr
   AND b.contract_soort_code = a.contract_soort_code
   AND b.contract_hergebruik_volgnr = a.contract_hergebruik_volgnr
   AND b.Party_sleutel_type = 'BC'
   AND b.Party_contract_rol_code = 'C'
+
 WHERE a.contract_status_code <> 3
   AND a.Herkomst_admin_key_soort_code = 'GRV'
   AND TRIM(a.Herkomst_administratie_key) = '10'        /* particulier RC altijd als complex beschouwen */
@@ -945,6 +2583,26 @@ GROUP BY 1,2,3
 ) WITH DATA
 PRIMARY INDEX(BC_nr)
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS ON Mi_temp.Complex_GRV102030 COLUMN BC_nr;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/*-----------------------------------------
+Maatwerk Krediet        --> obv NPL indicatie
+
+OBSI limiet --> NIET MEER TE BEPALEN
+-----------------------------------------*/
+
+COLLECT STATISTICS COLUMN (MAAND_NR ,FAC_CONTRACT_NR ,FAC_BC_NR) ON Mi_cmb.CIF_Complex;
+COLLECT STATISTICS COLUMN (Fac_Actief_ind ,SUBSTR(TRIM(BOTH FROM PL_NPL_type ),1 ,3 )) AS ST_250415160957_1_CIF_Complex ON Mi_cmb.CIF_Complex;
+COLLECT STATISTICS COLUMN (SUBSTR(TRIM(BOTH FROM PL_NPL_type),1 ,3 )) AS ST_250415160957_0_CIF_Complex ON Mi_cmb.CIF_Complex;
+COLLECT STATISTICS COLUMN (FAC_CONTRACT_NR) ON Mi_cmb.CIF_Complex;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 CREATE TABLE Mi_temp.Complex_prod_Kred
 AS
@@ -968,6 +2626,12 @@ GROUP BY 1,2,3,6
 PRIMARY INDEX(BC_nr)
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*-----------------------------------------
+Beleggen service concepten ongelijk aan ZELF BELEGGEN
+-----------------------------------------*/
+
 CREATE TABLE Mi_temp.Complex_prod_beleggen
 AS
 (
@@ -979,6 +2643,7 @@ SEL
      ,MAX(a.Contract_nr)                            AS MAX_contract_nr
 
 FROM mi_vm_nzdb.vEff_Contract_Feiten_Periode   a
+
 WHERE NOT a.Service_concept_naam LIKE '%ZELF%'
   AND NOT a.Service_concept_naam = 'EXECUTION ONLY'
   AND a.Maand_nr = (SEL MAX(Maand_nr) AS Maand_nr FROM mi_vm_nzdb.vEff_Contract_Feiten_Periode)
@@ -989,6 +2654,31 @@ PRIMARY INDEX(BC_nr)
 ;
 .IF ERRORCODE <> 0 THEN .GOTO EOP
 
+COLLECT STATS ON Mi_temp.Complex_prod_beleggen COLUMN BC_nr;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*-----------------------------------------
+RC EURIBOR rente, RC rentecompensatie
+-----------------------------------------*/
+
+/* tabel Mi_cmb.TRC_REK_COURANT nogal eens waardoor het schedule klapt. vandaar onderstaande sql */
+CREATE SET TABLE Mi_temp.CIAA_TRC_REK_COURANT ,NO FALLBACK ,
+     NO BEFORE JOURNAL,
+     NO AFTER JOURNAL,
+     CHECKSUM = DEFAULT,
+     DEFAULT MERGEBLOCKRATIO
+     (
+      Mi_cmb_ind BYTEINT,
+      Maand_nr INTEGER,
+      Contract_nr DECIMAL(11,0),
+      Ind_EURIBOR_rente SMALLINT COMPRESS(1),
+      Ind_rentecompensatie SMALLINT COMPRESS(1))
+UNIQUE PRIMARY INDEX ( MI_cmb_ind, Maand_nr ,Contract_nr )
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+    /* data van vorige week */
 INSERT INTO Mi_temp.CIAA_TRC_REK_COURANT
 SELECT
        0
@@ -999,6 +2689,10 @@ SELECT
 FROM MI_SAS_AA_MB_C_MB.CIAA_TRC_REK_COURANT
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* meest recente data */
+/* onderstaande sql kan stuklopen vanwege ontbreken tabel, script moet dan echter niet worden afgebroken */
 INSERT INTO MI_temp.CIAA_TRC_REK_COURANT
 SELECT
        1
@@ -1008,7 +2702,15 @@ SELECT
       ,Ind_rentecompensatie
 FROM MI_cmb.TRC_REK_COURANT
 ;
+/*.IF ERRORCODE <> 0 THEN .GOTO EOP*/
 
+
+DEL FROM MI_SAS_AA_MB_C_MB.CIAA_TRC_REK_COURANT
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* neem bij voorkeur de meest recente data, indien ontbrekend de data van vorige week */
 INSERT INTO MI_SAS_AA_MB_C_MB.CIAA_TRC_REK_COURANT
 SEL
        Maand_nr
@@ -1018,6 +2720,18 @@ SEL
 FROM MI_temp.CIAA_TRC_REK_COURANT
 QUALIFY RANK (Mi_cmb_ind DESC) = 1
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS MI_SAS_AA_MB_C_MB.CIAA_TRC_REK_COURANT COLUMN (Maand_nr,Contract_nr,Ind_EURIBOR_rente);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CIAA_TRC_REK_COURANT COLUMN (Maand_nr,Contract_nr,Ind_rentecompensatie);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CIAA_TRC_REK_COURANT COLUMN (Maand_nr,Contract_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+
 
 CREATE TABLE Mi_temp.Complex_prod_RC
 AS
@@ -1029,14 +2743,17 @@ SEL
      ,COUNT(DISTINCT a.Contract_nr)                 AS N_contracten
      ,MAX(a.Contract_nr)                            AS MAX_contract_nr
 FROM MI_SAS_AA_MB_C_MB.CIAA_TRC_REK_COURANT a
+
 INNER JOIN mi_vm_ldm.aParty_contract    b
    ON b.Contract_nr = a.Contract_nr
   AND b.Party_sleutel_type = 'BC'
   AND b.Party_contract_rol_code = 'C'
+
 INNER JOIN  Mi_vm_ldm.aContract    c
     ON b.Contract_nr = c.Contract_nr
   AND b.contract_soort_code = c.contract_soort_code
   AND b.contract_hergebruik_volgnr = c.contract_hergebruik_volgnr
+
 WHERE a.Ind_EURIBOR_rente = 1
   AND c.contract_status_code <> 3
   AND b.contract_soort_code = 5
@@ -1044,6 +2761,12 @@ GROUP BY 1,2,3
 ) WITH DATA
 PRIMARY INDEX(BC_nr)
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS ON Mi_temp.Complex_prod_RC COLUMN BC_nr;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Complex_prod_RC
 SEL
@@ -1070,6 +2793,34 @@ WHERE a.Ind_rentecompensatie = 1
 GROUP BY 1,2,3
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS ON Mi_temp.Complex_prod_RC COLUMN BC_nr;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Complex_prod_RC COLUMN (CODE_COMPLEX_PRODUCT,PRODUCT_NAAM);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+/*-----------------------------------------
+Maatwerktarifering betalingsverkeer
+
+    (bevat maatwerk offers: dus echt maatwerkafspraken met die klant,
+     of de klant maakt gebruik van maatwerk binnen een arrangement (bv. schell bezinepomp maakt gebruik van maatwerk arrangement afgesproken met Schell hoofdkantoor)
+     of bv. Lindorff afspraken (deze klanten worden niet getarifeerd0
+     en nog wat administratieve offers die wellicht niet als maatwerk tarifering zouden moeten worden beschouwd.
+
+     wil je nog onderscheidt maken dan moet je echt per offer kijken, niet te doen
+     )
+-----------------------------------------*/
+
+COLLECT STATISTICS Mi_cmb.TB_offers COLUMN Offer_code;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 CREATE TABLE Mi_temp.Complex_prod_RC_mtwrk
 AS
 (
@@ -1090,6 +2841,16 @@ GROUP BY 1,2,3
 PRIMARY INDEX(BC_nr)
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS ON Mi_temp.Complex_prod_RC_mtwrk COLUMN BC_nr;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*-----------------------------------------
+    BC eindtabel Complexe_producten
+-----------------------------------------*/
+
 CREATE TABLE Mi_temp.Complex_product
 AS
 (
@@ -1109,6 +2870,8 @@ GROUP BY 1,2,3,4,5
 PRIMARY INDEX (Klant_nr, Maand_nr)
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.Complex_product
 SEL  a.Klant_nr
     ,a.Maand_nr
@@ -1123,6 +2886,8 @@ INNER JOIN Mi_temp.Complex_prod_MIND        b
 
 GROUP BY 1,2,3,4,5
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Complex_product
 SEL  a.Klant_nr
@@ -1139,6 +2904,8 @@ INNER JOIN Mi_temp.Complex_GRV102030    b
 GROUP BY 1,2,3,4,5
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.Complex_product
 SEL  a.Klant_nr
     ,a.Maand_nr
@@ -1153,6 +2920,8 @@ INNER JOIN Mi_temp.Complex_prod_Kred         b
 
 GROUP BY 1,2,3,4,5
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Complex_product
 SEL  a.Klant_nr
@@ -1169,6 +2938,8 @@ INNER JOIN Mi_temp.Complex_prod_RC        b
 GROUP BY 1,2,3,4,5
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.Complex_product
 SEL  a.Klant_nr
     ,a.Maand_nr
@@ -1184,6 +2955,13 @@ INNER JOIN Mi_temp.Complex_prod_beleggen b
 GROUP BY 1,2,3,4,5
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS ON Mi_temp.Complex_product COLUMN (Klant_nr, Maand_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
 INSERT INTO Mi_temp.Complex_product
 SEL  a.Klant_nr
     ,a.Maand_nr
@@ -1198,6 +2976,31 @@ INNER JOIN Mi_temp.Complex_prod_RC_mtwrk b
 
 GROUP BY 1,2,3,4,5
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS ON Mi_temp.Complex_product COLUMN (Klant_nr, Maand_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+
+/*-----------------------------------------
+    Eindtabel Complexe_producten
+-----------------------------------------*/
+
+CREATE TABLE Mi_temp.Complexe_producten
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Complexe_producten VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Aantal_complexe_producten SMALLINT
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr )
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Complexe_producten
 SEL
@@ -1286,328 +3089,68 @@ FROM (
      ) a
 ;
 
-CREATE TABLE Mi_temp.Internationaal_maanden
-AS
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Complexe_producten COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS Mi_temp.Complexe_producten COLUMN (KLANT_NR , MAAND_NR);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.MIA_organisatie COLUMN (Org_niveau3, Org_niveau2, Org_niveau1, BO_BL);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.MIA_organisatie COLUMN (Org_niveau1, Org_niveau1_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.MIA_organisatie COLUMN (Org_niveau2, Org_niveau2_nr, Org_niveau1, Org_niveau1_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.MIA_organisatie COLUMN (Org_niveau3, Org_niveau3_nr, Org_niveau2, Org_niveau2_nr, Org_niveau1, Org_niveau1_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.MIA_organisatie COLUMN (Org_niveau0, Org_niveau0_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.MIA_organisatie COLUMN (Org_niveau3, Org_niveau2, Org_niveau1, Org_niveau0, BO_BL);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.MIA_organisatie COLUMN (Org_niveau1, Org_niveau1_nr, Org_niveau0, Org_niveau0_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.MIA_organisatie COLUMN (Org_niveau2, Org_niveau2_nr, Org_niveau1, Org_niveau1_nr, Org_niveau0, Org_niveau0_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.MIA_organisatie COLUMN (Org_niveau3, Org_niveau3_nr, Org_niveau2, Org_niveau2_nr, Org_niveau1, Org_niveau1_nr, Org_niveau0, Org_niveau0_nr);
+
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*************************************************************************************
+
+    BASIS SET tabellen Siebel (CRM), onafhankelijk van Mia_week
+
+*************************************************************************************/
+
+/* ----------------------------------------------------------------------------------------------------
+
+Siebel_Employee
+
+------------------------------------------------------------------------------------------------------*/
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.Siebel_Employee_NEW
 (
-SEL Maand_nr
-FROM
-      (
-      SEL
-          sni.Maand_nr
-         ,RANK(sni.Maand_nr) AS Maand_teller
-      FROM
-          /* Maanden SNU */
-            (
-            SEL Maand_nr
-            FROM (
-                  SEL boekdatum, COUNT(*) AS Aantal
-                  FROM mi_cmb.Snu a
-                  GROUP BY 1
-                  ) a
+      Maand_nr INTEGER,
+      Datum_gegevens DATE FORMAT 'yyyy-mm-dd',
+      SBT_ID VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Naam VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL,
+      Soort_mdw CHAR (2) COMPRESS ('AM','MW'),
+      Functie VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+      BO_nr_mdw INTEGER,
+      BO_naam_mdw VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+      CCA INTEGER,
+      CCA2 INTEGER,
+       CCA3 INTEGER,
+      GM_ind BYTEINT,
+      Account_Management_Specialism VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+      Account_Management_Segment VARCHAR(8) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+      Mdw_sdat DATE FORMAT 'yyyy-mm-dd'
+     )
+UNIQUE PRIMARY INDEX ( Maand_nr ,SBT_ID )
+PARTITION BY RANGE_N(Maand_nr  BETWEEN 201001  AND 201012  EACH 1 ,
+201101  AND 201112  EACH 1 ,
+201201  AND 201212  EACH 1 ,
+201301  AND 201312  EACH 1 ,
+201401  AND 201412  EACH 1 ,
+201501  AND 201512  EACH 1 ,
+201601  AND 201612  EACH 1 ,
+201701  AND 201712  EACH 1 ,
+201801  AND 201812  EACH 1 ,
+201901  AND 201912  EACH 1 ,
+202001  AND 202012  EACH 1 ,
+ NO RANGE, UNKNOWN);
 
-            INNER JOIN
-                      (
-                      SEL  a.Datum
-                          ,a.Maand_werkdag_nr
-                          ,b.*
-                      FROM  mi_vm.vKalender a
-                      INNER JOIN
-                                 (
-                                 SEL
-                                     Maand_nr
-                                    ,MAX(Maand_werkdag_nr) AS Laatste_maand_werkdag_nr
-                                 FROM mi_vm.vKalender
-                                 WHERE NOT Maand_werkdag_nr IS NULL
-                                 GROUP BY 1
-                                 ) b
-                         ON b.Maand_nr = a.Maand_nr
-                      ) b
-               ON b.datum = a.boekdatum
-
-            WHERE Maand_werkdag_nr >= (Laatste_maand_werkdag_nr - 2)  /* veiligheidsmarge van 2 werkdagen */
-            GROUP BY 1
-            ) snu
-          /* Maanden SNI */
-      INNER JOIN
-           (
-           SEL Maand_nr
-           FROM (
-                 SEL boekdatum, COUNT(*) AS Aantal
-                 FROM mi_cmb.Sni a
-                 GROUP BY 1
-                 ) a
-
-           INNER JOIN
-                     (
-                     SEL  a.Datum
-                         ,a.Maand_werkdag_nr
-                         ,b.*
-                     FROM  mi_vm.vKalender a
-                     INNER JOIN
-                                (
-                                SEL
-                                    Maand_nr
-                                   ,MAX(Maand_werkdag_nr) AS Laatste_maand_werkdag_nr
-                                FROM mi_vm.vKalender
-                                WHERE NOT Maand_werkdag_nr IS NULL
-                                GROUP BY 1
-                                ) b
-                        ON b.Maand_nr = a.Maand_nr
-                     ) b
-              ON b.datum = a.Boekdatum
-
-           WHERE Maand_werkdag_nr >= (Laatste_maand_werkdag_nr - 2)
-           GROUP BY 1
-           ) sni
-         ON sni.Maand_nr = snu.Maand_nr
-      ) a
-WHERE Maand_teller <= 12
-) WITH DATA
-UNIQUE PRIMARY INDEX (maand_nr)
-;
-
-CREATE TABLE mi_temp.Internationaal_snisnu AS
-(
-SELECT
-    COALESCE(A.bc_nr,B.bc_nr)       AS BC_nr,
-    COALESCE(A.maand_nr,B.maand_nr) AS Maand_nr,
-    SUM(A.N_snu_trx)                AS N_snu_trx,
-    SUM(a.amount_snu)               AS amount_snu,
-    SUM(B.N_sni_trx)                AS N_sni_trx,
-    SUM(b.amount_sni)               AS amount_sni
-FROM
-    (
-    SELECT
-           b.party_id                                                         AS BC_nr,
-           EXTRACT( YEAR FROM boekdatum)*100+ EXTRACT (MONTH FROM boekdatum)  AS Maand_nr,
-           COUNT(*)                                                           AS N_snu_trx,
-           SUM((c.valuta_koers (FLOAT)) * bedragvv)                           AS Amount_snu
-    FROM mi_cmb.Snu a
-
-    INNER JOIN Mi_temp.Internationaal_maanden Mnd
-       ON Mnd.Maand_nr = EXTRACT( YEAR FROM a.boekdatum)*100+ EXTRACT (MONTH FROM a.boekdatum)
-
-    JOIN mi_vm_ldm.aClient_koppeling b
-      ON a.client_nr = b.client_nr
-     AND b.party_sleutel_type = 'BC'
-    LEFT JOIN mi_vm_ldm.vWissel_koers        c
-      ON a.iso_mnt=c.valuta_code
-     AND  c.Wissel_koers_sdat <= a.boekdatum
-     AND (c.Wissel_koers_edat >= a.boekdatum OR c.Wissel_koers_edat IS NULL)
-
-    GROUP BY 1,2
-    ) A
-FULL OUTER JOIN
-   (
-   SELECT
-          b.party_id                                                         AS BC_nr,
-          EXTRACT( YEAR FROM boekdatum)*100+ EXTRACT (MONTH FROM boekdatum)  AS Maand_nr,
-          COUNT(*)                                                           AS N_sni_trx,
-          SUM((c.valuta_koers (FLOAT)) * bedragvv)                           AS Amount_sni
-   FROM mi_cmb.Sni a
-
-   INNER JOIN Mi_temp.Internationaal_maanden Mnd
-       ON Mnd.Maand_nr = EXTRACT( YEAR FROM a.boekdatum)*100+ EXTRACT (MONTH FROM a.boekdatum)
-
-   JOIN mi_vm_ldm.aClient_koppeling b
-     ON a.client_nr = b.client_nr
-    AND b.party_sleutel_type = 'BC'
-
-    LEFT JOIN mi_vm_ldm.vWissel_koers        c
-      ON a.iso_mnt=c.valuta_code
-     AND  c.Wissel_koers_sdat <= a.boekdatum
-     AND (c.Wissel_koers_edat >= a.boekdatum OR c.Wissel_koers_edat IS NULL)
-
-   GROUP BY 1,2
-   ) B
-   ON A.bc_nr = B.bc_nr
-  AND A.Maand_nr = B.Maand_nr
-
-GROUP BY 1,2
-) WITH DATA
-UNIQUE PRIMARY INDEX (Maand_nr, BC_nr)
-;
-
-CREATE TABLE mi_temp.Internationaal_trx_bc AS
-(
-SEL
-     cbc_oid AS BC_nr
-    ,c.Maand_nr
-    ,COUNT(DISTINCT c.contract_oid)         AS N_contracten
-    ,SUM(c.CS_N_CR_trx)                     AS CS_N_CR_trx
-    ,SUM(c.CS_CR_bedrag_trx)                AS CS_CR_bedrag_trx
-    ,SUM(c.CS_N_CR_buitenlandse_trx)        AS CS_N_CR_buitenlandse_trx
-    ,SUM(c.CS_CR_bedrag_buitenlandse_trx)   AS CS_CR_bedrag_buitenl_trx
-    ,SUM(c.CS_N_DT_trx)                     AS CS_N_DT_trx
-    ,SUM(c.CS_DT_bedrag_trx)                AS CS_DT_bedrag_trx
-    ,SUM(c.CS_N_DT_buitenlandse_trx)        AS CS_N_DT_buitenlandse_trx
-    ,SUM(c.CS_DT_bedrag_buitenlandse_trx)   AS CS_DT_bedrag_buitenl_trx
-
-FROM mi_vm_nzdb.vCS_geld_contr_feiten_periode c
-
-INNER JOIN Mi_temp.Internationaal_maanden Mnd
-   ON Mnd.Maand_nr = c.Maand_nr
-
-GROUP BY 1,2
-)WITH DATA
-UNIQUE PRIMARY INDEX (Maand_nr, BC_nr)
-;
-
-CREATE TABLE mi_temp.Internationaal_trx_tabel AS
-(
-SEL
-     a.bc_nr
-    ,a.maand_nr
-    ,ZEROIFNULL(a.CS_N_CR_trx        )                    AS CS_N_CR_trx
-    ,ZEROIFNULL(a.CS_CR_bedrag_trx        )               AS CS_CR_bedrag_trx
-    ,ZEROIFNULL(a.CS_N_CR_buitenlandse_trx  )             AS CS_N_CR_buitenlandse_trx
-    ,ZEROIFNULL(a.CS_CR_bedrag_buitenl_trx  )             AS CS_CR_bedrag_buitenl_trx
-    ,ZEROIFNULL(a.CS_N_DT_trx        )                    AS CS_N_DT_trx
-    ,ZEROIFNULL(a.CS_DT_bedrag_trx        )               AS CS_DT_bedrag_trx
-    ,ZEROIFNULL(a.CS_N_DT_buitenlandse_trx  )             AS CS_N_DT_buitenlandse_trx
-    ,ZEROIFNULL(a.CS_DT_bedrag_buitenl_trx  )             AS CS_DT_bedrag_buitenl_trx
-    ,ZEROIFNULL(b.N_sni_trx                 )             AS N_sni_trx
-    ,ZEROIFNULL(b.amount_sni                )             AS amount_sni
-    ,ZEROIFNULL(b.N_snu_trx                 )             AS N_snu_trx
-    ,ZEROIFNULL(b.amount_snu                )             AS amount_snu
-
-FROM mi_temp.Internationaal_trx_bc        a
-
-LEFT JOIN mi_temp.Internationaal_snisnu    b
-  ON a.bc_nr=b.bc_nr
- AND a.maand_nr=b.maand_nr
-
-GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14
-)WITH DATA
-UNIQUE PRIMARY INDEX (Maand_nr, BC_nr)
-;
-
-CREATE TABLE mi_temp.Internationaal_1 AS
-(
-SELECT
-         bc_nr
-        ,maand_nr
-        ,CS_N_CR_trx
-        ,CS_CR_bedrag_trx
-        ,CS_N_CR_buitenlandse_trx
-        ,CS_CR_bedrag_buitenl_trx
-        ,CS_N_DT_trx
-        ,CS_DT_bedrag_trx
-        ,CS_N_DT_buitenlandse_trx
-        ,CS_DT_bedrag_buitenl_trx
-        ,N_sni_trx
-        ,amount_sni
-        ,N_snu_trx
-        ,amount_snu
-        ,CS_N_CR_trx+CS_N_CR_buitenlandse_trx+N_sni_trx                 AS N_CR_transacties
-        ,CS_N_CR_buitenlandse_trx+N_sni_trx                             AS N_CR_btl_transacties
-        ,CS_CR_bedrag_trx+CS_CR_bedrag_buitenl_trx+amount_sni           AS sum_CR_transacties
-        ,CS_CR_bedrag_buitenl_trx+amount_sni                            AS sum_CR_btl_transacties
-
-        ,a.CS_N_DT_trx+a.CS_N_DT_buitenlandse_trx+N_snu_trx             AS N_DT_transacties
-        ,a.CS_N_DT_buitenlandse_trx+N_snu_trx                           AS N_DT_btl_transacties
-        ,a.CS_DT_bedrag_trx+a.CS_DT_bedrag_buitenl_trx+amount_snu       AS sum_DT_transacties
-        ,a.CS_DT_bedrag_buitenl_trx+amount_snu                          AS sum_DT_btl_transacties
-
-FROM mi_temp.Internationaal_trx_tabel a
-
-) WITH DATA
-UNIQUE PRIMARY INDEX (Maand_nr, BC_nr)
-;
-
-CREATE TABLE mi_temp.Internationaal_2 AS
-(
-SELECT
-        a.klant_nr
-       ,a.maand_nr
-       ,SUM(b.N_CR_transacties)        AS N_CR_transacties
-       ,SUM(b.N_CR_btl_transacties)    AS N_CR_btl_transacties
-       ,SUM(b.sum_CR_transacties)      AS sum_CR_transacties
-       ,SUM(b.sum_CR_btl_transacties)  AS sum_CR_btl_transacties
-
-       ,SUM(b.N_DT_transacties)        AS N_DT_transacties
-       ,SUM(b.N_DT_btl_transacties)    AS N_DT_btl_transacties
-       ,SUM(b.sum_DT_transacties)      AS sum_DT_transacties
-       ,SUM(b.sum_DT_btl_transacties)  AS sum_DT_btl_transacties
-
-FROM Mi_temp.Mia_klantkoppelingen a
-
-LEFT OUTER JOIN mi_temp.Internationaal_1 b
-   ON a.business_contact_nr = b.bc_nr
-
-WHERE a.maand_nr = (SELECT MAX(Maand_nr) FROM MI_SAS_AA_MB_C_MB.Mia_periode_NEW Mnd)
-GROUP BY 1,2
-) WITH DATA
-PRIMARY INDEX(Klant_nr,maand_nr)
-;
-
-CREATE TABLE mi_temp.Internationaal_3 AS
-(
-SELECT
-        a.maand_nr
-       ,a.klant_nr
-       ,b.business_line
-
-       ,a.N_CR_transacties
-       ,a.N_CR_btl_transacties
-       ,a.sum_CR_transacties
-       ,a.sum_CR_btl_transacties
-
-       ,a.N_DT_transacties
-       ,a.N_DT_btl_transacties
-       ,a.sum_DT_transacties
-       ,a.sum_DT_btl_transacties
-
-       ,(a.N_CR_btl_transacties (FLOAT))   / NULLIFZERO(a.N_CR_transacties(FLOAT))   AS btl_cr_prc
-       ,(a.sum_CR_btl_transacties (FLOAT)) / NULLIFZERO(a.sum_CR_transacties(FLOAT)) AS btl_cr_prc_volume
-       ,(a.N_DT_btl_transacties (FLOAT))   / NULLIFZERO(a.N_DT_transacties(FLOAT))   AS btl_dt_prc
-       ,(a.sum_DT_btl_transacties(FLOAT))  / NULLIFZERO(a.sum_DT_transacties(FLOAT)) AS btl_dt_prc_volume
-       ,(a.N_CR_btl_transacties + a.N_DT_btl_transacties (FLOAT)) / NULLIFZERO(a.N_CR_transacties + a.N_DT_transacties) AS btl_prc
-       ,(a.sum_CR_btl_transacties  + a.sum_DT_btl_transacties (FLOAT)) / NULLIFZERO(a.sum_CR_transacties + a.sum_DT_transacties) AS btl_prc_volume
-
-FROM mi_temp.Internationaal_2        a
-
-INNER JOIN Mi_temp.Mia_klant_info b
-   ON b.Klant_nr = a.Klant_nr
-  AND b.Maand_nr = a.Maand_nr
-
-WHERE b.Klantstatus = 'C'
-  AND b.Klant_ind = 1
-  AND b.Business_line in ('CBC', 'SME')
-) WITH DATA
-PRIMARY INDEX(Klant_nr);
-
-CREATE TABLE Mi_temp.Internationale AS (
-SELECT
-     A.Maand_nr
-    ,A.Business_line
-    ,A.Klant_nr
-    ,CASE
-        WHEN ZEROIFNULL(btl_cr_prc_volume) = 0 THEN '0.nvt'
-        WHEN ZEROIFNULL(btl_cr_prc_volume) LT 0.10 THEN '<10%'
-        WHEN btl_cr_prc_volume LT 0.40 THEN '<40%'
-        WHEN btl_cr_prc_volume LT 0.70 THEN '<70%'
-        ELSE '>70%'
-      END AS credit_percentage_buitenland
-    ,CASE
-        WHEN ZEROIFNULL(btl_dt_prc_volume) = 0 THEN '0.nvt'
-        WHEN ZEROIFNULL(btl_dt_prc_volume) LT 0.10 THEN '<10%'
-        WHEN btl_dt_prc_volume LT 0.40 THEN '<40%'
-        WHEN btl_dt_prc_volume LT 0.70 THEN '<70%'
-        ELSE '>70%'
-      END AS debet_percentage_buitenland
-    ,CASE
-        WHEN a.Business_line in ('CBC', 'SME')        AND ZEROIFNULL(btl_cr_prc_volume) LT 0.10    AND ZEROIFNULL(btl_dt_prc_volume) LT 0.10 THEN 'Nationaal'
-        WHEN a.Business_line in ('CBC', 'SME')        AND ZEROIFNULL(btl_cr_prc_volume) LT 0.40    AND ZEROIFNULL(btl_dt_prc_volume) LT 0.40 THEN 'Int.Light'
-        WHEN a.Business_line in ('CBC', 'SME')        AND ZEROIFNULL(btl_cr_prc_volume) LT 0.70    AND ZEROIFNULL(btl_dt_prc_volume) LT 0.70 THEN 'Int.Medium'
-        WHEN a.Business_line in ('CBC', 'SME')        AND ZEROIFNULL(btl_cr_prc_volume) GE 0.70    OR ZEROIFNULL(btl_dt_prc_volume)  GE 0.70 THEN 'Int.Heavy'
-        ELSE 'tbd'
-     END AS Int_Klasse
-
-FROM mi_temp.Internationaal_3 A
-) WITH DATA
-UNIQUE PRIMARY INDEX(Klant_nr, Maand_nr)
-;
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO MI_SAS_AA_MB_C_MB.Siebel_Employee_NEW
 SELECT
@@ -1666,6 +3209,9 @@ FROM (SEL party_id,
                 AND TRIM(FUNCTIE) NOT IN ('Zelst. Verm. Beh.', 'zelfst.Verm.Beh') --uitsluiten zelfstandig vermogensbeheerders (externe partijen)
                 AND LENGTH(TRIM(sbt_id)) > 0
 ) a
+
+-- Ophalen naam medewerker
+
 INNER JOIN (SEL party_id,
                                party_sleutel_type,
                                CASE WHEN party_sleutel_type = 'MW' THEN UPPER(TRIM(Naam)) ELSE UPPER(TRIM(Naamregel_1)) END AS
@@ -1675,6 +3221,9 @@ INNER JOIN (SEL party_id,
 ) b
 ON a.party_id = b.party_id
 AND a.party_sleutel_type = b.party_sleutel_type
+
+-- Ophalen BO nummer medewerker
+
 INNER JOIN (SEL party_id,
                                party_sleutel_type,
                                gerelateerd_party_id AS bo_nr
@@ -1683,17 +3232,26 @@ INNER JOIN (SEL party_id,
 ) c
 ON a.party_id = c.party_id
 AND a.party_sleutel_type = c.party_sleutel_type
+
+-- Ophalen BO naam medewerker
+
 LEFT JOIN  (SEL party_id AS bo_nr,
                                 naam AS bo_naam
                         FROM mi_vm_ldm.aparty_naam
                         WHERE party_sleutel_type = 'BO'
 ) d
 ON c.bo_nr = d.bo_nr
+
+-- Toevoegen Global Markets Indicator
+
 LEFT JOIN (SEL Party_id as bo_nr,
                                Structuur,
                                Case when substr(Structuur,1,6) = '334524' then 1 else 0 end as GM_ind
                                FROM  mi_vm_ldm.aParty_BO)  gm
 on c.bo_nr = gm.bo_nr
+
+-- Bepalen aantal klanten dat aan de RM is gekoppeld
+
 LEFT JOIN (SEL gerelateerd_party_id, gerelateerd_party_sleutel_type, COUNT(party_id) AS N_bcs
                         FROM mi_vm_ldm.aparty_party_relatie
                         WHERE party_relatie_type_code IN ('relman','cltadv')
@@ -1705,7 +3263,77 @@ LEFT JOIN MI_SAS_AA_MB_C_MB.Mia_periode_NEW f
 ON 1=1
 
 ) XA
+
+/*
+Indien meerdere party_id's per SBT_ID:
+1. AM boven MW
+2. Hoogste aantal bc's gekoppeld aan AM
+3. Meest recente ingangsdatum record
+4. Hoogste CCA code
+*/
+
 QUALIFY RANK () OVER (PARTITION BY XA.sbt_id ORDER BY XA.party_sleutel_type ASC, ZEROIFNULL(XA.N_bcs) DESC, XA.Mdw_sdat DESC, XA.cca DESC) = 1;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Employee_NEW COLUMN ( SBT_ID);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Employee_NEW COLUMN ( SBT_ID, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Employee_NEW COLUMN ( SBT_ID, Maand_nr, BO_nr_mdw);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Employee_NEW COLUMN ( BO_nr_mdw);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Employee_NEW COLUMN ( BO_nr_mdw, Maand_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ----------------------------------------------------------------------------------------------------
+
+Siebel_Activiteit
+
+------------------------------------------------------------------------------------------------------  */
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW
+ ,NO FALLBACK ,
+     NO BEFORE JOURNAL,
+     NO AFTER JOURNAL,
+     CHECKSUM = DEFAULT,
+     DEFAULT MERGEBLOCKRATIO
+     (
+      Klant_nr INTEGER,
+      Maand_nr INTEGER,
+      Datum_gegevens DATE FORMAT 'yyyy-mm-dd',
+      Business_contact_nr DECIMAL(12,0),
+      Status VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('Done', 'Unscheduled', 'Cancelled', 'In Progress', 'Closed', 'Wacht op klant', 'New', 'Toegewezen aan derden', 'Scheduled', 'Expired' ),
+      Activiteit_type VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('Task', 'Appointment', 'Contacts'),
+      Sub_type VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+      Product_groep VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+      Onderwerp VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+      Korte_omschrijving VARCHAR(250) CHARACTER SET UNICODE NOT CASESPECIFIC,
+      Contact_methode VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+      Vertrouwelijk_ind BYTEINT COMPRESS (0 ,1 ),
+      Datum_start DATE FORMAT 'yyyy-mm-dd',                         /*Datum contact*/
+      Maand_nr_start INTEGER,
+      Datum_verval DATE FORMAT 'yyyy-mm-dd',                     /*Een activiteit dient voor deze datum afgehandeld te zijn. Deze datum is dus de geplande eind datum, zelf in te vullen door medewerker */
+      Maand_nr_verval INTEGER,
+      Datum_eind DATE FORMAT 'yyyy-mm-dd',                         /*Dit is de datum waarop de activiteit gesloten wordt. Bij het aanmaken van een activiteit wordt deze gelijk gezet met de Vervaldatum. Maar als de activiteit gesloten wordt dan wordt deze datum bijgewerkt naar de datum van de betreffende dag.*/
+      Maand_nr_eind INTEGER,
+      Siebel_verkoopkans_id VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC,                     /*Link naar afhankelijke verkoopkans, alleen gevuld als er een link is tussen een activiteit en verkoopkans */
+      Sbt_id_mdw_eigenaar VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+      Naam_mdw_eigenaar VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+      Gespreksrapport_id VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Siebel_lead_id VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Siebel_revisie_id VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Siebel_service_request_id VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Datum_aangemaakt DATE FORMAT 'yyyy-mm-dd',
+      Maand_nr_aangemaakt INTEGER,
+      Aantal_contactpersonen INTEGER COMPRESS (NULL, 0),
+      Aantal_medewerkers INTEGER COMPRESS (NULL, 0),
+      Siebel_activiteit_id VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC NOT NULL,
+      Client_level CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('BC','CC','CE','CG', 'XR'),
+      Sdat DATE FORMAT 'yyyy-mm-dd' NOT NULL,
+      Edat DATE FORMAT 'yyyy-mm-dd'
+      )
+UNIQUE PRIMARY INDEX (Siebel_activiteit_id);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW
 SELECT
@@ -1731,6 +3359,9 @@ BC.klant_nr AS Klant_nr
 , TRIM(A.Sbt_id_mdw_eigenaar)
 , COALESCE(TRIM(SBT.Naam), 'Onbekend') AS Naam_mdw_eigenaar
 , TRIM(A.Siebel_gespreksrapport_id) AS Gespreksrapport_ID
+, TRIM(A.Siebel_lead_id)
+, TRIM(A.siebel_revisie_id)
+, TRIM(A.siebel_service_request_id)
 , TRIM(A.Datum_aangemaakt)
 , EXTRACT(YEAR FROM A.Datum_aangemaakt) * 100 + EXTRACT(MONTH FROM A.Datum_aangemaakt)
 , COALESCE(CN.Aantal_CN, 0) AS Aantal_Contactpersonen -- Wordt later in het script geupdate
@@ -1741,19 +3372,117 @@ BC.klant_nr AS Klant_nr
 , A.Edat
 
 FROM mi_vm_ldm.aACTIVITEIT_cb A
+
+/* Maandnummer en datum_gegevens toevoegen aan tabel */
 LEFT JOIN MI_SAS_AA_MB_C_MB.Mia_periode_NEW B
 ON 1=1
+
+/* Toevoegen Klant en BC nummer  */
 INNER JOIN Mi_temp.Mia_klantkoppelingen BC
 ON a.party_id_rechtspersoon_bc = BC.Business_contact_nr
+
+/* Namen bij SBT_id's -- Halen uit employee tabel */
 LEFT JOIN MI_SAS_AA_MB_C_MB.Siebel_Employee_NEW SBT
 ON SBT.SBT_ID = A.Sbt_id_mdw_eigenaar
+
+/* Aantal contactpersonen en medewerkers */
 LEFT JOIN
 ( SELECT siebel_activiteit_id, COUNT(DISTINCT party_id_contactpersoon) AS Aantal_CN FROM mi_vm_ldm.aActiviteit_Contactpersoon_cb GROUP BY 1 ) CN
 ON CN.siebel_activiteit_id = A.siebel_activiteit_id
+
 LEFT JOIN
 ( SELECT siebel_activiteit_id, COUNT(DISTINCT party_id_mdw) AS Aantal_MDW FROM mi_vm_ldm.aActiviteit_Medewerker_cb GROUP BY 1 ) MDW
 ON MDW.siebel_activiteit_id = A.siebel_activiteit_id
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Klant_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Klant_nr, Maand_nr, Client_level);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Business_contact_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Business_contact_nr, Maand_nr, Client_level);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Klant_nr, Maand_nr, Status, Activiteit_type, Sub_type, Product_groep, Contact_methode, Vertrouwelijk_ind, Siebel_activiteit_id, Client_level );
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Sbt_id_mdw_eigenaar, Naam_mdw_eigenaar, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Activiteit_type, maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Datum_start, maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Sub_type, Activiteit_type, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Contact_methode, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Product_groep, Maand_nr, Klant_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Status, Maand_nr, Klant_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Contact_methode, Datum_start);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Activiteit_type,Datum_start, Maand_nr, Klant_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Contact_methode);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Contact_methode,Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Klant_nr,Activiteit_type,Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Activiteit_type);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Activiteit_type,Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Klant_nr,Status,Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Product_groep);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Product_groep, Klant_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Product_groep, Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Onderwerp, Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Onderwerp);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Datum_eind,Datum_start, Maand_nr, Klant_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Datum_verval,Datum_start, Maand_nr, Klant_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Siebel_activiteit_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Siebel_activiteit_id, Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Siebel_verkoopkans_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Siebel_lead_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Siebel_revisie_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW COLUMN (Siebel_service_request_id);
+
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* ----------------------------------------------------------------------------------------------------
+
+Siebel_Activiteit_TB_revisies
+
+------------------------------------------------------------------------------------------------------  */
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.Siebel_Activiteit_TB_revisies_NEW
+      (
+       Klant_nr DECIMAL(12,0),
+       Maand_nr INTEGER,
+       Datum_gegevens DATE FORMAT 'yyyy-mm-dd',
+       Business_contact_nr DECIMAL(12,0),
+       Status VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('Done', 'Unscheduled', 'Cancelled', 'In Progress', 'Closed', 'Wacht op klant', 'New', 'Toegewezen aan derden', 'Scheduled', 'Expired' ),
+       Activiteit_type VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('Task', 'Appointment', 'Contacts'),
+       Sub_type VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Product_groep VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Onderwerp VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Korte_omschrijving VARCHAR(250) CHARACTER SET UNICODE NOT CASESPECIFIC,
+       Contact_methode VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Vertrouwelijk_ind BYTEINT COMPRESS (0 ,1 ),
+       Datum_start DATE FORMAT 'yyyy-mm-dd',                         /*Datum contact*/
+       Maand_nr_start INTEGER,
+       Datum_verval DATE FORMAT 'yyyy-mm-dd',                     /*Een activiteit dient voor deze datum afgehandeld te zijn. Deze datum is dus de geplande eind datum, zelf in te vullen door medewerker */
+       Maand_nr_verval INTEGER,
+       Datum_eind DATE FORMAT 'yyyy-mm-dd',                         /*Dit is de datum waarop de activiteit gesloten wordt. Bij het aanmaken van een activiteit wordt deze gelijk gezet met de Vervaldatum. Maar als de activiteit gesloten wordt dan wordt deze datum bijgewerkt naar de datum van de betreffende dag.*/
+       Maand_nr_eind INTEGER,
+       Siebel_verkoopkans_id VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC,                     /*Link naar afhankelijke verkoopkans, alleen gevuld als er een link is tussen een activiteit en verkoopkans */
+       Sbt_id_mdw_eigenaar VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Naam_mdw_eigenaar VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Gespreksrapport_id VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Datum_aangemaakt DATE FORMAT 'yyyy-mm-dd',
+       Maand_nr_aangemaakt INTEGER,
+       Aantal_contactpersonen INTEGER COMPRESS (NULL, 0),
+       Aantal_medewerkers INTEGER COMPRESS (NULL, 0),
+       Siebel_activiteit_id VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC NOT NULL,
+       Client_level CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('BC','CC','CE','CG', 'XR'),
+       Datum_bijgewerkt DATE FORMAT 'yyyy-mm-dd',
+       Sbt_id_mdw_bijgewerkt VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Naam_mdw_bijgewerkt VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       TB_revisie_actueel_ind BYTEINT,
+       Sdat DATE FORMAT 'yyyy-mm-dd' NOT NULL,
+       Edat DATE FORMAT 'yyyy-mm-dd'
+      )
+UNIQUE PRIMARY INDEX (Siebel_activiteit_id);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO MI_SAS_AA_MB_C_MB.Siebel_Activiteit_TB_revisies_NEW
 SELECT COALESCE(BC.Klant_nr, BC.Pcnl_nr) AS Klant_nr,
@@ -1794,28 +3523,93 @@ SELECT COALESCE(BC.Klant_nr, BC.Pcnl_nr) AS Klant_nr,
        A.Sdat,
        A.Edat
   FROM Mi_vm_ldm.aACTIVITEIT A
+
+/* Maandnummer en datum_gegevens toevoegen aan tabel */
   LEFT JOIN MI_SAS_AA_MB_C_MB.Mia_periode_NEW B
     ON 1 = 1
+
+/* Toevoegen Klant en BC nummer  */
   JOIN Mi_temp.Mia_alle_bcs BC
     ON A.party_id_rechtspersoon_bc = BC.Business_contact_nr
+
+/* Namen bij SBT_id's -- Halen uit employee tabel */
   LEFT JOIN MI_SAS_AA_MB_C_MB.Siebel_Employee_NEW SBT_EIG
     ON SBT_EIG.SBT_ID = A.Sbt_id_mdw_eigenaar
+
+/* Aantal contactpersonen en medewerkers */
   LEFT OUTER JOIN (SELECT Siebel_activiteit_id, COUNT(DISTINCT Party_id_contactpersoon) AS Aantal_CN
                      FROM Mi_vm_ldm.aActiviteit_Contactpersoon_cb
                     GROUP BY 1) CN
     ON CN.siebel_activiteit_id = A.siebel_activiteit_id
+
   LEFT OUTER JOIN (SELECT Siebel_activiteit_id, COUNT(DISTINCT Party_id_mdw) AS Aantal_MDW
                      FROM Mi_vm_ldm.aActiviteit_Medewerker_cb
                     GROUP BY 1) MDW
     ON MDW.siebel_activiteit_id = A.siebel_activiteit_id
+
+/* Namen bij SBT_id's -- Halen uit employee tabel */
   LEFT JOIN MI_SAS_AA_MB_C_MB.Siebel_Employee_NEW SBT_BIJ
     ON SBT_BIJ.SBT_ID = A.Sbt_id_mdw_bijgewerkt_door
+
  WHERE A.Onderwerp = 'Revision / maintenance'
    AND A.Productgroep = 'Betalen & Contant geld'
    AND A.Activiteit_type = 'Task'
    AND A.Korte_omschrijving = 'TB revisie'
    AND A.Status NE 'Cancelled'
    AND A.Sdat >=  DATE '2017-09-02';
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* ----------------------------------------------------------------------------------------------------
+
+Siebel_Contactpersoon
+
+------------------------------------------------------------------------------------------------------  */
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW
+     (
+
+            siebel_contactpersoon_id        VARCHAR(15)  CHARACTER SET LATIN NOT CASESPECIFIC NOT NULL,
+            achternaam                      VARCHAR(50)  CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+            tussenvoegsel                   VARCHAR(30)  CHARACTER SET LATIN NOT CASESPECIFIC,
+            achtervoegsel                   VARCHAR(15)  CHARACTER SET LATIN NOT CASESPECIFIC,
+            contactpersoon_titel            VARCHAR(50)  CHARACTER SET LATIN NOT CASESPECIFIC,
+            initialen                       VARCHAR(50)  CHARACTER SET LATIN NOT CASESPECIFIC,
+            voornaam                        VARCHAR(50)  CHARACTER SET LATIN NOT CASESPECIFIC,
+
+            adres                           VARCHAR(200) CHARACTER SET LATIN NOT CASESPECIFIC,
+            postcode                        VARCHAR(30)  CHARACTER SET LATIN NOT CASESPECIFIC,
+            plaats                          VARCHAR(50)  CHARACTER SET LATIN NOT CASESPECIFIC,
+            telefoonnummer                  VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC,
+            land                            VARCHAR(30)  CHARACTER SET LATIN NOT CASESPECIFIC,
+            email                           VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC,
+            email_net                        VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC,
+            email_bruikbaar                 BYTEINT,
+
+            contactpersoon_onderdeel           VARCHAR(30)  CHARACTER SET LATIN NOT CASESPECIFIC,
+            contactpersoon_functietitel     VARCHAR(75)  CHARACTER SET LATIN NOT CASESPECIFIC,
+            actief_ind                      SMALLINT,
+            academische_titel               VARCHAR(30)  CHARACTER SET LATIN NOT CASESPECIFIC,
+            niet_bellen_ind                 BYTEINT,
+            niet_mailen_ind                 BYTEINT,
+            geen_marktonderzoek_ind         BYTEINT,
+            geen_events_ind                 BYTEINT,
+
+            primair_contact_persoon_ind     BYTEINT,
+
+            Klant_nr                        INTEGER,
+            Maand_nr                        INTEGER,
+            Datum_gegevens                  DATE FORMAT  'yyyy-mm-dd',
+            Business_contact_nr             DECIMAL(12,0),
+            client_level                    CHAR(2)      CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('CE','CC','BC','CG'),
+            Sdat                            DATE FORMAT  'yyyy-mm-dd' NOT NULL,
+            Edat                            DATE FORMAT  'yyyy-mm-dd'
+
+)
+PRIMARY INDEX (siebel_contactpersoon_id);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW
 SELECT
@@ -1875,9 +3669,14 @@ FROM (
     FROM mi_vm_ldm.acontact_persoon_cb XA
     QUALIFY rank() over(partition by XA.siebel_contactpersoon_id , XA.party_id order by XA.contactpersoon_sdat desc) =1
  ) A
+
+/*maandnummer toevoegen aan tabel*/
 LEFT JOIN MI_SAS_AA_MB_C_MB.Mia_periode_NEW B
 ON 1=1
+
+/* Toevoegen Klant en BC nummer en ClientLevel */
 LEFT JOIN (
+    /* Voor elke contact persoon kijken op welk niveau die is vastgelegd en vervolgens 'oprollen' naar klant niveau */
     select
         party_sleutel_type
         , gerelateerd_party_id as cn
@@ -1894,29 +3693,40 @@ LEFT JOIN (
 ) B1
 ON A.party_id = B1.cn
 AND client_levelx = B1.party_sleutel_type
+
+-- van ce -> BC
 LEFT JOIN mi_vm_ldm.aparty_party_relatie B2
 ON B1.ce_contactpersoon = B2.gerelateerd_party_id
 AND B2.gerelateerd_party_sleutel_type = 'CE'
 AND B2.party_sleutel_type = 'BC'
 AND B2.party_relatie_type_code = 'CBCTCE'
+
+-- van CG -> CC
 LEFT JOIN mi_vm_ldm.aparty_party_relatie B3
 ON B1.cg_contactpersoon = B3.gerelateerd_party_id
 AND B3.gerelateerd_party_sleutel_type = 'CG'
 AND B3.party_sleutel_type = 'CC'
 AND B3.party_relatie_type_code = 'CCTCG'
+
+-- van CC -> Leidend BC
 LEFT JOIN mi_vm_ldm.aparty_party_relatie B4
 ON coalesce(B1.cc_contactpersoon , B3.party_id ) = B4.gerelateerd_party_id
 AND B4.gerelateerd_party_sleutel_type = 'CC'
 AND B4.party_sleutel_type = 'BC'
 AND B4.party_relatie_type_code = 'CBCTCC'
 AND B4.party_deelnemer_rol =1
+
+-- van (leidend) BC -> CC
 LEFT JOIN mi_vm_ldm.aparty_party_relatie BX
 ON coalesce( B1.bc_contactpersoon , B2.party_id , B4.party_id ) = BX.party_id
 AND BX.party_sleutel_type = 'BC'
 AND BX.gerelateerd_party_sleutel_type = 'CC'
 AND BX.party_relatie_type_code = 'CBCTCC'
+
 WHERE a.client_levelx not in ( 'XR' , 'XX' )
   AND klant_nr is not NULL;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 CREATE TABLE mi_temp.crm_email_updates AS (
     SELECT
@@ -1949,6 +3759,118 @@ CREATE TABLE mi_temp.crm_email_updates AS (
     WHERE email ne ''
     AND email_net <> email_netst
 ) WITH DATA PRIMARY INDEX(siebel_contactpersoon_id);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW
+   SET email_net                                                      = mi_temp.crm_email_updates.email_netst
+ WHERE MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW.siebel_contactpersoon_id = mi_temp.crm_email_updates.siebel_contactpersoon_id
+   AND MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW.email_net                = mi_temp.crm_email_updates.email_net;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ONBRUIKBARE EMAIL ADRESSEN UITSLUITEN */
+
+UPDATE MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW
+   SET email_bruikbaar =
+       CASE
+                WHEN LENGTH(Email_net) < 9      THEN 0
+                WHEN Email_net NOT LIKE '%@%.%' THEN 0
+                WHEN Email_net LIKE '%xx@xx%.%' THEN 0
+                WHEN Email_net LIKE '%x@x%.%'   THEN 0
+                WHEN Email_net LIKE '%@xx%.%' AND Email_net NOT LIKE '%xxi%' AND Email_net NOT LIKE '%xxl%' AND Email_net NOT LIKE '%xxs%'  THEN 0
+                WHEN Email_net LIKE '%xx@%.%'   THEN 0
+                WHEN Email_net LIKE '%@nvt%.%'  THEN 0
+                WHEN Email_net LIKE '%nvt@%.%'  THEN 0
+                WHEN Email_net LIKE 'geen@%.%'  THEN 0
+                WHEN Email_net LIKE '%@niet.%'  THEN 0
+                WHEN Email_net LIKE '%@%.%'     THEN 1
+                ELSE email_bruikbaar
+            END;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ONBRUIKBARE ABNAMRO EMAIL ADRESSEN UITSLUITEN */
+UPDATE MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW
+   SET email_bruikbaar =
+       CASE
+                WHEN Email_net like'%@%abnamro%'   THEN 0
+                WHEN Email_net like'%@%abna%.com%' THEN 0
+                WHEN Email_net like'%@nl%abn%'     THEN 0
+                WHEN Email_net like'%@abn.%'       THEN 0
+                WHEN Email_net like'%@%abn %'      THEN 0
+            ELSE email_bruikbaar
+            END
+WHERE email_bruikbaar = 1
+  AND email_net like '%@%abn%' ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW COLUMN (Klant_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW COLUMN (Business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW COLUMN (Klant_nr, Maand_nr, client_level);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW COLUMN (Business_contact_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW COLUMN (Business_contact_nr, Maand_nr, client_level);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW COLUMN (siebel_contactpersoon_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW COLUMN (siebel_contactpersoon_id, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW COLUMN (siebel_contactpersoon_id, Klant_nr, Maand_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+/* ----------------------------------------------------------------------------------------------------
+
+Siebel_Verkoopkans
+
+------------------------------------------------------------------------------------------------------  */
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW
+(
+Klant_nr INTEGER,
+Maand_nr INTEGER,
+Datum_gegevens DATE FORMAT 'YYYY-MM-DD',
+Business_contact_nr DECIMAL (12,0),
+Siebel_verkoopkans_id VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC NOT NULL,
+Naam_verkoopkans VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC,
+Selling_type VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Status VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Siebel_verkoopkans_deal_id VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC,
+Soort VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('Opportunities', 'Deal', NULL),
+Productgroep VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Campaign_code_primary VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Herkomst VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Deal_captain_mdw_sbt_id VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Naam_deal_captain_mdw VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Sbt_id_mdw_aangemaakt_door VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Naam_mdw_aangemaakt_door VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Sbt_id_mdw_bijgewerkt_door VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Naam_mdw_bijgewerkt_door VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Vertrouwelijk_ind BYTEINT COMPRESS (NULL, 1,0),
+Aantal_producten INTEGER COMPRESS (NULL,0),
+Aantal_succesvol INTEGER COMPRESS (NULL,0),
+Aantal_niet_succesvol INTEGER COMPRESS (NULL,0),
+Aantal_in_behandeling INTEGER COMPRESS (NULL,0),
+Aantal_Nieuw INTEGER COMPRESS (NULL,0),
+Datum_aangemaakt DATE FORMAT 'YYYY-MM-DD',
+Datum_start DATE FORMAT 'YYYY-MM-DD',
+Datum_afgehandeld DATE FORMAT 'YYYY-MM-DD',
+Datum_start_baten DATE FORMAT 'YYYY-MM-DD',
+Lead_uuid VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+Client_level CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('CG','CE','CC','BC'),
+Country_primary CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('Y','N'),
+Contactpersoon_primary_siebel_id VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Sdat DATE FORMAT 'YYYY-MM-DD',
+Edat DATE FORMAT 'YYYY-MM-DD'
+)
+UNIQUE PRIMARY INDEX (Maand_nr, Siebel_verkoopkans_id)
+INDEX (Klant_nr)
+INDEX (Business_contact_nr)
+INDEX (Maand_nr)
+INDEX (Siebel_verkoopkans_id);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW
 SELECT
@@ -1993,8 +3915,12 @@ END AS Clientlevel
 ,a.verkoopkans_edat AS Edat
 
 FROM mi_vm_ldm.aVerkoopkans_cb a
+
+--KOPPELING MIA_PERIODE
 LEFT JOIN MI_SAS_AA_MB_C_MB.Mia_periode_NEW B
 ON 1=1
+
+--KOPPELING PRODUCT
 LEFT JOIN (SELECT siebel_verkoopkans_id
                                        ,COUNT(siebel_verkoopkans_product_id) AS Aantal_producten
                                        ,SUM(CASE WHEN TRIM(status) = 'Closed Successfully' THEN 1 ELSE 0 end) AS Aantal_succesvol
@@ -2005,6 +3931,8 @@ LEFT JOIN (SELECT siebel_verkoopkans_id
                       GROUP BY 1
 ) prod
 ON a.siebel_verkoopkans_id= prod.siebel_verkoopkans_id
+
+-- Koppeling BC to Klant + Uitfilteren records buiten scope van de afdelingstabellen
 INNER JOIN mi_temp.mia_klantkoppelingen mia
 ON a.party_id_rechtspersoon_bc = mia.business_contact_nr
 
@@ -2020,8 +3948,75 @@ LEFT JOIN MI_SAS_AA_MB_C_MB.Siebel_Employee_NEW emp3
 ON a.Sbt_id_mdw_bijgewerkt_door = emp3.sbt_id
 AND b.maand_nr = emp3.maand_nr
 
-WHERE Soort <> 'deal' or Soort IS NULL
+WHERE Soort <> 'deal' or Soort IS NULL --uitsluiten deals, deze staan in een aparte tabel, records zonder ingevulde soort wel selecteren
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW COLUMN (Siebel_verkoopkans_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW COLUMN (Siebel_verkoopkans_id, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW COLUMN (Klant_nr, Maand_nr, Selling_type);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW COLUMN (Klant_nr, Maand_nr, Selling_type, status);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW COLUMN (Klant_nr, Maand_nr, status);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW COLUMN (Business_contact_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW COLUMN (Business_contact_nr, Maand_nr, Selling_type);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW COLUMN (Business_contact_nr, Maand_nr, Selling_type, status);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW COLUMN (Business_contact_nr, Maand_nr, status);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* ----------------------------------------------------------------------------------------------------
+
+Siebel_Deal
+
+------------------------------------------------------------------------------------------------------  */
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.Siebel_Deal_NEW
+(
+Klant_nr INTEGER,
+Maand_nr INTEGER,
+Datum_gegevens DATE FORMAT 'YYYY-MM-DD',
+Business_contact_nr DECIMAL (12,0),
+Siebel_deal_id VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC NOT NULL,
+Naam_verkoopkans VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC,
+Selling_type VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Status VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Soort VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('Opportunities', 'Deal', NULL),
+Productgroep VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Campaign_code_primary VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Herkomst VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Deal_captain_mdw_sbt_id VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Naam_deal_captain_mdw VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Sbt_id_mdw_aangemaakt_door VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Naam_mdw_aangemaakt_door VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Sbt_id_mdw_bijgewerkt_door VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Naam_mdw_bijgewerkt_door VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Vertrouwelijk_ind BYTEINT COMPRESS (NULL, 1,0),
+Aantal_producten INTEGER COMPRESS (NULL,0),
+Aantal_succesvol INTEGER COMPRESS (NULL,0),
+Aantal_niet_succesvol INTEGER COMPRESS (NULL,0),
+Aantal_in_behandeling INTEGER COMPRESS (NULL,0),
+Aantal_Nieuw INTEGER COMPRESS (NULL,0),
+Datum_aangemaakt DATE FORMAT 'YYYY-MM-DD',
+Datum_start DATE FORMAT 'YYYY-MM-DD',
+Datum_afgehandeld DATE FORMAT 'YYYY-MM-DD',
+Datum_start_baten DATE FORMAT 'YYYY-MM-DD',
+Lead_uuid VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+Client_level CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('CG','CE','CC','BC'),
+Country_primary CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('Y','N'),
+Contactpersoon_primary_siebel_id VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+Sdat DATE FORMAT 'YYYY-MM-DD',
+Edat DATE FORMAT 'YYYY-MM-DD'
+)
+UNIQUE PRIMARY INDEX (Maand_nr, Siebel_deal_id)
+INDEX (Klant_nr)
+INDEX (Business_contact_nr)
+INDEX (Maand_nr)
+INDEX (Siebel_deal_id);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO MI_SAS_AA_MB_C_MB.Siebel_Deal_NEW
 SELECT
@@ -2063,9 +4058,14 @@ END AS Clientlevel
 ,a.contactpersoon_primary_siebel_id
 ,a.verkoopkans_sdat AS Sdat
 ,a.verkoopkans_edat AS Edat
+
 FROM mi_vm_ldm.aVerkoopkans_cb a
+
+--KOPPELING MIA_PERIODE
 LEFT JOIN MI_SAS_AA_MB_C_MB.Mia_periode_NEW B
 ON 1=1
+
+--KOPPELING PRODUCT
 LEFT JOIN (SELECT siebel_verkoopkans_id
                                        ,COUNT(siebel_verkoopkans_product_id) AS Aantal_producten
                                        ,SUM(CASE WHEN TRIM(status) = 'Closed Successfully' THEN 1 ELSE 0 end) AS Aantal_succesvol
@@ -2076,6 +4076,8 @@ LEFT JOIN (SELECT siebel_verkoopkans_id
                       GROUP BY 1
 ) prod
 ON a.siebel_verkoopkans_id= prod.siebel_verkoopkans_id
+
+-- Koppeling BC to Klant + Uitfilteren records buiten scope van de afdelingstabellen
 INNER JOIN mi_temp.mia_klantkoppelingen mia
 ON a.party_id_rechtspersoon_bc = mia.business_contact_nr
 
@@ -2091,8 +4093,74 @@ LEFT JOIN MI_SAS_AA_MB_C_MB.Siebel_Employee_NEW emp3
 ON a.Sbt_id_mdw_bijgewerkt_door = emp3.sbt_id
 AND b.maand_nr = emp3.maand_nr
 
-WHERE Soort = 'deal'
+WHERE Soort = 'deal' --alleen deals, verkoopkansen worden in een aparte tabel opgeslagen
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Deal_NEW COLUMN (Siebel_deal_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Deal_NEW COLUMN (Siebel_deal_id, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Deal_NEW COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Deal_NEW COLUMN (Klant_nr, Maand_nr, Selling_type);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Deal_NEW COLUMN (Klant_nr, Maand_nr, Selling_type, status);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Deal_NEW COLUMN (Klant_nr, Maand_nr, status);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Deal_NEW COLUMN (Business_contact_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Deal_NEW COLUMN (Business_contact_nr, Maand_nr, Selling_type);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Deal_NEW COLUMN (Business_contact_nr, Maand_nr, Selling_type, status);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Deal_NEW COLUMN (Business_contact_nr, Maand_nr, status);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+
+/* ----------------------------------------------------------------------------------------------------
+
+Siebel_Verkoopkans_Product
+
+- -----------------------------------------------------------------------------------------------------  */
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW (
+Klant_nr  INTEGER,
+Maand_nr INTEGER,
+Datum_gegevens DATE FORMAT 'YYYY-MM-DD',
+Business_contact_nr DECIMAL(12,0),
+Siebel_verkoopkans_product_id VARCHAR(50),
+Siebel_verkoopkans_id VARCHAR(50),
+Productnaam  VARCHAR(50),
+Productnaam2  VARCHAR(50),
+Productgroep  VARCHAR(50),
+Pnc_contract_nummer    VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC,
+Aantal DECIMAL (18,0),
+Omzet  DECIMAL (18,0),
+Baten_eenmalig   DECIMAL (18,0),
+Baten_terugkerend   DECIMAL (18,0),
+Baten_totaal_1ste_12mnd  DECIMAL (18,0),
+Baten_totaal_looptijd DECIMAL (18,0),
+Status VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC,
+Substatus  VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+Reden  VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC,
+Slagingskans   DECIMAL(22,7),
+Start_baten  DATE FORMAT 'YYYY-MM-DD',
+Eind_baten    DATE FORMAT 'YYYY-MM-DD',
+Looptijd_mnd  INTEGER,
+Vertrouwelijk_ind  INTEGER,
+Sbt_id_mdw_eigenaar VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+Naam_mdw_eigenaar   VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+Sbt_id_mdw_aangemaakt_door    VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+Naam_mdw_aangemaakt_door    VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+Datum_aangemaakt     DATE FORMAT 'YYYY-MM-DD',
+Datum_laatst_gewijzigd   DATE FORMAT 'YYYY-MM-DD',
+Datum_nieuw   DATE FORMAT 'YYYY-MM-DD',
+Datum_in_behandeling  DATE FORMAT 'YYYY-MM-DD',
+Datum_gesl_succesvol  DATE FORMAT 'YYYY-MM-DD',
+Datum_gesl_niet_succesvol DATE FORMAT 'YYYY-MM-DD',
+Client_level  CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('BC','CE','CC','CG'),
+Verkoopkans_product_sdat DATE FORMAT 'YYYY-MM-DD',
+Verkoopkans_product_edat DATE FORMAT 'YYYY-MM-DD'
+) UNIQUE PRIMARY INDEX ( siebel_verkoopkans_product_id, Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW
 SEL
@@ -2103,6 +4171,7 @@ B.klant_nr
 ,A.siebel_verkoopkans_product_id
 ,A.siebel_verkoopkans_id
 ,C.omschrijving -- Product_naam
+,C.part_number -- Productnaam2
 ,D.omschrijving --product_groep_naam
 ,A.pnc_contract_nummer
 ,A.aantal
@@ -2137,21 +4206,28 @@ B.klant_nr
 ,A.verkoopkans_product_edat
 
 FROM  MI_VM_LDM.aVerkoopkansproduct_CB A
+
+-- innerjoin met verkoopkanstabel zodat er geen 'zwevende' producten ontstaan
 INNER JOIN MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW B
 ON A.siebel_verkoopkans_id = B.siebel_verkoopkans_id
 
+-- ophalen van productnaam
 LEFT JOIN MI_VM_Ldm.aProduct_cb C
 ON A.siebel_product_id = C.siebel_product_id
 
+-- ophalen van productgroepnaam
 LEFT JOIN  MI_VM_Ldm.aProductGroep_cb D
 ON A.siebel_productgroep_id = D.siebel_productgroep_id
 
+-- ophalen van de naam 'Naam_mdw_eigenaar'
 LEFT JOIN MI_SAS_AA_MB_C_MB.Siebel_Employee_NEW E
 ON A.sbt_id_mdw_eigenaar = E.SBT_ID AND E.Maand_nr = (SEL maand_nr FROM MI_SAS_AA_MB_C_MB.Mia_periode_NEW)
 
+-- ophalen van de naam 'naam_mdw_aangemaakt_door'
 LEFT JOIN MI_SAS_AA_MB_C_MB.Siebel_Employee_NEW F
 ON A.sbt_id_mdw_aangemaakt_door = F.SBT_ID AND F.Maand_nr = (SEL maand_nr FROM MI_SAS_AA_MB_C_MB.Mia_periode_NEW)
 
+-- ophalen data eerste keer 'new' status
 LEFT JOIN (
     SEL siebel_verkoopkans_product_id,MIN(bijgewerkt_op) as Datum_nieuw
     FROM  MI_VM_LDM.vVerkoopkansproduct_CB
@@ -2160,6 +4236,7 @@ LEFT JOIN (
 ) AS XD
 ON A.siebel_verkoopkans_product_id = XD.siebel_verkoopkans_product_id
 
+-- ophalen data eerste keer 'In behandeling' status
 LEFT JOIN (
     SEL siebel_verkoopkans_product_id,MIN(bijgewerkt_op) as Datum_in_behandeling
     FROM  MI_VM_LDM.vVerkoopkansproduct_CB
@@ -2168,6 +4245,7 @@ LEFT JOIN (
 ) AS XE
 ON A.siebel_verkoopkans_product_id = XE.siebel_verkoopkans_product_id
 
+-- ophalen data eerste keer 'succesvol gesloten' status
 LEFT JOIN (
     SEL siebel_verkoopkans_product_id,MIN(bijgewerkt_op) as Datum_gesl_succesvol
     FROM  MI_VM_LDM.vVerkoopkansproduct_CB
@@ -2176,6 +4254,7 @@ LEFT JOIN (
 ) AS XF
 ON A.siebel_verkoopkans_product_id = XF.siebel_verkoopkans_product_id
 
+-- ophalen data eerste keer 'niet succesvol gesloten' status
 LEFT JOIN (
     SEL siebel_verkoopkans_product_id,MIN(bijgewerkt_op) as Datum_gesl_niet_succesvol
     FROM  MI_VM_LDM.vVerkoopkansproduct_CB
@@ -2185,6 +4264,53 @@ LEFT JOIN (
 ON A.siebel_verkoopkans_product_id = XG.siebel_verkoopkans_product_id
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Klant_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Klant_nr, Maand_nr, Siebel_verkoopkans_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Klant_nr, Maand_nr, Siebel_verkoopkans_id, Productnaam);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Klant_nr, Business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Klant_nr, Maand_nr, Business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Klant_nr, Maand_nr, Siebel_verkoopkans_id, Business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Klant_nr, Maand_nr, Siebel_verkoopkans_id, Productnaam, Business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Siebel_verkoopkans_id, Productnaam);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Siebel_verkoopkans_id, Productnaam, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Siebel_verkoopkans_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Productnaam);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Productnaam, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Siebel_verkoopkans_id, Productnaam, Business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Siebel_verkoopkans_id, Productnaam, Maand_nr, Business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Siebel_verkoopkans_id, Business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Productnaam, Business_contact_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW COLUMN ( Productnaam, Maand_nr, Klant_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* ----------------------------------------------------------------------------------------------------
+
+Siebel_Act_Participants
+
+------------------------------------------------------------------------------------------------------*/
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.Siebel_act_participants_NEW
+(
+      Siebel_activiteit_id VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Maand_nr INTEGER,
+      Datum_gegevens DATE FORMAT 'YYYY-MM-DD',
+      Type_deelnemer VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('Medewerker','Contactpersoon'),
+      Naam VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Functie VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+      SBT_ID VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Siebel_Contactpersoon_id VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC
+      )
+UNIQUE PRIMARY INDEX (Siebel_activiteit_id, Maand_nr, SBT_ID, Functie, Siebel_Contactpersoon_id);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+-- Deze insert voegt de Werknermers (ABN AMRO) toe die bij de activiteit aanwezig waren:
 INSERT INTO MI_SAS_AA_MB_C_MB.Siebel_act_participants_NEW
 SELECT
 TRIM(A.Siebel_activiteit_id) as Siebel_activiteit_id
@@ -2196,14 +4322,18 @@ TRIM(A.Siebel_activiteit_id) as Siebel_activiteit_id
 ,E.sbt_id
 ,NULL as Siebel_Contactpersoon_id
 
+/* uitgangspunt is de eerder aangemaakte activiteitentabel. Hier is eventuele rommel al uitgefilterd*/
 FROM MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW A
 
+/* maandnummer toevoegen*/
 LEFT JOIN MI_SAS_AA_MB_C_MB.Mia_periode_NEW   B
 ON 1=1
 
+/* dit betreft een koppelingtabel om alle employees aan de activiteit te plakken*/
 INNER JOIN mi_vm_ldm.aActiviteit_Medewerker_cb C
 ON   A.siebel_activiteit_id = C.siebel_activiteit_id
 
+/* nette tabel met alle medewerkers*/
 LEFT JOIN mi_vm_ldm.aACCOUNT_MANAGEMENT D
 ON C.sleutel_type_mdw= D.party_sleutel_type
 and C.party_id_mdw = D.party_id
@@ -2212,6 +4342,9 @@ INNER JOIN MI_SAS_AA_MB_C_MB.Siebel_Employee_NEW E
 ON D.sbt_userid = E.sbt_id
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-- Deze insert voegt de Contactpersonen (klant) toe die bij de activiteit aanwezig waren:
 INSERT INTO MI_SAS_AA_MB_C_MB.Siebel_act_participants_NEW
 SELECT
 TRIM(A.Siebel_activiteit_id)
@@ -2223,14 +4356,18 @@ TRIM(A.Siebel_activiteit_id)
 ,NULL as SBT_ID
 ,TRIM(E.siebel_contactpersoon_id) as siebel_contactpersoon_id
 
+/* uitgangspunt is de eerder aangemaakte activiteitentabel. Hier is eventuele rommel al uitgefilterd*/
 FROM MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW A
 
+/* maandnummer toevoegen*/
 LEFT JOIN MI_SAS_AA_MB_C_MB.Mia_periode_NEW   B
 ON 1=1
 
+/* dit betreft een koppelingtabel om alle contactpersonen aan de activiteit te plakken*/
 INNER JOIN mi_vm_ldm.aActiviteit_Contactpersoon_cb C
 ON A.siebel_activiteit_id = C.siebel_activiteit_id
 
+/* Tabel met alle contactpersonen */
 LEFT JOIN mi_vm_ldm.acontact_persoon_cb D
 on C.party_id_contactpersoon = D.party_id
 AND C.sleutel_type_contactpersoon = D.party_sleutel_type
@@ -2242,6 +4379,66 @@ INNER JOIN (select siebel_contactpersoon_id,
                       group by 1,2,3
 ) E
 ON D.siebel_contactpersoon_id = E.siebel_contactpersoon_id;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_act_participants_NEW COLUMN (Siebel_activiteit_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_act_participants_NEW COLUMN (Siebel_activiteit_id, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_act_participants_NEW COLUMN (Siebel_activiteit_id, Maand_nr, Type_deelnemer);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_act_participants_NEW COLUMN (Siebel_activiteit_id, Maand_nr, Type_deelnemer, Functie);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_act_participants_NEW COLUMN (Type_deelnemer, Maand_nr, Functie);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_act_participants_NEW COLUMN (Type_deelnemer, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_act_participants_NEW COLUMN (Type_deelnemer);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_act_participants_NEW COLUMN (Functie);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_act_participants_NEW COLUMN (Maand_nr, Functie);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_act_participants_NEW COLUMN (Type_deelnemer, Functie);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-- UPDATE MI_TEMP.Siebel_Activiteit_NEW
+-- Aantal medewerkers en contactpersonen aan de activiteit toevoegen - aggregatie
+-- reden voor update: het aantal participants wordt berekend op basis van participantstabel die pas na de activiteitentabel wordt aangemaakt.
+
+UPDATE MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW
+FROM
+(SELECT Siebel_activiteit_id,
+                 SUM(case when type_deelnemer = 'contactpersoon' then 1 else 0 end) as Aantal_contactpersonen,
+                 SUM(case when type_deelnemer = 'medewerker' then 1 else 0 end) as Aantal_Medewerkers
+                 FROM MI_SAS_AA_MB_C_MB.Siebel_act_participants_NEW
+                 GROUP BY 1
+) a
+SET
+Aantal_Contactpersonen = A.Aantal_Contactpersonen ,
+Aantal_Medewerkers = A.Aantal_Medewerkers
+WHERE MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW.Siebel_activiteit_id = A.Siebel_activiteit_id;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+/*************************************************************************************
+
+    BASIS SET tabel Mia_sector
+
+*************************************************************************************/
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.Mia_sector_NEW
+      (
+       Maand_nr INTEGER,
+       Sbi_code VARCHAR(9) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Sbi_oms VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Agic_code VARCHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Agic_oms VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Sector_code VARCHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Sector_oms VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Subsector_code CHAR(3) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Subsector_oms VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Sectorcluster_code INTEGER,
+       Sectorcluster_oms VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L
+      )
+UNIQUE PRIMARY INDEX ( Sbi_code );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO MI_SAS_AA_MB_C_MB.Mia_sector_NEW
 SELECT
@@ -2277,6 +4474,25 @@ SELECT
     ON 1=1
  GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS COLUMN (Maand_nr, SBI_CODE) ON MI_SAS_AA_MB_C_MB.Mia_sector_NEW;
+COLLECT STATISTICS COLUMN (SBI_CODE) ON MI_SAS_AA_MB_C_MB.Mia_sector_NEW;
+COLLECT STATISTICS COLUMN (Maand_nr, agic_code) ON MI_SAS_AA_MB_C_MB.Mia_sector_NEW;
+COLLECT STATISTICS COLUMN (Maand_nr, sector_code) ON MI_SAS_AA_MB_C_MB.Mia_sector_NEW;
+COLLECT STATISTICS COLUMN (Maand_nr, subsector_code) ON MI_SAS_AA_MB_C_MB.Mia_sector_NEW;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/******************************************************************************************************** Patrick de Hoon - 17072018
+MI_TEMP.GEO_VARIABELEN
+De samengestelde brontabel voor geo_variabelen & SME specifieke variabelen. Onder geo_variabelen verstaan wij land_id, gemeente/stad
+naam & regio's. Voor SME specificeren wij hierin welke regio en marktgebied van toepassing is.
+
+Om verschillen tussen de bronnen weg te halen en 1 plaatsnaam/gemeente per postcode terug te geven, wordt de tabel ook nog geupdate
+met de configuratie tabel.
+***********************************************************************************************************************************/
+
 CREATE TABLE mi_temp.geo_variabelen as (
 select D.maand_nr,
 			D.cbc_postcode as postcode,
@@ -2311,6 +4527,160 @@ on D.cbc_postcode = XK.pc
 where d.maand_nr = MI_SAS_AA_MB_C_MB.Mia_periode.maand_nr
 group by 1,2,3,4,5,6,7,8) with data and stats
 UNIQUE PRIMARY INDEX (maand_nr,postcode,cbc_oid);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+update mi_temp.geo_variabelen
+set Geo_niveau3 = mi_cmb.geo_variabelen_conf.geo_niveau3_adj
+where Geo_niveau3 = mi_cmb.geo_variabelen_conf.geo_niveau3_ori;
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+update mi_temp.geo_variabelen
+set Geo_niveau3 = mi_cmb.geo_variabelen_conf.geo_niveau3_adj
+where postcode = mi_cmb.geo_variabelen_conf.postcode_ori;
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*-----------------------------------------
+    Mia_week
+-----------------------------------------*/
+
+COLLECT STATISTICS COLUMN (BUSINESS_CONTACT_NR ,MAAND_NR) ON Mi_temp.Mia_alle_bcs;
+COLLECT STATISTICS COLUMN (CBC_OID) ON Mi_temp.geo_variabelen;
+COLLECT STATISTICS COLUMN (MAAND_NR) ON Mi_temp.Mia_alle_bcs;
+COLLECT STATISTICS COLUMN (BO_BL) ON MI_SAS_AA_MB_C_MB.MIA_organisatie;
+COLLECT STATISTICS COLUMN (ORG_NIVEAU3_BO_NR) ON MI_SAS_AA_MB_C_MB.MIA_organisatie;
+COLLECT STATISTICS USING MAXVALUELENGTH 60 COLUMN (ACTIVITEIT_TYPE ,SUB_TYPE) ON MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW;
+COLLECT STATISTICS COLUMN (SUB_TYPE) ON MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW;
+COLLECT STATISTICS COLUMN (DATUM_START) ON MI_SAS_AA_MB_C_MB.Siebel_Activiteit_NEW;
+COLLECT STATISTICS COLUMN (MAAND_NR) ON Mi_temp.Mia_klant_info;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+CREATE TABLE Mi_temp.Mia_week
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Datum_gegevens DATE FORMAT 'YYYY-MM-DD',
+       Business_contact_nr DECIMAL(12,0),
+       Verkorte_naam CHAR(24) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Klant_ind BYTEINT,
+       Klantstatus CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Business_line VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Segment VARCHAR (10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Subsegment VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Clientgroep CHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Clientgroep_theoretisch CHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Starter_ind BYTEINT,
+       VenS_ind BYTEINT,
+       ZZP_ind BYTEINT,
+       Internationaal_segment VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bo_nr INTEGER,
+       Bo_naam VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       CCA INTEGER,
+       Relatiemanager CHAR(48) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Org_niveau5 VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L,
+       Org_niveau5_bo_nr INTEGER COMPRESS (NULL,-101,103),
+       Org_niveau4 VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L,
+       Org_niveau4_bo_nr INTEGER COMPRESS (NULL,-101,103),
+       Org_niveau3 VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L,
+       Org_niveau3_bo_nr INTEGER COMPRESS (NULL,-101,103),
+       Org_niveau2 VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L,
+       Org_niveau2_bo_nr INTEGER COMPRESS (NULL,-101,103),
+       Org_niveau1 VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L,
+       Org_niveau1_bo_nr INTEGER COMPRESS (NULL,-101,103),
+       Org_niveau0 VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L,
+       Org_niveau0_bo_nr INTEGER COMPRESS (NULL,-101,103),
+       Bank_herkomst VARCHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Kvk_nr CHAR(13) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Kvk_branche_nr CHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Kvk_branche_oms CHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Kvk_klasse_werknemers VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Sbi_code CHAR(6) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Sbi_oms VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Sbi_bron VARCHAR(9) CHARACTER SET UNICODE NOT CASESPECIFIC,
+       AGIC_oms VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Sectorcluster VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       CMB_sector VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Subsector_code CHAR(3) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Subsector_oms VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Baten DECIMAL(18,0),
+       Aantal_jaren_bestaan INTEGER,
+       Aantal_jaren_klant INTEGER,
+       Aantal_maanden_klant INTEGER,
+       Omzet_inkomend DECIMAL(15,0),
+       Bedrijfsomzet DECIMAL(18,0),
+       Bedrijfsomzet_RM_ind BYTEINT,
+       Bedrijfsomzet_jaar INTEGER,
+       Omzetklasse_id SMALLINT,
+       Omzetklasse_oms VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+       SoW VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Primair_categorie VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Primair_ind BYTEINT,
+       Businessvolume DECIMAL(18,0),
+       Creditvolume DECIMAL(18,0),
+       Debetvolume DECIMAL(18,0),
+       Cross_sell INTEGER,
+       Cs_betalen BYTEINT,
+       Cs_creditgelden BYTEINT,
+       Cs_kredieten BYTEINT,
+       Cs_verzekeren_ondernemer BYTEINT,
+       Cs_creditcard BYTEINT,
+       Cs_employee_benefits BYTEINT,
+       Cs_beleggen BYTEINT,
+       Cs_lease BYTEINT,
+       Cs_ifn BYTEINT,
+       Cs_treasury BYTEINT,
+       Cs_digitaal_bankieren BYTEINT,
+       Cs_pakket_prive BYTEINT,
+       Cs_verzekeren_onderneming BYTEINT,
+       Aantal_mnd_sinds_productafname INTEGER,
+       Startersrekening_ind BYTEINT,
+       Starterspakket_ind BYTEINT,
+       MKB_pakket_ind BYTEINT,
+       VenS_pakket_ind BYTEINT,
+       Aantal_complexe_producten SMALLINT,
+       Complexe_producten VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Naw VARCHAR(315) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Postcode VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Geo_niveau1 CHAR (2) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Geo_niveau2 VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Geo_niveau3 VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       SME_regio VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       SME_marktgebied VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Postretour_adres_ind BYTEINT,
+       Telefoon_nr_vast VARCHAR(19) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Telefoon_nr_mobiel VARCHAR(19) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Contactpersoon CHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Emailadres VARCHAR(75) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Datum_volgend_contact DATE FORMAT 'YYYYMMDD',
+       Datum_laatste_contact_pro_ftf DATE FORMAT 'YYYYMMDD',
+       Datum_laatste_contact_ftf DATE FORMAT 'YYYYMMDD',
+       Aantal_contact_pro_ftf INTEGER,
+       Aantal_contact_ftf INTEGER,
+       Aantal_contact_pro_tel INTEGER,
+       Aantal_contact_tel INTEGER,
+       Faillissement_ind BYTEINT,
+       Surseance_ind BYTEINT,
+       Bijzonder_beheer_ind BYTEINT,
+       CRG SMALLINT,
+       GSRI_goedgekeurd VARCHAR(8) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('High','Low','Medium'),
+       GSRI_Assessment_resultaat VARCHAR(9) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('ABOVE PAR','ON PAR','BELOW PAR'),
+       Aantal_bcs INTEGER,
+       Aantal_bcs_in_scope INTEGER,
+       Leidend_business_contact_nr DECIMAL(12,0),
+       Leidend_bc_ind BYTEINT,
+       Signaal VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Datum_revisie_TB DATE FORMAT 'YYYY-MM-DD',
+       CCA_consultant_TB INTEGER COMPRESS 0
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 
 INSERT INTO Mi_temp.Mia_week
 SELECT MIA.Klant_nr AS Klant_nr,
@@ -2736,8 +5106,6 @@ SELECT MIA.Klant_nr AS Klant_nr,
     ON A.Share_of_wallet_code = XD.Share_of_wallet_code AND A.Maand_nr = XD.Maand_nr
   LEFT OUTER JOIN Mi_vm_nzdb.vPrimaire_klant_kans XE
     ON A.Primaire_klant_kans_code = XE.Primaire_klant_kans_code AND A.Maand_nr = XE.Maand_nr
-  LEFT OUTER JOIN Mi_temp.Internationale XF
-    ON MIA.Klant_nr = XF.Klant_nr
   LEFT OUTER JOIN mi_vm_ldm.aCommercieel_complex_cb XG
     ON MIA.Klant_nr = XG.Party_id
   LEFT OUTER JOIN mi_temp.geo_variabelen XH
@@ -2749,6 +5117,41 @@ SELECT MIA.Klant_nr AS Klant_nr,
                      FROM MI_SAS_AA_MB_C_MB.Siebel_Activiteit_TB_revisies_NEW XA
                     WHERE XA.TB_revisie_actueel_ind = 1) AS XJ
     ON MIA.Klant_nr = XJ.Klant_nr;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN ( Klant_nr, Maand_nr );
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN ( Klant_ind, Klantstatus );
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN ( Klant_ind );
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN ( Klantstatus );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*************************************************************************************
+
+    BEGIN TIJDELIJKE WORKAROUND
+
+*************************************************************************************/
+
+CREATE TABLE Mi_temp.Mia_week_UPDATE
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Team_oid INTEGER,
+       Org_niveau3 VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Org_niveau3_bo_nr INTEGER COMPRESS (103 ,-101 ),
+       Org_niveau2 VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Org_niveau2_bo_nr INTEGER COMPRESS (103 ,-101 ),
+       Org_niveau1 VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Org_niveau1_bo_nr INTEGER COMPRESS (103 ,-101 ),
+       Org_niveau0 VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Org_niveau0_bo_nr INTEGER COMPRESS (103 ,-101 )
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr ,Maand_nr )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_week_UPDATE
 SELECT A.Klant_nr,
@@ -2769,6 +5172,64 @@ SELECT A.Klant_nr,
     ON SUBSTR(A.CCA, 4, 6) = XA.Bo_nr AND ((A.Business_line IN ('CBC', 'SME') AND XA.BO_BL IN ('CBC', 'SME')) OR (A.Business_line = 'CIB' AND XA.BO_BL = 'CIB'))
   LEFT OUTER JOIN Mi_sas_aa_mb_c_mb.Mia_organisatie_workaround XB
     ON A.Bo_nr = XB.Bo_nr AND ((A.Business_line IN ('CBC', 'SME') AND XB.BO_BL IN ('CBC', 'SME')) OR (A.Business_line = 'CIB' AND XB.BO_BL = 'CIB'));
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+/* DAADWERKELIJK UPDATEN Mi_temp.Mia_week */
+
+UPDATE Mi_temp.Mia_week
+   SET Org_niveau3       = Mi_temp.Mia_week_UPDATE.Org_niveau3      ,
+       Org_niveau3_bo_nr = Mi_temp.Mia_week_UPDATE.Org_niveau3_bo_nr,
+       Org_niveau2       = Mi_temp.Mia_week_UPDATE.Org_niveau2      ,
+       Org_niveau2_bo_nr = Mi_temp.Mia_week_UPDATE.Org_niveau2_bo_nr,
+       Org_niveau1       = Mi_temp.Mia_week_UPDATE.Org_niveau1      ,
+       Org_niveau1_bo_nr = Mi_temp.Mia_week_UPDATE.Org_niveau1_bo_nr,
+       Org_niveau0       = Mi_temp.Mia_week_UPDATE.Org_niveau0      ,
+       Org_niveau0_bo_nr = Mi_temp.Mia_week_UPDATE.Org_niveau0_bo_nr
+ WHERE Mi_temp.Mia_week.Klant_nr = Mi_temp.Mia_week_UPDATE.Klant_nr
+   AND Mi_temp.Mia_week.Maand_nr = Mi_temp.Mia_week_UPDATE.Maand_nr;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN ( Klant_nr, Maand_nr );
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN ( Klant_ind, Klantstatus );
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN ( Klant_ind );
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN ( Klantstatus );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/*************************************************************************************
+
+    EINDE TIJDELIJKE WORKAROUND
+
+*************************************************************************************/
+
+
+
+CREATE TABLE Mi_temp.Mia_klanten
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Bank_herkomst VARCHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Business_line VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Segment VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Subsegment VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Benchmark_ind BYTEINT,
+       Uitscoor_ind BYTEINT,
+       Bedrijfstak_id VARCHAR(6),
+       Omzetklasse_id SMALLINT,
+       Dimensie3_id VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Dimensie4_id INTEGER,
+       Dimensie5_id INTEGER
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_klanten
 SELECT A.Klant_nr,
@@ -2805,6 +5266,261 @@ SELECT A.Klant_nr,
     ON A.Klant_nr = B.Klant_nr AND A.Maand_nr = B.Maand_nr
  WHERE (A.Klant_ind = 1 OR A.Klantstatus = 'S');
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN (MAAND_NR , SEGMENT ,KLANT_IND ,KLANTSTATUS);
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN (MAAND_NR , KLANT_IND ,KLANTSTATUS);
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN (KLANT_NR ,KLANT_IND);
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN (SEGMENT);
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN (KLANT_IND ,ZZP_IND   ,KLANTSTATUS);
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN CREDITVOLUME;
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN (KLANT_IND,CS_LEASE ,KLANTSTATUS);
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN AANTAL_JAREN_BESTAAN;
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN OMZET_INKOMEND;
+COLLECT STATISTICS Mi_temp.Mia_week;
+COLLECT STATISTICS Mi_temp.Mia_klanten COLUMN (MAAND_NR,BUSINESS_LINE,SUBSEGMENT,BEDRIJFSTAK_ID,OMZETKLASSE_ID,DIMENSIE4_ID,DIMENSIE5_ID);
+COLLECT STATISTICS COLUMN (KLANT_NR) ON Mi_temp.Mia_klanten;
+COLLECT STATISTICS COLUMN (KLANT_NR ,MAAND_NR) ON Mi_temp.Mia_klanten;
+COLLECT STATISTICS COLUMN (BUSINESS_LINE) ON Mi_temp.Mia_klanten;
+COLLECT STATISTICS COLUMN (BUSINESS_LINE) ON Mi_temp.Mia_week;
+COLLECT STATISTICS COLUMN (CCA) ON Mi_temp.Mia_week;
+COLLECT STATISTICS COLUMN (ORG_NIVEAU3) ON Mi_temp.Mia_week;
+COLLECT STATISTICS COLUMN (ORG_NIVEAU2) ON Mi_temp.Mia_week;
+COLLECT STATISTICS COLUMN (ORG_NIVEAU1) ON Mi_temp.Mia_week;
+COLLECT STATISTICS COLUMN (ORG_NIVEAU0) ON Mi_temp.Mia_week;
+
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+/*************************************************************************************
+
+    BASIS SET tabel Mia_hist
+
+*************************************************************************************/
+
+/* maak columns (zeker primary index columns) zo mogelijk NOT NULL
+  COMPRESS zo veel mogelijk */
+
+/* kopie */
+CREATE TABLE MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW AS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist WITH DATA
+UNIQUE PRIMARY INDEX (Business_contact_nr, Klant_nr, Maand_nr)
+PARTITION BY (
+               RANGE_N(maand_nr  BETWEEN
+                      201001  AND 201012  EACH 1,
+                      201101  AND 201112  EACH 1,
+                      201201  AND 201212  EACH 1,
+                      201301  AND 201312  EACH 1,
+                      201401  AND 201412  EACH 1,
+                      201501  AND 201512  EACH 1,
+                      201601  AND 201612  EACH 1,
+                      201701  AND 201712  EACH 1,
+                      201801  AND 201812  EACH 1,
+                      201901  AND 201912  EACH 1,
+                      202001  AND 202012  EACH 1,
+                      NO RANGE,
+                      UNKNOWN))
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (PARTITION);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* WEEKCIJFERS VERWIJDEREN INDIEN MAAND REEDS AANWEZIG VAN VORIGE WEEK */
+DELETE FROM MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW
+WHERE maand_nr = (SEL Maand_nr FROM Mi_temp.Mia_week GROUP BY 1)
+;
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (PARTITION);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* WEEKCIJFERS TOEVOEGEN */
+
+INSERT INTO MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW
+SELECT *
+FROM Mi_temp.Mia_week
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (PARTITION);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (Klant_nr, Maand_nr, Business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN CCA;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN Business_contact_nr;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN Bedrijfsomzet;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN Kvk_nr;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN Contactpersoon;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN Faillissement_ind;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN Naw;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN Klant_ind;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN Klantstatus;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (MAAND_NR , SEGMENT ,KLANT_IND ,KLANTSTATUS);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (MAAND_NR , KLANT_IND ,KLANTSTATUS);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (KLANT_NR ,KLANT_IND);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (MAAND_NR , KLANT_IND);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN KLANT_NR;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (KLANT_IND ,KLANTSTATUS ,BUSINESS_LINE ,SEGMENT);
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (MAAND_NR);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (BUSINESS_LINE);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (MAAND_NR, KLANT_IND ,KLANTSTATUS ,SEGMENT);
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (Maand_nr, Business_line);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (Maand_nr, Segment, Subsegment);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (Maand_nr, CCA );
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (Maand_nr, Omzetklasse_id, Omzetklasse_oms);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN SEGMENT;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (PARTITION ,KLANT_NR ,MAAND_NR);
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN BO_NR;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (VERKORTE_NAAM ,KVK_NR);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (KLANT_NR);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (MAAND_NR , BO_NR);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN CLIENTGROEP;
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (Org_niveau2);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW COLUMN (Business_line, Segment, Org_niveau1);
+
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/*************************************************************************************
+
+    BASIS SET tabel Mia_klantkoppelingen_hist
+
+*************************************************************************************/
+
+/* kopie */
+CREATE TABLE MI_SAS_AA_MB_C_MB.Mia_klantkoppelingen_hist_NEW AS MI_SAS_AA_MB_C_MB.Mia_klantkoppelingen_hist WITH DATA
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr ,Business_contact_nr )
+PARTITION BY (
+               RANGE_N(maand_nr  BETWEEN
+                      201001  AND 201012  EACH 1,
+                      201101  AND 201112  EACH 1,
+                      201201  AND 201212  EACH 1,
+                      201301  AND 201312  EACH 1,
+                      201401  AND 201412  EACH 1,
+                      201501  AND 201512  EACH 1,
+                      201601  AND 201612  EACH 1,
+                      201701  AND 201712  EACH 1,
+                      201801  AND 201812  EACH 1,
+                      201901  AND 201912  EACH 1,
+                      202001  AND 202012  EACH 1,
+                      NO RANGE,
+                      UNKNOWN))
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_klantkoppelingen_hist_NEW COLUMN (PARTITION);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* WEEKCIJFERS VERWIJDEREN INDIEN MAAND REEDS AANWEZIG VAN VORIGE WEEK */
+DELETE FROM MI_SAS_AA_MB_C_MB.Mia_klantkoppelingen_hist_NEW
+WHERE maand_nr = (SEL Maand_nr FROM Mi_temp.Mia_klantkoppelingen GROUP BY 1)
+;
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_klantkoppelingen_hist_NEW COLUMN (PARTITION);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* WEEKCIJFERS TOEVOEGEN */
+
+INSERT INTO MI_SAS_AA_MB_C_MB.Mia_klantkoppelingen_hist_NEW
+SELECT  Klant_nr
+       ,Maand_nr
+       ,Business_contact_nr
+       ,Koppeling_id_CC
+       ,Koppeling_id_CE
+FROM Mi_temp.Mia_klantkoppelingen
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_klantkoppelingen_hist_NEW COLUMN (PARTITION);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_klantkoppelingen_hist_NEW COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_klantkoppelingen_hist_NEW COLUMN Business_contact_nr;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_klantkoppelingen_hist_NEW COLUMN MAAND_NR;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_klantkoppelingen_hist_NEW COLUMN (MAAND_NR, BUSINESS_CONTACT_NR);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_klantkoppelingen_hist_NEW COLUMN (MAAND_NR, BUSINESS_CONTACT_NR,Koppeling_id_CC);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_klantkoppelingen_hist_NEW COLUMN (MAAND_NR, BUSINESS_CONTACT_NR,Koppeling_id_CC,Koppeling_id_CE);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_klantkoppelingen_hist_NEW COLUMN (KLANT_NR);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*************************************************************************************
+
+    BASIS SET tabel Mia_groepkoppelingen_hist
+
+*************************************************************************************/
+
+CREATE TABLE Mi_sas_aa_mb_c_mb.Mia_groepkoppelingen_hist_NEW AS Mi_sas_aa_mb_c_mb.Mia_groepkoppelingen_hist WITH DATA
+UNIQUE PRIMARY INDEX ( Groep_nr, Maand_nr, Klant_nr )
+PARTITION BY (
+               RANGE_N(maand_nr  BETWEEN
+                      201001  AND 201012  EACH 1,
+                      201101  AND 201112  EACH 1,
+                      201201  AND 201212  EACH 1,
+                      201301  AND 201312  EACH 1,
+                      201401  AND 201412  EACH 1,
+                      201501  AND 201512  EACH 1,
+                      201601  AND 201612  EACH 1,
+                      201701  AND 201712  EACH 1,
+                      201801  AND 201812  EACH 1,
+                      201901  AND 201912  EACH 1,
+                      202001  AND 202012  EACH 1,
+                      NO RANGE,
+                      UNKNOWN))
+INDEX (Groep_nr)
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* WEEKCIJFERS VERWIJDEREN INDIEN MAAND REEDS AANWEZIG VAN VORIGE WEEK */
+
+DELETE FROM Mi_sas_aa_mb_c_mb.Mia_groepkoppelingen_hist_NEW
+WHERE maand_nr = (SEL Maand_nr FROM Mi_temp.Mia_groepkoppelingen GROUP BY 1)
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* WEEKCIJFERS TOEVOEGEN */
+
+INSERT INTO Mi_sas_aa_mb_c_mb.Mia_groepkoppelingen_hist_NEW
+SELECT * FROM Mi_temp.Mia_groepkoppelingen
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_sas_aa_mb_c_mb.Mia_groepkoppelingen_hist_NEW COLUMN (PARTITION);
+COLLECT STATISTICS Mi_sas_aa_mb_c_mb.Mia_groepkoppelingen_hist_NEW COLUMN (Groep_nr, Maand_nr, Klant_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+
+/*************************************************************************************
+
+    Tabel om per maand een chronologische rangorde aan te brengen, oa. voor
+    view performance set
+
+    (na MIa Week op te bouwen)
+
+*************************************************************************************/
+
 CREATE TABLE MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW
 AS
 (
@@ -2831,6 +5547,109 @@ INNER JOIN MI_vm.vlu_maand  b
 ) WITH DATA
 UNIQUE PRIMARY INDEX (Maand_nr)
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW COLUMN (Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW COLUMN (Maand_nr_cube_baten);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW COLUMN (Maand_nr_bet_trx);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW COLUMN (Maand_nr_beleggen);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW COLUMN (Maand_nr_kredieten);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW COLUMN (Maand_nr_part_zak);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW COLUMN (Maand_nr_Cidar);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW COLUMN (N_maanden_terug);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW COLUMN (Maand_nr, N_maanden_terug);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW COLUMN (Maand_edat);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW COLUMN (Maand_edat, N_maanden_terug);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+/*************************************************************************************
+
+   1B. Opbouw Mia_businesscontacts
+
+*************************************************************************************/
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.Mia_businesscontacts_NEW
+      (
+       Business_contact_nr DECIMAL(12,0),
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Datum_gegevens DATE FORMAT 'YYYYMMDD',
+       Bc_naam VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Bc_startdatum DATE FORMAT 'YYYYMMDD',
+       Bc_clientgroep CHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_crg BYTEINT,
+       Bc_bo_nr INTEGER,
+       Bc_bo_naam VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Bc_bo_bu_code CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_bo_bu_decode VARCHAR(60) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_validatieniveau BYTEINT,
+       Bc_cca_am INTEGER,
+       Bc_cca_rm INTEGER,
+       Bc_cca_am_bu_code CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_cca_am_bu_decode VARCHAR(60) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_cca_rm_bu_code CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_cca_rm_bu_decode VARCHAR(60) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_cca_pb INTEGER,
+       Bc_relatiecategorie SMALLINT,
+       Bc_verschijningsvorm SMALLINT,
+       Bc_verschijningsvorm_oms VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Bc_kvk_nr CHAR(12),
+       Bc_postcode CHAR(6),
+       Bc_sbi_code_bcdb CHAR(6) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_sbi_code_kvk CHAR(6) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_contracten BYTEINT,
+       Bc_klantlevenscyclus VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('ACTIVE', 'DECLINED (FOR FUTURE USE)', 'DORMANT (FOR FUTURE USE)', 'FORMER', 'POTENTIAL (FOR FUTURE USE)', 'PROSPECTIVE', 'REJECTED'),
+       Leidend_bc_ind BYTEINT,
+       Leidend_bc_pb_ind BYTEINT,
+       Cc_nr INTEGER,
+       Koppeling_id_CC CHAR(15),
+       Koppeling_id_CE CHAR(15),
+       Koppeling_id_CG CHAR(15),
+       Fhh_nr INTEGER,
+       Pcnl_nr INTEGER,
+       Bc_Lindorff_ind BYTEINT,
+       Bc_FRenR_ind BYTEINT,
+       Bc_in_nzdb BYTEINT,
+       Bc_SEC_US_Person_ind BYTEINT,
+       Bc_SEC_US_Person_oms VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('Geen SEC US Person','SEC US Person - Counterparties', 'SEC        US Person - U.S. Instituti','Geen SEC US Person - Accredite','Niet gereviewed op SEC US Pers',' Geen SEC US Person - Represent','SEC        US Person'),
+       Bc_FATCA_US_Person_ind BYTEINT,
+       Bc_FATCA_US_Person_class VARCHAR(46) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('Subject to Tax in US', 'P-NFFE', 'IGA_FFI', 'To be determined', 'NFFE', 'E-NFFE', 'Recalcitrant (applicable for Entities as well)', 'US', 'FFI', 'Not Subject to Tax in US'),
+       Bc_ringfence VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('Alleen Maat / Vennoot (ihkv VVB review)', 'Alleen Swift Key relatie', 'Alleen T24 relatie',
+                                                                               'Garantsteller/ov. betrokkene (ikv VVB)', 'Geen nieuwe diensten - zie E-archief', 'Integriteitsgevoelig.',
+                                                                               'klant afgewezen, zie klantbeeld', 'klant in faillissement / in surseance', 'Klant Levenscyclus Status Former',
+                                                                               'Klantacceptatie niet volledig doorlopen', 'Landenbeleid restrictie afzet producten',
+                                                                               'landenbeleid verbod op afzet producten', 'Rechtspersoon zonder actieve producten'),
+       Bc_Risico_score VARCHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       BC_Risico_klasse_oms VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_WtClas VARCHAR(16) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('Non Professional', 'Professional', 'ECP'),
+       Bc_AAClas VARCHAR(16) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('Non Professional', 'Professional', 'ECP'),
+       Bc_Rente_drv VARCHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_Comm_drv VARCHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_Valuta_drv VARCHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bc_Overig_cms VARCHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+       BC_GSRI_goedgekeurd CHAR(8) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('High', 'Medium', 'Low'),
+       BC_GSRI_Assessment_resultaat CHAR (10) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('ABOVE PAR', 'BELOW PAR'),
+       BC_GBC_nr DECIMAL(12,0),
+       BC_GBC_Naam VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       BC_ULP_nr DECIMAL(12,0),
+       BC_ULP_Naam VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       BC_CCA_TB INTEGER,
+       BC_CCA_TB_NAAM VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       BC_CCA_TB_TEAM VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS NULL COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+       Trust_complex_nr DECIMAL(12,0),
+       Franchise_complex_nr DECIMAL(12,0)
+      )
+UNIQUE PRIMARY INDEX ( Business_contact_nr, Klant_nr, Maand_nr )
+INDEX ( Business_contact_nr )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr )
+INDEX ( Bc_bo_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO MI_SAS_AA_MB_C_MB.Mia_businesscontacts_NEW
 SELECT A.Business_contact_nr,
@@ -2900,12 +5719,162 @@ SELECT A.Business_contact_nr,
   FROM Mi_temp.Mia_alle_bcs A
   JOIN MI_SAS_AA_MB_C_MB.Mia_periode_NEW X
     ON 1 = 1
-  LEFT OUTER JOIN Mi_vm_ldm.aSegment B
+  LEFT OUTER JOIN MI_TEMP.aSegment B
     ON A.Bc_verschijningsvorm = B.Segment_id
    AND B.Segment_type_code = 'APPTYP'
  WHERE A.DB_ind = 0
    AND A.RBS_ind = 0
    AND A.Bc_clientgroep NOT IN ('8001', '9001');
+
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_businesscontacts_NEW COLUMN ( Klant_nr, Maand_nr );
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_businesscontacts_NEW COLUMN BC_NAAM;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_businesscontacts_NEW COLUMN Leidend_bc_ind;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_businesscontacts_NEW COLUMN Bc_validatieniveau;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_businesscontacts_NEW COLUMN Bc_clientgroep;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_businesscontacts_NEW INDEX(Bc_bo_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_businesscontacts_NEW INDEX(Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_businesscontacts_NEW INDEX(Klant_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_businesscontacts_NEW INDEX(Business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Mia_businesscontacts_NEW INDEX(Business_contact_nr,Klant_nr,Maand_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+
+
+
+/*************************************************************************************
+
+    1C Mia_week_PB (afhankelijk van Mia_businesscontacts)
+
+*************************************************************************************/
+
+CREATE TABLE Mi_temp.Mia_week_PB
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Datum_gegevens DATE FORMAT 'YYYY-MM-DD',
+       Business_contact_nr DECIMAL(12,0),
+       Verkorte_naam CHAR(24) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Klant_ind BYTEINT,
+       Klantstatus CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Business_line VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Segment VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Subsegment VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Clientgroep CHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Clientgroep_theoretisch CHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Starter_ind BYTEINT,
+       VenS_ind BYTEINT,
+       ZZP_ind BYTEINT,
+       Internationaal_segment VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bo_nr INTEGER,
+       Bo_naam VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       CCA INTEGER,
+       Relatiemanager CHAR(48) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Org_niveau5 VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Org_niveau5_bo_nr INTEGER COMPRESS (103 ,-101 ),
+       Org_niveau4 VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Org_niveau4_bo_nr INTEGER COMPRESS (103 ,-101 ),
+       Org_niveau3 VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Org_niveau3_bo_nr INTEGER COMPRESS (103 ,-101 ),
+       Org_niveau2 VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Org_niveau2_bo_nr INTEGER COMPRESS (103 ,-101 ),
+       Org_niveau1 VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Org_niveau1_bo_nr INTEGER COMPRESS (103 ,-101 ),
+       Org_niveau0 VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Org_niveau0_bo_nr INTEGER COMPRESS (103 ,-101 ),
+       Bank_herkomst VARCHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Kvk_nr CHAR(13) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Kvk_branche_nr CHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Kvk_branche_oms CHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Kvk_klasse_werknemers VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Sbi_code CHAR(6) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Sbi_oms VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Sbi_bron VARCHAR(9) CHARACTER SET UNICODE NOT CASESPECIFIC,
+       AGIC_oms VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Sectorcluster VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       CMB_sector VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Subsector_code CHAR(3) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Subsector_oms VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Baten DECIMAL(18,0),
+       Aantal_jaren_bestaan INTEGER,
+       Aantal_jaren_klant INTEGER,
+       Aantal_maanden_klant INTEGER,
+       Omzet_inkomend DECIMAL(15,0),
+       Bedrijfsomzet DECIMAL(18,0),
+       Bedrijfsomzet_RM_ind BYTEINT,
+       Bedrijfsomzet_jaar INTEGER,
+       Omzetklasse_id SMALLINT,
+       Omzetklasse_oms VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+       SoW VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Primair_categorie VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Primair_ind BYTEINT,
+       Businessvolume DECIMAL(18,0),
+       Creditvolume DECIMAL(18,0),
+       Debetvolume DECIMAL(18,0),
+       Cross_sell INTEGER,
+       Cs_betalen BYTEINT,
+       Cs_creditgelden BYTEINT,
+       Cs_kredieten BYTEINT,
+       Cs_verzekeren_ondernemer BYTEINT,
+       Cs_creditcard BYTEINT,
+       Cs_employee_benefits BYTEINT,
+       Cs_beleggen BYTEINT,
+       Cs_lease BYTEINT,
+       Cs_ifn BYTEINT,
+       Cs_treasury BYTEINT,
+       Cs_digitaal_bankieren BYTEINT,
+       Cs_pakket_prive BYTEINT,
+       Cs_verzekeren_onderneming BYTEINT,
+       Aantal_mnd_sinds_productafname INTEGER,
+       Startersrekening_ind BYTEINT,
+       Starterspakket_ind BYTEINT,
+       MKB_pakket_ind BYTEINT,
+       VenS_pakket_ind BYTEINT,
+       Aantal_complexe_producten SMALLINT,
+       Complexe_producten VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Naw VARCHAR(315) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Postcode VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Geo_niveau1 CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Geo_niveau2 VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Geo_niveau3 VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       SME_regio VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       SME_marktgebied VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Postretour_adres_ind BYTEINT,
+       Telefoon_nr_vast VARCHAR(19) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Telefoon_nr_mobiel VARCHAR(19) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Contactpersoon CHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Emailadres VARCHAR(75) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Datum_volgend_contact DATE FORMAT 'YYYYMMDD',
+       Datum_laatste_contact_pro_ftf DATE FORMAT 'YYYYMMDD',
+       Datum_laatste_contact_ftf DATE FORMAT 'YYYYMMDD',
+       Aantal_contact_pro_ftf INTEGER,
+       Aantal_contact_ftf INTEGER,
+       Aantal_contact_pro_tel INTEGER,
+       Aantal_contact_tel INTEGER,
+       Faillissement_ind BYTEINT,
+       Surseance_ind BYTEINT,
+       Bijzonder_beheer_ind BYTEINT,
+       CRG SMALLINT,
+       GSRI_goedgekeurd VARCHAR(8) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('High','Low','Medium'),
+       GSRI_Assessment_resultaat VARCHAR(9) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('ABOVE PAR','ON PAR','BELOW PAR'),
+       Aantal_bcs INTEGER,
+       Aantal_bcs_in_scope INTEGER,
+       Leidend_business_contact_nr DECIMAL(12,0),
+       Leidend_bc_ind BYTEINT,
+       Signaal VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING TD_SYSFNLIB.LZCOMP_L DECOMPRESS USING TD_SYSFNLIB.LZDECOMP_L ,
+       Datum_revisie_TB DATE FORMAT 'YYYY-MM-DD',
+       CCA_consultant_TB INTEGER COMPRESS 0
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_week_PB
 SELECT A.Pcnl_nr AS Klant_nr,
@@ -2939,12 +5908,12 @@ SELECT A.Pcnl_nr AS Klant_nr,
        NULL AS Org_niveau5_bo_nr,
        NULL AS Org_niveau4,
        NULL AS Org_niveau4_bo_nr,
-       NULL AS Org_niveau3,
-       NULL AS Org_niveau3_bo_nr,
-       NULL AS Org_niveau2,
-       NULL AS Org_niveau2_bo_nr,
-       NULL AS Org_niveau1,
-       NULL AS Org_niveau1_bo_nr,
+       'PB' AS Org_niveau3,
+       309113 AS Org_niveau3_bo_nr,
+       'PB' AS Org_niveau2,
+       309113 AS Org_niveau2_bo_nr,
+       'PB' AS Org_niveau1,
+       309113 AS Org_niveau1_bo_nr,
        'PB' AS Org_niveau0,
        /* hoogste Bo_nr in de PB hierarchie */
        309113 AS Org_niveau0_bo_nr,
@@ -3052,6 +6021,113 @@ SELECT A.Pcnl_nr AS Klant_nr,
    AND B.Business_line = 'PB'
 QUALIFY ROW_NUMBER() OVER (PARTITION BY A.Pcnl_nr ORDER BY A.Leidend_bc_pb_ind, A.Business_contact_nr DESC ) = 1;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* kopie */
+CREATE TABLE MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW AS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB WITH DATA
+UNIQUE PRIMARY INDEX (Business_contact_nr, Klant_nr, Maand_nr)
+PARTITION BY (
+               RANGE_N(maand_nr  BETWEEN
+                      201001  AND 201012  EACH 1,
+                      201101  AND 201112  EACH 1,
+                      201201  AND 201212  EACH 1,
+                      201301  AND 201312  EACH 1,
+                      201401  AND 201412  EACH 1,
+                      201501  AND 201512  EACH 1,
+                      201601  AND 201612  EACH 1,
+                      201701  AND 201712  EACH 1,
+                      201801  AND 201812  EACH 1,
+                      201901  AND 201912  EACH 1,
+                      202001  AND 202012  EACH 1,
+                      NO RANGE,
+                      UNKNOWN))
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB COLUMN (PARTITION);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* GEEN HISTORIE BEWAREN, DUS ALLES VERWIJDEREN */
+DELETE FROM MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (PARTITION);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* WEEKCIJFERS TOEVOEGEN */
+
+INSERT INTO MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW
+SELECT *
+FROM Mi_temp.Mia_week_PB
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (PARTITION);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (Klant_nr, Maand_nr, Business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN CCA;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN Business_contact_nr;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN Bedrijfsomzet;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN Kvk_nr;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN Contactpersoon;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN Faillissement_ind;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN Naw;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN Klant_ind;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN Klantstatus;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (MAAND_NR , SEGMENT ,KLANT_IND ,KLANTSTATUS);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (MAAND_NR , KLANT_IND ,KLANTSTATUS);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (KLANT_NR ,KLANT_IND);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (MAAND_NR , KLANT_IND);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN KLANT_NR;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (KLANT_IND ,KLANTSTATUS ,BUSINESS_LINE ,SEGMENT);
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (MAAND_NR);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (BUSINESS_LINE);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (MAAND_NR, KLANT_IND ,KLANTSTATUS ,SEGMENT);
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (Maand_nr, Business_line);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (Maand_nr, Segment, Subsegment);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (Maand_nr, CCA );
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (Maand_nr, Omzetklasse_id, Omzetklasse_oms);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN SEGMENT;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (PARTITION ,KLANT_NR ,MAAND_NR);
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN BO_NR;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (VERKORTE_NAAM ,KVK_NR);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (KLANT_NR);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (MAAND_NR , BO_NR);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN CLIENTGROEP;
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (Org_niveau2);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_PB_NEW COLUMN (Business_line, Segment, Org_niveau1);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+
+/*************************************************************************************
+
+    BASIS SET tabellen Siebel (CRM), afhankelijk van Mia_week
+
+*************************************************************************************/
+
+/* ----------------------------------------------------------------------------------------------------
+
+Siebel_CST_Member
+
+------------------------------------------------------------------------------------------------------  */
+
+-- Tijdelijke tabel waarin de klantcomplexen van retail staan, dus BC - Leidend_BC en klant_nr. Klant_nr hoeft niet altijd aanwezig te zijn.
+-- Bij een ontbrekend leidend BC wordt het gewone BC als leidend gezien.
 
 CREATE TABLE mi_temp.cst_mi_private_banking_scope
 AS
@@ -3083,6 +6159,31 @@ WHERE      a.BC_clientgroep LIKE ANY ('04%', '05%')         -- private banking s
 )
 WITH DATA
 UNIQUE PRIMARY INDEX (business_contact_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-- Creeren tijdelijke tabel voor selecteren van alle CST members die aangeleverd zijn. De uiteindelijke tabel is hier een selectie van, om van elke rol binnen een team maar 1 medewerker over te houden. Een medewerker kan wel 2 rollen binnen 1 team hebben, dus hoeft niet uniek te zijn.
+
+CREATE TABLE MI_TEMP.Siebel_CST_Member_TEMP
+(
+      Klant_nr INTEGER,
+      Business_contact_nr DECIMAL(12,0),
+      Client_level CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('BC','CC','CE','CG'),
+      Leidend_Business_contact DECIMAL(12,0),
+      Bc_Business_segment VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Maand_nr INTEGER,
+      Datum_gegevens DATE FORMAT 'yyyy-mm-dd',
+      SBT_ID VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Naam VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Sbl_cst_deelnemer_rol VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+      SBL_gedelegeerde_ind CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      TB_Consultant CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS ('N','Y'),
+      Party_party_relatie_sdat  DATE FORMAT 'YYYY-MM-DD' NOT NULL,
+      Party_party_relatie_edat DATE FORMAT 'YYYY-MM-DD'
+      )
+PRIMARY INDEX ( Business_contact_nr, Klant_nr, Maand_nr, sbt_id, Sbl_cst_deelnemer_rol);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO MI_TEMP.Siebel_CST_Member_TEMP
 SELECT
@@ -3175,6 +6276,24 @@ ON A.sbl_cst_deelnemer_rol = X.taal_onafhankelijke_code
 
 WHERE (Leidend_BC IS NOT NULL AND Business_contact_nrX IS NOT NULL);
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-- De tijdelijke tabel bevat data waarbij medewerkers en klanten vaker kunnen voorkomen, omdat ze op meerdere clientlevels aangeleverd kunnen zijn. Om ervoor te zorgen dat een klant in combinatie met een medewerker maar 1x voorkomt, wordt hier een qualify op data gedaan.
+-- LET OP: Een medewerker kan 2 rollen binnen 1 team hebben en dus is klant_nr / SBT_id niet uniek.
+-- LET OP: Er kunnen verschillende medewerkers aangeleverd worden met dezelfde rol. Binnen CE is iemand anders de RM dan op CC niveau. Van elke rol wordt maar 1 iemand opgenomen in 1 team (hoogst aangeleverde clientlevel krijgt voorrang)
+
+-- HISTORIE MOET BEWAARD BLIJVEN!!! Na half jaar evaluatie of historie bewaren nodig is.
+
+CREATE TABLE Mi_temp.Siebel_CST_Member_NEW AS MI_TEMP.Siebel_CST_Member_TEMP WITH DATA;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+DELETE FROM mi_temp.Siebel_CST_Member_NEW
+WHERE maand_nr = (SEL Maand_nr FROM Mi_temp.Mia_week GROUP BY 1)
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.Siebel_CST_Member_NEW
 SELECT *
 FROM (SELECT a.*
@@ -3192,6 +6311,13 @@ QUALIFY RANK () OVER (PARTITION BY Leidend_Business_contact, sbl_cst_deelnemer_r
                                                   WHEN a.client_level = 'CC' THEN 2
                                                   WHEN a.client_level = 'CE' THEN 1
                                                   WHEN a.client_level = 'BC' THEN 0 END) DESC) = 1;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-- Updaten TB consultant
+
+-- Als er meerdere TB consultants aangeleverd worden, dan wordt degene gekozen die op hoogst clientlevel is aangeleverd, gevolgd door rol (CTS consultant krijgt voorrang boven Cash Management Consultant en overige) en gevolgd op SBT_id DESC
+-- TB Consultants worden aangeleverd onder CTS consultant (rol 45), Cash Management Consultant
 
 CREATE TABLE MI_TEMP.Consultants_CST_member AS
 (
@@ -3213,6 +6339,69 @@ QUALIFY RANK () OVER (PARTITION BY Leidend_Business_contact ORDER BY (CASE WHEN 
                                    A.sbt_id DESC ) = 1
 GROUP BY 1,2,3,4,5, client_level, SBL_cst_deelnemer_rol
 ) WITH DATA;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-- Consultant bijzoeken en TB_consultant veld updaten in CST member
+-- Join op leidend BC, SBT_ID
+
+UPDATE Mi_temp.Siebel_CST_Member_NEW
+FROM (SELECT A.SBT_ID,
+             A.Leidend_Business_contact,
+             A.sbl_cst_deelnemer_rol
+      FROM MI_TEMP.Consultants_CST_member A
+      WHERE  A.Leidend_Business_contact = mi_temp.Siebel_CST_Member_NEW.Leidend_Business_contact
+      AND A.SBT_ID = mi_temp.Siebel_CST_Member_NEW.SBT_ID
+      AND A.sbl_cst_deelnemer_rol = mi_temp.Siebel_CST_Member_NEW.sbl_cst_deelnemer_rol
+      GROUP BY 1,2,3) KL
+SET TB_Consultant = CASE WHEN KL.Leidend_Business_contact IS NOT NULL THEN 'Y' END
+WHERE KL.SBT_ID = mi_temp.Siebel_CST_Member_NEW.SBT_ID
+AND KL.Leidend_Business_contact = MI_TEMP.Siebel_CST_Member_NEW.Leidend_Business_contact
+AND TRIM(KL.sbl_cst_deelnemer_rol) = TRIM(MI_TEMP.Siebel_CST_Member_NEW.sbl_cst_deelnemer_rol);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_TEMP.Siebel_CST_Member_NEW COLUMN ( SBT_ID);
+COLLECT STATISTICS MI_TEMP.Siebel_CST_Member_NEW COLUMN ( SBT_ID, Maand_nr);
+COLLECT STATISTICS MI_TEMP.Siebel_CST_Member_NEW COLUMN ( Klant_nr, SBT_ID, Maand_nr);
+COLLECT STATISTICS MI_TEMP.Siebel_CST_Member_NEW COLUMN ( Klant_nr, Leidend_business_contact, SBT_ID, Maand_nr);
+COLLECT STATISTICS MI_TEMP.Siebel_CST_Member_NEW COLUMN ( Klant_nr, Leidend_business_contact, client_level, SBT_ID, Maand_nr);
+COLLECT STATISTICS MI_TEMP.Siebel_CST_Member_NEW COLUMN ( Klant_nr, Leidend_business_contact, client_level, SBT_ID, sbl_cst_deelnemer_rol, Maand_nr);
+COLLECT STATISTICS MI_TEMP.Siebel_CST_Member_NEW COLUMN (Klant_nr);
+COLLECT STATISTICS MI_TEMP.Siebel_CST_Member_NEW COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_TEMP.Siebel_CST_Member_NEW COLUMN (Klant_nr, Maand_nr, SBT_ID);
+COLLECT STATISTICS MI_TEMP.Siebel_CST_Member_NEW COLUMN (Client_level, Maand_nr);
+COLLECT STATISTICS MI_TEMP.Siebel_CST_Member_NEW COLUMN (Client_level, Maand_nr, SBT_ID);
+COLLECT STATISTICS MI_TEMP.Siebel_CST_Member_NEW COLUMN (Client_level);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ----------------------------------------------------------------------------------------------------
+
+Siebel_Verkoopteam_Member
+
+------------------------------------------------------------------------------------------------------  */
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW
+ (
+ klant_nr INTEGER
+,maand_nr INTEGER
+,datum_gegevens DATE FORMAT  'yyyy-mm-dd'
+,business_contact_nr DECIMAL(12,0)
+,siebel_verkoopkans_id VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC
+,sbt_id VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC
+,naam VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L
+,bo_nr_mdw INTEGER
+,bo_naam_mdw VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L
+,functie VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L
+,primary_ind BYTEINT
+,Client_level CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L
+,sdat DATE FORMAT  'yyyy-mm-dd'
+,edat DATE FORMAT  'yyyy-mm-dd'
+)
+UNIQUE PRIMARY INDEX (siebel_verkoopkans_id, klant_nr, business_contact_nr, sbt_id, primary_ind);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW
 SELECT
@@ -3252,6 +6441,57 @@ ON E.sbt_id = D.sbt_id_mdw
 QUALIFY RANK() OVER(PARTITION BY D.sbt_id_mdw ORDER BY A.primary_ind DESC) = 1 -- Indien sbt_id zowel primary als non-primary dan alleen primary selecteren
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (klant_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (klant_nr, maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (klant_nr, maand_nr, client_level);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (business_contact_nr, maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (business_contact_nr, maand_nr, client_level);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (siebel_verkoopkans_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (sbt_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (sbt_id, siebel_verkoopkans_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (Klant_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (Klant_nr, Maand_nr, siebel_verkoopkans_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (Klant_nr, Maand_nr, siebel_verkoopkans_id, primary_ind);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (Klant_nr, Maand_nr, SBT_ID);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (Klant_nr, Maand_nr, SBT_ID, primary_ind);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (Klant_nr, Maand_nr, SBT_ID, siebel_verkoopkans_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (Klant_nr, Business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (Klant_nr, Business_contact_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (Klant_nr, Maand_nr, siebel_verkoopkans_id, Business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (Business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (Business_contact_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_Verkoopteam_Member_NEW COLUMN (Maand_nr, siebel_verkoopkans_id, Business_contact_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ----------------------------------------------------------------------------------------------------
+
+Siebel_Verkoopkans_Contactpersoon
+
+------------------------------------------------------------------------------------------------------*/
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.Siebel_verkoopkans_contactpersoon_NEW
+ (
+ klant_nr INTEGER
+,maand_nr INTEGER
+,datum_gegevens DATE FORMAT  'yyyy-mm-dd'
+,business_contact_nr DECIMAL(12,0)
+,siebel_verkoopkans_id VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC
+,primary_ind BYTEINT
+,siebel_contactpersoon_id VARCHAR(15)  CHARACTER SET LATIN NOT CASESPECIFIC -- hiermee kun je van alles koppelen uit Siebel_contactpersoon
+,Client_level CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L
+,sdat DATE FORMAT  'yyyy-mm-dd'
+,edat DATE FORMAT  'yyyy-mm-dd'
+)
+UNIQUE PRIMARY INDEX (siebel_verkoopkans_id, klant_nr, siebel_contactpersoon_id);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO MI_SAS_AA_MB_C_MB.Siebel_verkoopkans_contactpersoon_NEW
 SELECT
  C.klant_nr
@@ -3284,10 +6524,105 @@ AND D.party_hergebruik_volgnr = A.hergebruik_volgnr_contactpersoon
 QUALIFY RANK() OVER(PARTITION BY D.siebel_contactpersoon_id ORDER BY A.primary_ind DESC) = 1 -- Indien siebel_contactpersoon_id zowel primary als non-primary dan alleen primary selecteren
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_verkoopkans_contactpersoon_NEW COLUMN (klant_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_verkoopkans_contactpersoon_NEW COLUMN (business_contact_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_verkoopkans_contactpersoon_NEW COLUMN (klant_nr, maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_verkoopkans_contactpersoon_NEW COLUMN (klant_nr, maand_nr, client_level);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_verkoopkans_contactpersoon_NEW COLUMN (business_contact_nr, maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_verkoopkans_contactpersoon_NEW COLUMN (business_contact_nr, maand_nr, client_level);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_verkoopkans_contactpersoon_NEW COLUMN (siebel_verkoopkans_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_verkoopkans_contactpersoon_NEW COLUMN (siebel_contactpersoon_id);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_verkoopkans_contactpersoon_NEW COLUMN (siebel_contactpersoon_id, maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_verkoopkans_contactpersoon_NEW COLUMN (siebel_contactpersoon_id, maand_nr, client_level);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_verkoopkans_contactpersoon_NEW COLUMN (siebel_contactpersoon_id, maand_nr, client_level, klant_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ----------------------------------------------------------------------------------------------------
+
+Siebel_CST_Member_hist
+
+------------------------------------------------------------------------------------------------------  */
+
+/* kopie tabel aanmaken*/
+CREATE TABLE MI_SAS_AA_MB_C_MB.Siebel_CST_Member_hist_NEW  AS MI_SAS_AA_MB_C_MB.Siebel_CST_Member_hist WITH DATA
+ PRIMARY INDEX (Klant_nr, Maand_nr, sbt_id)
+PARTITION BY RANGE_N(maand_nr  BETWEEN
+    201001  AND 201012  EACH 1,
+    201101  AND 201112  EACH 1,
+    201201  AND 201212  EACH 1,
+    201301  AND 201312  EACH 1,
+    201401  AND 201412  EACH 1,
+    201501  AND 201512  EACH 1,
+    201601  AND 201612  EACH 1,
+    201701  AND 201712  EACH 1,
+    201801  AND 201812  EACH 1,
+    201901  AND 201912  EACH 1,
+    202001  AND 202012  EACH 1,
+    NO RANGE,
+    UNKNOWN);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_CST_Member_hist_NEW COLUMN (PARTITION);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_CST_Member_hist_NEW COLUMN (Klant_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_CST_Member_hist_NEW COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_CST_Member_hist_NEW COLUMN (Klant_nr, Maand_nr, SBT_ID);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_CST_Member_hist_NEW COLUMN (Client_level, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_CST_Member_hist_NEW COLUMN (Client_level, Maand_nr, SBT_ID);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Siebel_CST_Member_hist_NEW COLUMN (Client_level);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* Weekcijfers verwijderen indien maand reeds aanwezig van vorige week*/
+DELETE FROM  MI_SAS_AA_MB_C_MB.Siebel_CST_Member_hist_NEW
+WHERE maand_nr = (SEL Maand_nr FROM MI_SAS_AA_MB_C_MB.Mia_periode_NEW);
+
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* Weekcijfers toevoegen*/
+INSERT INTO MI_SAS_AA_MB_C_MB.Siebel_CST_Member_hist_NEW
+SELECT * FROM Mi_temp.Siebel_CST_Member_NEW;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+
+
+/*************************************************************************************
+
+   2. Wegloopmodel
+
+   Commerciele clusters waarbij het volgende van toepassing is:
+   - Business Volume vorige maand bedroeg minimaal €100.000
+      en
+   - Business Volume huidige maand minimaal 20% afgenomen tov. voorgaande maand
+      en
+   - Business Volume huidige maand minimaal 20% afgenomen tov. Laagste Business volume voorgaande 12 maanden
+      en
+   - segment RM, minimaal 1 jaar klant, niet onder beheer van FR&R/Solveon (voor zover inzichtelijk)
+     geen Notaris (bus.vol. derdengelden varieert sterk)
+
+*************************************************************************************/
+
+CREATE TABLE Mi_temp.Wegl_rapportage_moment_t1
+      (
+       Maand_nr                  INTEGER
+      )
+UNIQUE PRIMARY INDEX ( Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.Wegl_rapportage_moment_t1
 SELECT Maand_nr
 FROM Mi_temp.Mia_week
 GROUP BY 1;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 CREATE TABLE Mi_temp.Wegl_rapportage_moment
 AS
@@ -3331,6 +6666,31 @@ AS
 UNIQUE PRIMARY INDEX ( Maand_nr )
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS COLUMN (MAANDNRLY) ON Mi_temp.Wegl_rapportage_moment;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*
+-- BESTAANDE KLANTEN ALS UITGANGSPUNT, BESTOND REEDS 12 mnd terug
+--
+--   Decode status:
+--   -  1 bestaand ongewijzigd
+--   -  2 nieuw
+--   -  3 vervallen
+--   - 99 niet te duiden
+*/
+CREATE TABLE Mi_temp.Cluster_status_basis
+      (
+       Klant_nr INTEGER,
+       Status INTEGER
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* Bestaande klanten                                           */
 INSERT INTO Mi_temp.Cluster_status_basis
 SELECT A.Cluster_nr AS Klant_nr,
        1
@@ -3360,6 +6720,114 @@ INNER JOIN
 ;
 
 .IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* verwijderen klanten die afgelopen 12 maanden minimaal 1x Solveon indicatie in kredietentabel */
+DELETE FROM Mi_temp.Cluster_status_basis
+WHERE Klant_nr IN
+        (
+        SEL Klant_nr
+
+        FROM
+                (
+                 SEL c.Klant_nr
+                 FROM Mi_cmb.vCIF_complex a
+
+                 INNER JOIN Mi_temp.Wegl_rapportage_moment b
+                    ON a.Maand_nr >= B.MaandNrLY
+
+                 INNER JOIN Mi_temp.Mia_alle_bcs c
+                    ON c.Business_contact_nr = TO_NUMBER(a.Fac_BC_nr)
+
+                 WHERE a.Fac_actief_ind = 1
+                   AND ZEROIFNULL(a.Bijzonder_beheer_ind) >= 1
+                   AND NOT a.Fac_BC_nr IS NULL
+                   AND NOT c.Klant_nr IS NULL
+                 GROUP BY 1
+                ) a
+        )
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* verwijderen klanten bijzonder beheer en klanten waarbij minimaal 1 BC op BO van Solveon/FR&R staat  */
+
+DELETE FROM Mi_temp.Cluster_status_basis
+WHERE Klant_nr IN
+(
+ SEL Klant_nr
+ FROM mi_temp.mia_week  a
+ WHERE (ZEROIFNULL(Faillissement_ind) + ZEROIFNULL(Surseance_ind) + ZEROIFNULL(Bijzonder_beheer_ind)) > 0
+ GROUP BY 1
+);
+
+ .IF ERRORCODE <> 0 THEN .GOTO EOP
+
+DELETE FROM Mi_temp.Cluster_status_basis
+WHERE Klant_nr IN
+(
+ SEL e.gerelateerd_party_id AS Cluster_nr
+ FROM mi_vm_ldm.aparty_party_relatie c
+
+ INNER JOIN
+                 (
+                  SEL a.bo_nr
+                  FROM mi_vm_ldm.vbo_mi_part_zak a
+                  WHERE a.bo_naam LIKE '%SOLV%'
+                     OR a.bo_naam LIKE '%BIJZ.KRED%'
+                     OR a.bo_naam LIKE '%BIJZ. KRED%'
+                     OR a.bo_naam LIKE '%LINDORFF%'
+                 ) d
+    ON d.bo_nr = c.gerelateerd_party_id
+
+ INNER JOIN Mi_vm_ldm.aParty_party_relatie e
+    ON e.Party_id = c.Party_id
+   AND e.Party_sleutel_type = 'BC'
+   AND e.Party_relatie_type_code = 'CBCTCC'
+   AND e.Gerelateerd_party_sleutel_type = 'CC'
+
+WHERE c.party_sleutel_type='BC'
+   AND c.gerelateerd_party_sleutel_type='BO'
+   AND c.party_relatie_type_code='BOBEHR'
+
+ GROUP BY 1);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* verwijderen klanten waarvan minimaal 1 BC failliet/surseance */
+DELETE FROM Mi_temp.Cluster_status_basis
+WHERE Klant_nr IN
+(
+  SEL a.cc_nr
+  FROM mi_vm_nzdb.vCommercieel_business_contact a
+  INNER JOIN Mi_temp.Wegl_rapportage_moment XB
+     ON a.Maand_nr = XB.Maand_nr
+  INNER JOIN (       SEL
+                         Party_id  AS Cbc_nr
+                     FROM MI_VM_Ldm.aKLANT_PROSPECT
+                     WHERE Party_sleutel_type = 'BC'
+                       AND Beschikkingsmacht IN (4, 5)
+                    GROUP BY 1) AS G
+    ON A.Cbc_nr = G.Cbc_nr
+ GROUP BY 1
+)
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* verwijderen Notarissen (grote volume fluctuaties op derdengelden rekeningen) */
+DELETE FROM Mi_temp.Cluster_status_basis
+WHERE Klant_nr IN
+(
+SEL
+        a.Klant_nr
+FROM mi_temp.mia_week  a
+WHERE a.SBI_code IN ('69103')
+   OR a.Kvk_branche_nr IN ('69103')
+);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ACTUELE WEEK data van RM-klanten */
 
 CREATE TABLE Mi_temp.Wegl_act_week
 AS
@@ -3396,6 +6864,10 @@ WHERE a.Aantal_jaren_klant >= 1
 ) WITH DATA
 UNIQUE PRIMARY INDEX (Klant_nr);
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*bepalen historische business volume items voor klanten*/
+
 CREATE TABLE Mi_temp.Wegl_hist_volume
 AS
 (
@@ -3420,6 +6892,9 @@ GROUP BY 1, 2
 ) WITH DATA
 UNIQUE PRIMARY INDEX (Maand_nr, Klant_nr);
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*bepalen wegloopcriteria indien 12 maanden historie aanwezig en het min. business volume van afgelopen 12 mnd groter is dan 0*/
 CREATE TABLE Mi_temp.Wegl_business_vol_items
 AS
 (
@@ -3441,6 +6916,11 @@ HAVING Min_Business_volume > 0 AND N_mnd = N_mnd_max
 ) WITH DATA
 UNIQUE PRIMARY INDEX (Klant_nr);
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* vorige maand minimaal 100k business volume & huidig business volume minimaal 20% gedaald tov vorige maand en laagste volume afgelopen 12 maanden*/
+
 CREATE TABLE Mi_temp.Wegl_potentieel
 AS
 (
@@ -3458,6 +6938,19 @@ WHERE ZEROIFNULL(b.Business_vol_L1m) > 100000
 ) WITH DATA
 UNIQUE PRIMARY INDEX (Klant_nr);
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* leads die deze maand voor het eerst zijn weggeschreven met stoplicht (week_1e_retentie_stoplicht is gevuld)
+   blijven staan, overige leads verwijderen en opnieuw bepalen  */
+
+DELETE
+  FROM MI_SAS_AA_MB_C_MB.Model_wegloop_hist
+ WHERE maand_nr IN (SELECT Maand_nr FROM Mi_temp.Mia_week GROUP BY 1)
+   AND ZEROIFNULL(week_1e_retentie_stoplicht ) = 0;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* leads vorige maand voor het eerst opgevoerd maar nog geen 4 weken gesignaleerd */
 INSERT INTO MI_SAS_AA_MB_C_MB.Model_wegloop_hist
 SELECT a.Klant_nr
       ,mnd.Maand_nr
@@ -3473,6 +6966,7 @@ SELECT a.Klant_nr
    ON a.klant_nr = e.Klant_nr
  JOIN Mi_temp.Wegl_rapportage_moment         mnd
    ON a.Maand_nr  =  mnd.MaandNrL1m
+/* deze maand nog niet weggeschreven */
 LEFT OUTER JOIN
                 (
                 SELECT klant_nr
@@ -3533,6 +7027,46 @@ SELECT a.Klant_nr
    AND d.business_line in ('CBC', 'SME')
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Model_wegloop_hist COLUMN (Klant_nr,Maand_nr,Retentie_stoplicht );
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Model_wegloop_hist COLUMN (Maand_nr,Retentie_stoplicht );
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Model_wegloop_hist COLUMN (Maand_nr );
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Model_wegloop_hist COLUMN (Week_1e_retentie_stoplicht );
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Model_wegloop_hist COLUMN (Klant_nr );
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Model_wegloop_hist COLUMN (Klant_nr,Week_1e_retentie_stoplicht );
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Model_wegloop_hist COLUMN (Retentie_stoplicht );
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Model_wegloop_hist COLUMN (Klant_nr,Maand_nr);
+
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+/*************************************************************************************
+
+   3. CUBe Baten en stoplichten
+
+*************************************************************************************/
+
+/************************************************************************************/
+/* 3.1 Historie CUBe leads bijwerken obv Siebel terugkoppeling                      */
+/************************************************************************************/
+
+-- Huidige en voorgaande maand bepalen
+
+CREATE TABLE Mi_temp.Mia_periode_CUBe
+      (
+       Maand_nr INTEGER,
+       Datum_gegevens DATE FORMAT 'YYYYMMDD',
+       Maand_nr_vm1 INTEGER
+      )
+UNIQUE PRIMARY INDEX ( Maand_nr )
+INDEX ( Maand_nr_vm1 )
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.Mia_periode_CUBe
 SELECT B.Maand_nr,
        D.Datum_gegevens,
@@ -3550,10 +7084,83 @@ SELECT B.Maand_nr,
  WHERE B.Lopende_maand_ind = 1
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS COLUMN (MAAND_NR_VM1) ON Mi_temp.Mia_periode_CUBe;
+COLLECT STATISTICS COLUMN (MAAND_NR) ON Mi_temp.Mia_periode_CUBe;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-- Nieuwe versie historische tabel CUBe leads
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW
+(
+ UUID                 CHAR(36) CHARACTER SET LATIN NOT CASESPECIFIC,
+ Klant_nr             INTEGER,
+ Business_contact_nr  DECIMAL(12,0),
+ Maand_nr             INTEGER,
+ CUBe_product_id      INTEGER,
+ Bedrijfstak_id       CHAR(3) CHARACTER SET LATIN CASESPECIFIC,
+ Omzetklasse_id       SMALLINT,
+ Baten                DECIMAL(18,2),
+ Baten_benchmark      DECIMAL(18,2),
+ Penetratie           DECIMAL(10,4),
+ Lichtbeheer          BYTEINT,
+ Status               VARCHAR(25),
+ N_mnd_status         INTEGER,
+ Lead_opvolgen        BYTEINT,
+ Recordtype           CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+ Datum_aanlevering    DATE FORMAT 'yyyy-mm-dd',
+ Datum_terugkoppeling DATE FORMAT 'yyyy-mm-dd',
+ Siebel_cube_lead_ID  VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC,
+ Koppeling_id_CC      VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC,
+ Datum_bijgewerkt     DATE FORMAT 'yyyy-mm-dd',
+ SBT_id_mdw_bijgewerkt_door VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+ Siebel_verkoopkans_id  VARCHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC,
+ Siebel_verkoopkans_Status VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS USING LZCOMP_L DECOMPRESS USING LZDECOMP_L,
+ Siebel_verkoopkans_Sdat DATE FORMAT 'MM-DD-YYYY'
+ )
+UNIQUE PRIMARY INDEX ( Maand_nr, UUID )
+INDEX ( Klant_nr )
+INDEX ( Business_contact_nr )
+INDEX ( Maand_nr )
+INDEX ( CUBe_product_id )
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COMMENT ON MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW AS 'NIET VERWIJDEREN - Afdelingstabel in schedulescript (CUBe)';
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-- vullen met oude historie
 INSERT INTO MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW
 SELECT * FROM MI_SAS_AA_MB_C_MB.CUBe_leads_hist
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW INDEX (Maand_nr, UUID);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW COLUMN (UUID);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW COLUMN (UUID, Maand_nr);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW COLUMN (Recordtype);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW COLUMN (Status, N_mnd_status);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW COLUMN (MAAND_NR);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW COLUMN (DATUM_TERUGKOPPELING);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW COLUMN (RECORDTYPE);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW COLUMN (Siebel_cube_lead_ID);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW COLUMN (Siebel_verkoopkans_id);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW COLUMN (Datum_bijgewerkt);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW COLUMN (SBT_id_mdw_bijgewerkt_door);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW COLUMN (Koppeling_id_CC);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW COLUMN (Siebel_verkoopkans_Status);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW COLUMN (Siebel_verkoopkans_Status,Siebel_verkoopkans_Sdat);
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW COLUMN (Siebel_verkoopkans_Sdat);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-- Indien de laatste levering in vorige maand heeft plaatsgevonden dan de leads kopieren naar huidige maand voor verwerking Siebel feedback
+-- Reeds verwijderde leads niet kopieren naar de nieuwe maand
 INSERT INTO MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW
 SEL
      a.UUID
@@ -3599,6 +7206,14 @@ INNER JOIN Mi_temp.Mia_periode_CUBe b
 WHERE ZEROIFNULL(x.Ind_nieuwe_mnd) = 0
   AND (a.Recordtype <> 'D' OR (a.Recordtype = 'D' AND a.Datum_terugkoppeling IS NULL))
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-- Leads van meest recente maand bijwerken met de laatst bekende status van het UUID
 
 UPDATE MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW
 FROM
@@ -3646,6 +7261,79 @@ WHERE TRIM(MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW.UUID) = TRIM(A.UUID)
   AND ((A.Cube_lead_edat + 1) >= MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW.Datum_aanlevering OR A.Cube_lead_edat IS NULL)
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-- N_mnd_status bijwerken
+
+UPDATE MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW
+FROM
+     (
+      SELECT TRIM(XA.UUID) AS UUID,
+             XA.Klant_nr,
+             XA.Business_contact_nr,
+             XA.Maand_nr,
+             XA.CUBe_product_id,
+             XA.Bedrijfstak_id,
+             XA.Omzetklasse_id,
+             XA.Baten,
+             XA.Baten_benchmark,
+             XA.Penetratie,
+             XA.Lichtbeheer,
+             COALESCE(XA.Status, 'New') AS StatusX,
+             XA.Lead_opvolgen,
+             ROW_NUMBER() OVER (PARTITION BY XA.UUID ORDER BY Maand_nr
+                 -- reset de nummering indien de voorgaande status van de UUID afwijkend is
+              RESET WHEN StatusX <>  MAX(StatusX) OVER (PARTITION BY XA.UUID ORDER BY Maand_nr ROWS BETWEEN 1 PRECEDING AND 1 PRECEDING)) N_mnd_status
+       FROM MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW XA
+      )  A
+SET N_mnd_status =  A.N_mnd_status
+
+WHERE MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW.UUID = A.UUID
+  AND MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW.Maand_nr = A.Maand_nr
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+/************************************************************************************/
+/* 3.2 CUBe model uitscoren, nieuwe leads genereren                                 */
+/************************************************************************************/
+
+/*-------------------------------------------------------------*/
+/* VERZAMELEN BASISGEGEVENS                                    */
+/*-------------------------------------------------------------*/
+
+COLLECT STATISTICS Mi_temp.Mia_klanten COLUMN ( Benchmark_ind );
+COLLECT STATISTICS Mi_temp.Mia_klanten COLUMN ( Maand_nr, Business_line, Segment, Omzetklasse_id );
+COLLECT STATISTICS Mi_temp.Mia_klanten COLUMN ( Maand_nr, Business_line, Segment, Subsegment, Bedrijfstak_id, Omzetklasse_id, Dimensie3_id, Dimensie4_id, Dimensie5_id );
+COLLECT STATISTICS Mi_temp.Mia_baten COLUMN ( Klant_nr, Maand_nr );
+COLLECT STATISTICS COLUMN (DIMENSIE3_ID) ON Mi_temp.Mia_klanten;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.CUBe_benchmark_000
+      (
+       Maand_nr INTEGER,
+       Business_line VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Segment VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Subsegment VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bedrijfstak_id VARCHAR(6),
+       Omzetklasse_id SMALLINT,
+       Dimensie3_id VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Dimensie4_id INTEGER,
+       Dimensie5_id INTEGER,
+       N_klanten INTEGER
+      )
+UNIQUE PRIMARY INDEX ( Maand_nr, Business_line, Segment, Subsegment, Bedrijfstak_id,
+                       Omzetklasse_id, Dimensie3_id, Dimensie4_id, Dimensie5_id );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.CUBe_benchmark_000
 SELECT A.Maand_nr,
        A.Business_line,
@@ -3660,6 +7348,63 @@ SELECT A.Maand_nr,
   FROM Mi_temp.Mia_klanten A
  WHERE A.Benchmark_ind = 1
  GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_000 COLUMN Business_line;
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_000 COLUMN (Maand_nr, Business_line, Segment, Subsegment, Bedrijfstak_id, Omzetklasse_id, Dimensie4_id, Dimensie5_id);
+COLLECT STATISTICS Mi_temp.Mia_klanten COLUMN (Business_line, Bedrijfstak_id);
+COLLECT STATISTICS Mi_temp.Mia_klanten COLUMN (Maand_nr, Business_line, Segment, Subsegment, Bedrijfstak_id, Omzetklasse_id, Dimensie4_id, Dimensie5_id);
+COLLECT STATISTICS Mi_temp.Mia_klanten COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS COLUMN (SUBSEGMENT) ON  Mi_temp.CUBe_benchmark_000;
+COLLECT STATISTICS COLUMN (DIMENSIE4_ID) ON   Mi_temp.CUBe_benchmark_000;
+COLLECT STATISTICS COLUMN (DIMENSIE5_ID) ON   Mi_temp.CUBe_benchmark_000;
+COLLECT STATISTICS COLUMN (MAAND_NR ,BUSINESS_LINE ,SEGMENT , SUBSEGMENT ,BEDRIJFSTAK_ID ,OMZETKLASSE_ID ,DIMENSIE3_ID ,DIMENSIE4_ID , DIMENSIE5_ID) ON Mi_temp.CUBe_benchmark_000;
+COLLECT STATISTICS COLUMN (BENCHMARK_IND ,BUSINESS_LINE) ON  Mi_temp.Mia_klanten;
+COLLECT STATISTICS COLUMN (KLANT_NR ,MAAND_NR ,CUBE_PRODUCT_ID)  ON Mi_temp.Mia_baten;
+COLLECT STATISTICS COLUMN (MAAND_NR ,SEGMENT ,SUBSEGMENT,BEDRIJFSTAK_ID , OMZETKLASSE_ID ,DIMENSIE4_ID ,DIMENSIE5_ID) ON  Mi_temp.CUBe_benchmark_000;
+COLLECT STATISTICS COLUMN (MAAND_NR) ON  Mi_temp.CUBe_benchmark_000;
+COLLECT STATISTICS COLUMN (MAAND_NR) ON Mi_temp.Mia_klanten;
+COLLECT STATISTICS COLUMN (DIMENSIE5_ID) ON    Mi_temp.Mia_klanten;
+COLLECT STATISTICS COLUMN (DIMENSIE4_ID) ON  Mi_temp.Mia_klanten;
+COLLECT STATISTICS COLUMN (SUBSEGMENT) ON Mi_temp.Mia_klanten;
+COLLECT STATISTICS COLUMN (MAAND_NR ,SEGMENT ,SUBSEGMENT ,BEDRIJFSTAK_ID , OMZETKLASSE_ID ,DIMENSIE4_ID ,DIMENSIE5_ID) ON  Mi_temp.Mia_klanten;
+COLLECT STATISTICS COLUMN (BENCHMARK_IND ,BUSINESS_LINE,KLANT_NR , MAAND_NR) ON Mi_temp.Mia_klanten;
+COLLECT STATISTICS COLUMN (SEGMENT ,SUBSEGMENT ,BEDRIJFSTAK_ID ,OMZETKLASSE_ID ,DIMENSIE4_ID ,DIMENSIE5_ID) ON Mi_temp.Mia_klanten;
+COLLECT STATISTICS COLUMN (SEGMENT ,SUBSEGMENT ,BEDRIJFSTAK_ID,OMZETKLASSE_ID ,DIMENSIE4_ID ,DIMENSIE5_ID) ON Mi_temp.CUBe_benchmark_000;
+COLLECT STATISTICS COLUMN (SEGMENT ,SUBSEGMENT ,DIMENSIE4_ID , DIMENSIE5_ID) ON Mi_temp.Mia_klanten;
+COLLECT STATISTICS COLUMN (SEGMENT ,SUBSEGMENT ,DIMENSIE4_ID , DIMENSIE5_ID) ON Mi_temp.CUBe_benchmark_000;
+COLLECT STATISTICS COLUMN (MAAND_NR ,BUSINESS_LINE ,SEGMENT ,SUBSEGMENT ,DIMENSIE4_ID ,DIMENSIE5_ID) ON  Mi_temp.CUBe_benchmark_000;
+COLLECT STATISTICS COLUMN (MAAND_NR ,BUSINESS_LINE ,SEGMENT ,SUBSEGMENT ,DIMENSIE4_ID ,DIMENSIE5_ID) ON Mi_temp.Mia_klanten;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.CUBe_benchmark_001
+      (
+       Maand_nr INTEGER,
+       Business_line VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Segment VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Subsegment VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bedrijfstak_id VARCHAR(6),
+       Omzetklasse_id SMALLINT,
+       Dimensie3_id VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Dimensie4_id INTEGER,
+       Dimensie5_id INTEGER,
+       CUBe_product_id INTEGER,
+
+       Min_verhouding DECIMAL(10,2),
+       Min_benchmark DECIMAL(10,0),
+       Min_penetratie DECIMAL(10,2),
+       Adresseerbaarheid DECIMAL(10,2),
+       N_met_product INTEGER,
+       Baten_product DECIMAL(18,2),
+       N_klanten INTEGER,
+       Penetratie DECIMAL(10,4)
+      )
+UNIQUE PRIMARY INDEX ( Maand_nr, Business_line, Segment, Subsegment, Bedrijfstak_id,
+                       Omzetklasse_id, Dimensie3_id, Dimensie4_id, Dimensie5_id, CUBe_product_id );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.CUBe_benchmark_001
 SELECT A.Maand_nr,
@@ -3707,6 +7452,59 @@ SELECT A.Maand_nr,
    AND B.CUBe_product_id IS NOT NULL
    AND A.Business_line in ('CBC', 'SME')
  GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_baten COLUMN Baten;
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_001 COLUMN (Maand_nr, Business_line, Segment, Omzetklasse_id, CUBe_product_id);
+COLLECT STATISTICS COLUMN (CUBE_PRODUCT_ID) ON Mi_temp.Mia_baten;
+COLLECT STATISTICS COLUMN (N_MET_PRODUCT) ON  Mi_temp.CUBe_benchmark_001;
+COLLECT STATISTICS COLUMN (MAAND_NR ,BUSINESS_LINE ,SEGMENT , SUBSEGMENT ,BEDRIJFSTAK_ID ,OMZETKLASSE_ID ,DIMENSIE3_ID,DIMENSIE4_ID , DIMENSIE5_ID ,CUBE_PRODUCT_ID) ON  Mi_temp.CUBe_benchmark_001;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+CREATE TABLE Mi_temp.CUBe_benchmark_002
+      (
+       Maand_nr INTEGER,
+       Business_line VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Segment VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Subsegment VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bedrijfstak_id VARCHAR(6),
+       Omzetklasse_id SMALLINT,
+       Dimensie3_id VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Dimensie4_id INTEGER,
+       Dimensie5_id INTEGER,
+       CUBe_product_id INTEGER,
+       Min_verhouding DECIMAL(10,2),
+       Min_benchmark DECIMAL(10,0),
+       Min_penetratie DECIMAL(10,2),
+       Adresseerbaarheid DECIMAL(10,2),
+       N_met_product INTEGER,
+       Baten_product DECIMAL(18,2),
+       N_klanten INTEGER,
+       Penetratie DECIMAL(10,4),
+
+       Baten_benchmark DECIMAL(18,2),
+       Baten_cumulatief DECIMAL(18,2),
+       Percentage_cumulatief DECIMAL(10,4),
+       D01 DECIMAL(18,2),
+       D02 DECIMAL(18,2),
+       D03 DECIMAL(18,2),
+       D04 DECIMAL(18,2),
+       D05 DECIMAL(18,2),
+       D06 DECIMAL(18,2),
+       D07 DECIMAL(18,2),
+       D08 DECIMAL(18,2),
+       D09 DECIMAL(18,2),
+       D10 DECIMAL(18,2),
+       Min_penetratie_en_klanten_ind BYTEINT
+      )
+UNIQUE PRIMARY INDEX ( Maand_nr, Business_line, Segment, Subsegment, Bedrijfstak_id,
+                       Omzetklasse_id, Dimensie3_id, Dimensie4_id, Dimensie5_id, CUBe_product_id );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.CUBe_benchmark_002
 SELECT A.*,
@@ -3757,6 +7555,55 @@ SELECT A.*,
    AND A.CUBe_product_id = D.CUBe_product_id AND A.N_met_product >= 10
  GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_002 COLUMN (Omzetklasse_id);
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_002 COLUMN (Omzetklasse_id, Min_penetratie_en_klanten_ind);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.CUBe_benchmark_003
+      (
+       Maand_nr INTEGER,
+       Business_line VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Segment VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Subsegment VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bedrijfstak_id VARCHAR(6),
+       Omzetklasse_id SMALLINT,
+       Dimensie3_id VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Dimensie4_id INTEGER,
+       Dimensie5_id INTEGER,
+       CUBe_product_id INTEGER,
+       Min_verhouding DECIMAL(10,2),
+       Min_benchmark DECIMAL(10,0),
+       Min_penetratie DECIMAL(10,2),
+       Adresseerbaarheid DECIMAL(10,2),
+       N_met_product INTEGER,
+       Baten_product DECIMAL(18,2),
+       N_klanten INTEGER,
+       Penetratie DECIMAL(10,4),
+
+       Baten_benchmark DECIMAL(18,2),
+       Baten_cumulatief DECIMAL(18,2),
+       Percentage_cumulatief DECIMAL(10,4),
+       D01 DECIMAL(18,2),
+       D02 DECIMAL(18,2),
+       D03 DECIMAL(18,2),
+       D04 DECIMAL(18,2),
+       D05 DECIMAL(18,2),
+       D06 DECIMAL(18,2),
+       D07 DECIMAL(18,2),
+       D08 DECIMAL(18,2),
+       D09 DECIMAL(18,2),
+       D10 DECIMAL(18,2),
+       Min_penetratie_en_klanten_ind BYTEINT,
+       Overgenomen_baten_benchmark BYTEINT
+      )
+UNIQUE PRIMARY INDEX ( Maand_nr, Business_line, Segment, Subsegment, Bedrijfstak_id,
+                       Omzetklasse_id, Dimensie3_id, Dimensie4_id, Dimensie5_id, CUBe_product_id );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.CUBe_benchmark_003
 SELECT A.*,
        0 AS Overgenomen_baten_benchmark
@@ -3774,6 +7621,18 @@ SELECT A.*,
   FROM Mi_temp.CUBe_benchmark_002 A
  WHERE A.Omzetklasse_id = 2
    AND A.Min_penetratie_en_klanten_ind = 1;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_003 COLUMN Min_penetratie_en_klanten_ind;
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_003 COLUMN Overgenomen_baten_benchmark;
+COLLECT STATISTICS COLUMN (MAAND_NR ,BUSINESS_LINE ,SEGMENT , SUBSEGMENT ,BEDRIJFSTAK_ID ,DIMENSIE3_ID ,DIMENSIE4_ID,DIMENSIE5_ID , CUBE_PRODUCT_ID) ON Mi_temp.CUBe_benchmark_002;
+COLLECT STATISTICS COLUMN (MAAND_NR ,BUSINESS_LINE ,SEGMENT, SUBSEGMENT ,BEDRIJFSTAK_ID ,OMZETKLASSE_ID ,DIMENSIE3_ID,DIMENSIE4_ID , DIMENSIE5_ID ,CUBE_PRODUCT_ID) ON  Mi_temp.CUBe_benchmark_002;
+COLLECT STATISTICS COLUMN (OMZETKLASSE_ID) ON  Mi_temp.CUBe_benchmark_003;
+COLLECT STATISTICS COLUMN (MAAND_NR ,BUSINESS_LINE ,SEGMENT , SUBSEGMENT ,BEDRIJFSTAK_ID ,OMZETKLASSE_ID ,DIMENSIE3_ID ,DIMENSIE4_ID , DIMENSIE5_ID ,CUBE_PRODUCT_ID) ON Mi_temp.CUBe_benchmark_003;
+COLLECT STATISTICS COLUMN (OVERGENOMEN_BATEN_BENCHMARK ,MIN_PENETRATIE_EN_KLANTEN_IND) ON Mi_temp.CUBe_benchmark_003;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.CUBe_benchmark_003
 SELECT A.Maand_nr,
@@ -3829,6 +7688,13 @@ SELECT A.*,
   FROM Mi_temp.CUBe_benchmark_002 A
  WHERE A.Omzetklasse_id = 3
    AND A.Min_penetratie_en_klanten_ind = 1;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_003 COLUMN Min_penetratie_en_klanten_ind;
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_003 COLUMN Overgenomen_baten_benchmark;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.CUBe_benchmark_003
 SELECT A.Maand_nr,
@@ -3884,6 +7750,13 @@ SELECT A.*,
   FROM Mi_temp.CUBe_benchmark_002 A
  WHERE A.Omzetklasse_id = 4
    AND A.Min_penetratie_en_klanten_ind = 1;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_003 COLUMN Min_penetratie_en_klanten_ind;
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_003 COLUMN Overgenomen_baten_benchmark;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.CUBe_benchmark_003
 SELECT A.Maand_nr,
@@ -3939,6 +7812,13 @@ SELECT A.*,
   FROM Mi_temp.CUBe_benchmark_002 A
  WHERE A.Omzetklasse_id = 5
    AND A.Min_penetratie_en_klanten_ind = 1;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_003 COLUMN Min_penetratie_en_klanten_ind;
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_003 COLUMN Overgenomen_baten_benchmark;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.CUBe_benchmark_003
 SELECT A.Maand_nr,
@@ -3994,6 +7874,13 @@ SELECT A.*,
   FROM Mi_temp.CUBe_benchmark_002 A
  WHERE A.Omzetklasse_id = 6
    AND A.Min_penetratie_en_klanten_ind = 1;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_003 COLUMN Min_penetratie_en_klanten_ind;
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_003 COLUMN Overgenomen_baten_benchmark;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.CUBe_benchmark_003
 SELECT A.Maand_nr,
@@ -4044,6 +7931,16 @@ SELECT A.Maand_nr,
  WHERE A.Omzetklasse_id = 6
    AND A.Min_penetratie_en_klanten_ind = 0;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_003 COLUMN Min_penetratie_en_klanten_ind;
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_003 COLUMN Overgenomen_baten_benchmark;
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_002 COLUMN ( Min_penetratie_en_klanten_ind );
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_002 COLUMN (Maand_nr, Business_line, Segment, Omzetklasse_id, CUBe_product_id);
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_003 COLUMN (Maand_nr, Business_line, Segment, Omzetklasse_id, CUBe_product_id);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.CUBe_benchmark_003
 SELECT A.*,
        0 AS Overgenomen_baten_benchmark
@@ -4059,6 +7956,60 @@ SELECT A.*,
    AND ((A.Dimensie5_id = B.Dimensie5_id) OR (A.Dimensie5_id IS NULL AND B.Dimensie5_id IS NULL))
    AND A.CUBe_product_id = B.CUBe_product_id
  WHERE A.Min_penetratie_en_klanten_ind = 0  AND ZEROIFNULL(B.Overgenomen_baten_benchmark) = 0;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+/*-------------------------------------------------------------*/
+/* VERZAMELEN BASISGEGEVENS                                    */
+/*-------------------------------------------------------------*/
+
+UPDATE MI_SAS_AA_MB_C_MB.Mia_periode_NEW
+   SET Datum_leads = Mi_cmb.CUBe_collector_datum.DateLastModified;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_003 COLUMN ( Maand_nr, Business_line, Segment, Omzetklasse_id );
+COLLECT STATISTICS Mi_temp.Mia_baten COLUMN ( Klant_nr, Maand_nr );
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_003 COLUMN ( Maand_nr, Business_line, Segment, Subsegment, Bedrijfstak_id, Omzetklasse_id, Dimensie4_id, Dimensie5_id );
+COLLECT STATISTICS Mi_temp.CUBe_benchmark_003 COLUMN (MAAND_NR ,BUSINESS_LINE ,SUBSEGMENT,BEDRIJFSTAK_ID ,OMZETKLASSE_ID ,DIMENSIE4_ID ,DIMENSIE5_ID);
+COLLECT STATISTICS COLUMN (SUBSEGMENT) ON  Mi_temp.CUBe_benchmark_003;
+COLLECT STATISTICS COLUMN (BEDRIJFSTAK_ID) ON Mi_temp.CUBe_benchmark_003;
+COLLECT STATISTICS COLUMN (DIMENSIE4_ID) ON Mi_temp.CUBe_benchmark_003;
+COLLECT STATISTICS COLUMN (DIMENSIE5_ID) ON Mi_temp.CUBe_benchmark_003;
+COLLECT STATISTICS COLUMN (BUSINESS_LINE) ON Mi_temp.CUBe_benchmark_003;
+COLLECT STATISTICS COLUMN (BUSINESS_LINE ,KLANT_NR ,MAAND_NR) ON Mi_temp.Mia_klanten;
+COLLECT STATISTICS COLUMN (KLANT_NR) ON Mi_temp.Mia_klanten;
+COLLECT STATISTICS COLUMN (BUSINESS_LINE) ON Mi_temp.Mia_klanten;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+CREATE TABLE Mi_temp.Mia_baten_benchmarken_001
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       CUBe_product_id INTEGER,
+       Baten DECIMAL(18,2),
+
+       Baten_benchmark DECIMAL(18,2),
+       Penetratie DECIMAL(10,4),
+       Min_verhouding DECIMAL(10,2),
+       Min_benchmark DECIMAL(10,0),
+       Min_penetratie DECIMAL(10,2),
+       Adresseerbaarheid DECIMAL(10,2),
+       Lichtbeheer BYTEINT
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr, CUBe_product_id )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr )
+INDEX ( CUBe_product_id );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 
 INSERT INTO Mi_temp.Mia_baten_benchmarken_001
 SELECT A.Klant_nr,
@@ -4095,6 +8046,45 @@ LEFT OUTER JOIN Mi_temp.CUBe_benchmark_003 B
   AND (B.CUBe_product_id = C.CUBe_product_id OR (B.CUBe_product_id IS NULL AND C.CUBe_product_id IS NOT NULL))
 WHERE A.Business_line IN ('CBC', 'SME', 'CIB')
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_baten_benchmarken_001 COLUMN ( Klant_nr, Maand_nr );
+COLLECT STATISTICS Mi_temp.Mia_baten_benchmarken_001 COLUMN ( Lichtbeheer );
+
+
+COLLECT STATISTICS COLUMN (KLANT_NR ,MAAND_NR ,CUBE_PRODUCT_ID, BATEN ,BATEN_BENCHMARK ,PENETRATIE ,MIN_VERHOUDING,MIN_BENCHMARK ,MIN_PENETRATIE ,ADRESSEERBAARHEID) ON Mi_temp.Mia_baten_benchmarken_001;
+COLLECT STATISTICS COLUMN (MAAND_NR) ON Mi_temp.Mia_baten_benchmarken_001;
+COLLECT STATISTICS COLUMN (KLANT_NR) ON Mi_temp.Mia_baten_benchmarken_001;
+COLLECT STATISTICS COLUMN (LICHTBEHEER ,CUBE_PRODUCT_ID) ON Mi_temp.Mia_baten_benchmarken_001;
+COLLECT STATISTICS COLUMN (CUBE_PRODUCT_ID) ON Mi_temp.Mia_baten_benchmarken_001;
+COLLECT STATISTICS COLUMN (MAAND_NR) ON Mi_temp.Mia_baten_benchmarken_001;
+COLLECT STATISTICS COLUMN (KLANT_NR ,MAAND_NR) ON Mi_temp.Mia_baten_benchmarken_001;
+COLLECT STATISTICS COLUMN (LICHTBEHEER) ON Mi_temp.Mia_baten_benchmarken_001;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.Mia_baten_benchmarken_002
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       CUBe_product_id INTEGER,
+       Baten DECIMAL(18,2),
+
+       Baten_benchmark DECIMAL(18,2),
+       Penetratie DECIMAL(10,4),
+       Min_verhouding DECIMAL(10,2),
+       Min_benchmark DECIMAL(10,0),
+       Min_penetratie DECIMAL(10,2),
+       Adresseerbaarheid DECIMAL(10,2),
+       Lichtbeheer BYTEINT
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr, CUBe_product_id )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr )
+INDEX ( CUBe_product_id );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_baten_benchmarken_002
 SELECT A.Klant_nr,
@@ -4140,13 +8130,55 @@ INSERT INTO Mi_temp.Mia_baten_benchmarken_002
 SELECT A.*
   FROM Mi_temp.Mia_baten_benchmarken_001 A
  WHERE A.CUBe_product_id NOT IN (1, 9, 25, 26)
-;
-
-INSERT INTO Mi_temp.Mia_baten_benchmarken_002
+;INSERT INTO Mi_temp.Mia_baten_benchmarken_002
 SELECT A.*
   FROM Mi_temp.Mia_baten_benchmarken_001 A
  WHERE A.CUBe_product_id IN (1, 9, 25, 26)
    AND A.Lichtbeheer NE 1;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_klanten COLUMN Business_line;
+COLLECT STATISTICS Mi_temp.Mia_klanten COLUMN (Klant_nr);
+COLLECT STATISTICS Mi_temp.Mia_klanten COLUMN Segment;
+COLLECT STATISTICS COLUMN (BUSINESS_LINE ,KLANT_NR) ON Mi_temp.Mia_klanten;
+COLLECT STATISTICS COLUMN (BC_NR) ON Mi_cmb.mia_markets_lnd;
+COLLECT STATISTICS COLUMN (( CASE WHEN ((aantal_euribor_leningen > 0) AND (aantal_derivaten = 0 )) THEN (1) ELSE (0) END )) AS ST_030311360979_0_mia_markets_lnd ON Mi_cmb.mia_markets_lnd;
+COLLECT STATISTICS COLUMN (maand_nr ,( CASE WHEN((aantal_derivaten > 0) AND (((ADD_MONTHS((max_maturity_date ),(36)))< laatste_afloop_datum) AND (aantal_euribor_leningen > 0 )))THEN (1) ELSE (0) END ),bc_nr) AS ST_220312544215_1_mia_markets_lnd ON Mi_cmb.mia_markets_lnd;
+COLLECT STATISTICS COLUMN (( CASE WHEN ((aantal_derivaten > 0) AND (((ADD_MONTHS((max_maturity_date ),(36 )))< laatste_afloop_datum) AND (aantal_euribor_leningen > 0 ))) THEN (1) ELSE (0) END )) AS ST_220312544215_0_mia_markets_lnd ON Mi_cmb.mia_markets_lnd;
+COLLECT STATISTICS COLUMN (COMMODITY ,BEDRIJFSTAK_ID) ON MI_SAS_AA_MB_C_MB.CUBe_bedrijfstak;
+COLLECT STATISTICS COLUMN (BEDRIJFSTAK_ID) ON MI_SAS_AA_MB_C_MB.CUBe_bedrijfstak;
+COLLECT STATISTICS COLUMN (COMMODITY) ON MI_SAS_AA_MB_C_MB.CUBe_bedrijfstak;
+COLLECT STATISTICS COLUMN (KLANT_NR) ON Mi_temp.Mia_baten_benchmarken_002;
+COLLECT STATISTICS COLUMN (BATEN) ON Mi_temp.Mia_baten_benchmarken_002;
+COLLECT STATISTICS COLUMN (CUBE_PRODUCT_ID) ON Mi_temp.Mia_baten_benchmarken_002;
+COLLECT STATISTICS COLUMN (CUBE_PRODUCT_ID ,CLUSTER_NR) ON Mi_cmb.CUBe_leads_hist;
+COLLECT STATISTICS COLUMN (CUBE_PRODUCT_ID ,MAAND_NR) ON Mi_cmb.CUBe_leads_hist;
+COLLECT STATISTICS COLUMN (RETENTIE_STOPLICHT ,KLANT_NR) ON MI_SAS_AA_MB_C_MB.Model_wegloop_hist;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.Mia_baten_benchmarken_003
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       CUBe_product_id INTEGER,
+       Baten DECIMAL(18,2),
+
+       Baten_benchmark DECIMAL(18,2),
+       Penetratie DECIMAL(10,4),
+       Min_verhouding DECIMAL(10,2),
+       Min_benchmark DECIMAL(10,0),
+       Min_penetratie DECIMAL(10,2),
+       Adresseerbaarheid DECIMAL(10,2),
+       Lichtbeheer BYTEINT
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr, CUBe_product_id )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr )
+INDEX ( CUBe_product_id );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_baten_benchmarken_003
 SELECT A.Klant_nr,
@@ -4186,9 +8218,7 @@ SELECT A.Klant_nr,
    AND A.Klant_nr NOT IN (SELECT X.Klant_nr
                             FROM Mi_temp.Mia_baten_benchmarken_003 X
                            WHERE X.CUBe_product_id = 25)  /* Lease */
-;
-
-INSERT INTO Mi_temp.Mia_baten_benchmarken_003
+;INSERT INTO Mi_temp.Mia_baten_benchmarken_003
 SELECT A.Klant_nr,
        A.Maand_nr,
        26 AS CUBe_product_id,  /* Factoring */
@@ -4213,9 +8243,7 @@ SELECT A.Klant_nr,
                             FROM Mi_temp.Mia_baten_benchmarken_003 X
                            WHERE X.CUBe_product_id = 26)  /* Factoring */
    AND A.Business_line in ('CBC', 'SME')
-;
-
-INSERT INTO Mi_temp.Mia_baten_benchmarken_003
+;INSERT INTO Mi_temp.Mia_baten_benchmarken_003
 SELECT A.Klant_nr,
        A.Maand_nr,
        26 AS CUBe_product_id,  /* Factoring */
@@ -4246,6 +8274,13 @@ SELECT A.Klant_nr,
    AND A.Business_line in ('CBC', 'SME')
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN Verkorte_naam;
+COLLECT STATISTICS Mi_temp.Mia_klanten COLUMN (Klant_nr, Maand_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.Mia_baten_benchmarken_003
 SELECT A.Klant_nr,
        A.Maand_nr,
@@ -4272,6 +8307,13 @@ SELECT A.Klant_nr,
                              WHERE X.CUBe_product_id = 12)  /* International Cash Management */
    AND A.Omzetklasse_id > 1
    AND A.Business_line in ('CBC', 'SME');
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_baten_benchmarken_002 COLUMN (Baten);
+COLLECT STATISTICS Mi_temp.Mia_baten_benchmarken_003 COLUMN (CUBe_product_id);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_baten_benchmarken_003
 SELECT A.Klant_nr,
@@ -4304,6 +8346,12 @@ SELECT A.Klant_nr,
    AND A.Business_line in ('CBC', 'SME')
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_baten_benchmarken_002 COLUMN (CUBe_product_id);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.Mia_baten_benchmarken_003
 SELECT A.Klant_nr,
        A.Maand_nr,
@@ -4335,6 +8383,12 @@ SELECT A.Klant_nr,
    AND A.Business_line in ('CBC', 'SME')
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_week COLUMN Klantstatus;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.Mia_baten_benchmarken_003
 SELECT A.Klant_nr,
        A.Maand_nr,
@@ -4353,6 +8407,18 @@ SELECT A.Klant_nr,
  WHERE (A.Business_line in ('CBC', 'SME'))
    AND B.Klantstatus = 'S';
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Model_wegloop_hist COLUMN (Retentie_stoplicht);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Model_wegloop_hist COLUMN (Maand_nr, Retentie_stoplicht);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Model_wegloop_hist COLUMN (Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Model_wegloop_hist COLUMN Week_1e_retentie_stoplicht;
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Model_wegloop_hist COLUMN (Klant_nr, Week_1e_retentie_stoplicht);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.Model_wegloop_hist COLUMN Klant_nr;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* BESTAANDE RETENTIELEADS, MITS NIET OUDER DAN 3 MAANDEN */
 INSERT INTO Mi_temp.Mia_baten_benchmarken_003
 SELECT A.Cluster_nr,
        A.Maand_nr,
@@ -4385,9 +8451,8 @@ FROM Mi_cmb.CUBe_leads_hist A
    AND XY.Dag_naam = XZ.Dag_naam
 
 WHERE A.CUBe_product_id = 81
-   AND XZ.Datum > ADD_MONTHS(XY.Datum, -3);
-
-
+   AND XZ.Datum > ADD_MONTHS(XY.Datum, -3); /* NIET OUDER DAN 3 MAANDEN */
+/* NIEUWE RETENTIELEADS */
 INSERT INTO Mi_temp.Mia_baten_benchmarken_003
 SELECT A.Klant_nr,
        A.Maand_nr,
@@ -4424,6 +8489,35 @@ WHERE A.Retentie_stoplicht = 1
   AND D.Cluster_nr IS NULL
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS COLUMN (KLANT_NR ,MAAND_NR ,CUBE_PRODUCT_ID) ON Mi_temp.Mia_baten_benchmarken_003;
+COLLECT STATISTICS COLUMN (KLANT_NR ,MAAND_NR ,CUBE_PRODUCT_ID) ON Mi_temp.Mia_baten_benchmarken_002;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.Mia_baten_benchmarken_004
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       CUBe_product_id INTEGER,
+       Baten DECIMAL(18,2),
+
+       Baten_benchmark DECIMAL(18,2),
+       Penetratie DECIMAL(10,4),
+       Min_verhouding DECIMAL(10,2),
+       Min_benchmark DECIMAL(10,0),
+       Min_penetratie DECIMAL(10,2),
+       Adresseerbaarheid DECIMAL(10,2),
+       Lichtbeheer BYTEINT
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr, CUBe_product_id )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr )
+INDEX ( CUBe_product_id );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.Mia_baten_benchmarken_004
 SELECT A.Klant_nr,
        A.Maand_nr,
@@ -4450,6 +8544,54 @@ SELECT A.Klant_nr,
    AND A.Maand_nr = B.Maand_nr
    AND A.CUBe_product_id = B.CUBe_product_id;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_klantkoppelingen COLUMN (Business_contact_nr);
+COLLECT STATISTICS Mi_temp.Mia_klantkoppelingen COLUMN (Maand_nr, Business_contact_nr);
+COLLECT STATISTICS COLUMN (CUBE_PRODUCT_ID) ON Mi_temp.Mia_baten_benchmarken_004;
+COLLECT STATISTICS COLUMN (MAAND_NR) ON Mi_temp.Mia_baten_benchmarken_004;
+COLLECT STATISTICS COLUMN (KLANT_NR) ON Mi_temp.Mia_baten_benchmarken_004;
+COLLECT STATISTICS COLUMN (KLANT_NR ,MAAND_NR ,CUBE_PRODUCT_ID) ON Mi_temp.Mia_baten_benchmarken_004;
+COLLECT STATISTICS COLUMN (CUBE_PRODUCT_ID) ON Mi_temp.Mia_baten_benchmarken_004;
+COLLECT STATISTICS COLUMN (MAAND_NR) ON Mi_temp.Mia_baten_benchmarken_004;
+COLLECT STATISTICS COLUMN (KLANT_NR) ON Mi_temp.Mia_baten_benchmarken_004;
+COLLECT STATISTICS COLUMN (KLANT_NR ,MAAND_NR,BUSINESS_CONTACT_NR) ON Mi_temp.Mia_klantkoppelingen;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS COLUMN (CUBE_PRODUCT_ID) ON MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW;
+COLLECT STATISTICS COLUMN (KLANT_NR ,MAAND_NR ,CUBE_PRODUCT_ID) ON MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW;
+COLLECT STATISTICS COLUMN (KLANT_NR) ON MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.Mia_baten_benchmarken_005
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       CUBe_product_id INTEGER,
+       UUID CHAR(36) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Baten DECIMAL(18,2),
+       Baten_benchmark DECIMAL(18,2),
+       Penetratie DECIMAL(10,4),
+       Min_verhouding DECIMAL(10,2),
+       Min_benchmark DECIMAL(10,0),
+       Min_penetratie DECIMAL(10,2),
+       Adresseerbaarheid DECIMAL(10,2),
+       Lichtbeheer BYTEINT,
+       Baten_potentieel DECIMAL(18,2),
+       Baten_potentieel_adress DECIMAL(18,2),
+       Status VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       N_mnd_status INTEGER
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr, CUBe_product_id )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr )
+INDEX ( CUBe_product_id );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-- koppelen leads aan reeds uitgeleverde leads op basis van Klant_nr, CUBe_product_id, maand_nr --> eerste 2 velden vormen ook de basis voor UUID
 INSERT INTO Mi_temp.Mia_baten_benchmarken_005
 SELECT A.Klant_nr,
        A.Maand_nr,
@@ -4478,6 +8620,190 @@ LEFT OUTER JOIN (SEL * FROM MI_SAS_AA_MB_C_MB.CUBe_leads_hist_NEW XA
  AND A.Maand_nr = B.Maand_nr
  AND A.CUBe_product_id = B.CUBe_product_id
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Mia_baten_benchmarken_005 COLUMN (Klant_nr);
+COLLECT STATISTICS Mi_temp.Mia_baten_benchmarken_005 COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS Mi_temp.Mia_baten_benchmarken_005 COLUMN (UUID);
+COLLECT STATISTICS Mi_temp.Mia_baten_benchmarken_005 COLUMN (UUID, Maand_nr);
+COLLECT STATISTICS COLUMN (CUBE_PRODUCT_ID) ON Mi_temp.Mia_baten_benchmarken_005;
+COLLECT STATISTICS COLUMN (KLANT_NR) ON Mi_temp.Mia_baten_benchmarken_005;
+COLLECT STATISTICS COLUMN (STATUS) ON Mi_temp.Mia_baten_benchmarken_005;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.Mia_baten_benchmarken_006
+      (
+       Klant_nr INTEGER,
+       Baten DECIMAL(18,2),
+       Baten_potentieel DECIMAL(18,2),
+       Kredieten_baten DECIMAL(18,2),
+       Kredieten_stoplicht BYTEINT,
+       Kredieten_n_mnd_lead INTEGER,
+       Kredieten_bmark DECIMAL(18,2),
+       Kredieten_pen DECIMAL(10,4),
+       Kredieten_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Lease_baten DECIMAL(18,2),
+       Lease_stoplicht BYTEINT,
+       Lease_n_mnd_lead INTEGER,
+       Lease_bmark DECIMAL(18,2),
+       Lease_pen DECIMAL(10,4),
+       Lease_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Factoring_baten DECIMAL(18,2),
+       Factoring_stoplicht BYTEINT,
+       Factoring_n_mnd_lead INTEGER,
+       Factoring_bmark DECIMAL(18,2),
+       Factoring_pen DECIMAL(10,4),
+       Factoring_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Creditgelden_baten DECIMAL(18,2),
+       Creditgelden_stoplicht BYTEINT,
+       Creditgelden_n_mnd_lead INTEGER,
+       Creditgelden_bmark DECIMAL(18,2),
+       Creditgelden_pen DECIMAL(10,4),
+       Creditgelden_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Domestic_cash_baten DECIMAL(18,2),
+       Domestic_cash_stoplicht BYTEINT,
+       Domestic_cash_n_mnd_lead INTEGER,
+       Domestic_cash_bmark DECIMAL(18,2),
+       Domestic_cash_pen DECIMAL(10,4),
+       Domestic_cash_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       iDEAL_baten DECIMAL(18,2),
+       iDEAL_stoplicht BYTEINT,
+       iDEAL_n_mnd_lead INTEGER,
+       iDEAL_bmark DECIMAL(18,2),
+       iDEAL_pen DECIMAL(10,4),
+       iDEAL_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       International_cash_baten DECIMAL(18,2),
+       International_cash_stoplicht BYTEINT,
+       International_cash_n_mnd_lead INTEGER,
+       International_cash_bmark DECIMAL(18,2),
+       International_cash_pen DECIMAL(10,4),
+       International_cash_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Cards_baten DECIMAL(18,2),
+       Cards_stoplicht BYTEINT,
+       Cards_n_mnd_lead INTEGER,
+       Cards_bmark DECIMAL(18,2),
+       Cards_pen DECIMAL(10,4),
+       Cards_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Documentary_colcred_baten DECIMAL(18,2),
+       Documentary_colcred_stoplicht BYTEINT,
+       Documentary_colcred_n_mnd_lead INTEGER,
+       Documentary_colcred_bmark DECIMAL(18,2),
+       Documentary_colcred_pen DECIMAL(10,4),
+       Documentary_colcred_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Garanties_baten DECIMAL(18,2),
+       Garanties_stoplicht BYTEINT,
+       Garanties_n_mnd_lead INTEGER,
+       Garanties_bmark DECIMAL(18,2),
+       Garanties_pen DECIMAL(10,4),
+       Garanties_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Schade_baten DECIMAL(18,2),
+       Schade_stoplicht BYTEINT,
+       Schade_n_mnd_lead INTEGER,
+       Schade_bmark DECIMAL(18,2),
+       Schade_pen DECIMAL(10,4),
+       Schade_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Leven_en_pensioen_baten DECIMAL(18,2),
+       Leven_en_pensioen_stoplicht BYTEINT,
+       Leven_en_pensioen_n_mnd_lead INTEGER,
+       Leven_en_pensioen_bmark DECIMAL(18,2),
+       Leven_en_pensioen_pen DECIMAL(10,4),
+       Leven_en_pensioen_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Zorg_en_inkomen_baten DECIMAL(18,2),
+       Zorg_en_inkomen_stoplicht BYTEINT,
+       Zorg_en_inkomen_n_mnd_lead INTEGER,
+       Zorg_en_inkomen_bmark DECIMAL(18,2),
+       Zorg_en_inkomen_pen DECIMAL(10,4),
+       Zorg_en_inkomen_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Rentederivaten_baten DECIMAL(18,2),
+       Rentederivaten_stoplicht BYTEINT,
+       Rentederivaten_n_mnd_lead INTEGER,
+       Rentederivaten_bmark DECIMAL(18,2),
+       Rentederivaten_pen DECIMAL(10,4),
+       Rentederivaten_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Valutaderivaten_baten DECIMAL(18,2),
+       Valutaderivaten_stoplicht BYTEINT,
+       Valutaderivaten_n_mnd_lead INTEGER,
+       Valutaderivaten_bmark DECIMAL(18,2),
+       Valutaderivaten_pen DECIMAL(10,4),
+       Valutaderivaten_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Effecten_baten DECIMAL(18,2),
+       Effecten_stoplicht BYTEINT,
+       Effecten_n_mnd_lead INTEGER,
+       Effecten_bmark DECIMAL(18,2),
+       Effecten_pen DECIMAL(10,4),
+       Effecten_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Commodity_baten DECIMAL(18,2),
+       Commodity_stoplicht BYTEINT,
+       Commodity_n_mnd_lead INTEGER,
+       Commodity_bmark DECIMAL(18,2),
+       Commodity_pen DECIMAL(10,4),
+       Commodity_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+
+       Corp_finance_baten DECIMAL(18,2),
+       Corp_finance_stoplicht BYTEINT,
+       Corp_finance_n_mnd_lead INTEGER,
+       Corp_finance_bmark DECIMAL(18,2),
+       Corp_finance_pen DECIMAL(10,4),
+       Corp_finance_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+
+       CBI_cmts_signaal VARCHAR(50),
+       CBI_cmts_baten DECIMAL(18,2),
+       CBI_cmts_stoplicht BYTEINT,
+       CBI_cmts_n_mnd_lead INTEGER, /* eigenlijk landen */
+       CBI_cmts_bmark DECIMAL(18,2),
+       CBI_cmts_pen DECIMAL(10,4),
+       CBI_cmts_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       CBI_kredieten_signaal VARCHAR(50),
+       CBI_kredieten_baten DECIMAL(18,2),
+       CBI_kredieten_stoplicht BYTEINT,
+       CBI_kredieten_n_mnd_lead INTEGER, /* eigenlijk landen */
+       CBI_kredieten_bmark DECIMAL(18,2),
+       CBI_kredieten_pen DECIMAL(10,4),
+       CBI_kredieten_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       CBI_treasury_signaal VARCHAR(50),
+       CBI_treasury_baten DECIMAL(18,2),
+       CBI_treasury_stoplicht BYTEINT,
+       CBI_treasury_n_mnd_lead INTEGER, /* eigenlijk landen */
+       CBI_treasury_bmark DECIMAL(18,2),
+       CBI_treasury_pen DECIMAL(10,4),
+       CBI_treasury_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       CBI_trade_signaal VARCHAR(50), /* eigenlijk landen */
+       CBI_trade_baten DECIMAL(18,2),
+       CBI_trade_stoplicht BYTEINT,
+       CBI_trade_n_mnd_lead INTEGER, /* eigenlijk landen */
+       CBI_trade_bmark DECIMAL(18,2),
+       CBI_trade_pen DECIMAL(10,4),
+       CBI_trade_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Acquisitie_baten DECIMAL(18,2),
+       Acquisitie_stoplicht BYTEINT,
+       Acquisitie_status VARCHAR(50),
+       Acquisitie_bmark DECIMAL(18,2),
+       Acquisitie_pen DECIMAL(10,4),
+       Acquisitie_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Retentie_baten DECIMAL(18,2),
+       Retentie_stoplicht BYTEINT,
+       Retentie_status VARCHAR(50),
+       Retentie_bmark DECIMAL(18,2),
+       Retentie_pen DECIMAL(10,4),
+       Retentie_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+
+       PS_cmts BYTEINT,
+       PS_factoring  BYTEINT,
+       PS_lease BYTEINT,
+       PS_markets BYTEINT,
+       PS_verzekeren BYTEINT,
+       PS_cbi BYTEINT
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+-- Status = 'nee' --> geen stoplicht (kan wel of niet zijn aangeleverd aan Siebel)
+-- Status = 'ja'  --> stoplicht maar geen status dus niet aangeleverd aan Siebel of nog geen feedback uit Siebel
+-- anders de Status obv feedback Siebel
 
 INSERT INTO Mi_temp.Mia_baten_benchmarken_006
 SELECT A.Klant_nr,
@@ -4917,6 +9243,59 @@ SELECT A.Klant_nr,
     ON D.Maand_einde_jaar = E.Maand
  WHERE (A.Klant_ind = 1 OR Klantstatus = 'S');
 
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS COLUMN (DATUM_INGELEZEN) ON Mi_cmb.CUBe_RM_oordeel;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.CUBe_leadstatus
+     (
+      Klant_nr INTEGER,
+      Maand_nr INTEGER,
+      Datum_gegevens DATE FORMAT 'yyyy-mm-dd',
+      Datum_baten DATE FORMAT 'yyyy-mm-dd',
+      Datum_leads DATE FORMAT 'yyyy-mm-dd',
+      Kredieten_n_mnd_lead INTEGER,
+      Kredieten_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      Lease_n_mnd_lead INTEGER,
+      Lease_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      Factoring_n_mnd_lead INTEGER,
+      Factoring_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      Creditgelden_n_mnd_lead INTEGER,
+      Creditgelden_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      Domestic_cash_n_mnd_lead INTEGER,
+      Domestic_cash_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      iDEAL_n_mnd_lead INTEGER,
+      iDEAL_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      International_cash_n_mnd_lead INTEGER,
+      International_cash_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      Cards_n_mnd_lead INTEGER,
+      Cards_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      Documentary_colcred_n_mnd_lead INTEGER,
+      Documentary_colcred_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      Garanties_n_mnd_lead INTEGER,
+      Garanties_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      Rentederivaten_n_mnd_lead INTEGER,
+      Rentederivaten_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      Valutaderivaten_n_mnd_lead INTEGER,
+      Valutaderivaten_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      Effecten_n_mnd_lead INTEGER,
+      Effecten_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      Commodity_n_mnd_lead INTEGER,
+      Commodity_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      Corp_finance_n_mnd_lead INTEGER,
+      Corp_finance_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      CBI_cmts_n_mnd_lead INTEGER,
+      CBI_cmts_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      Acquisitie_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee'),
+      Retentie_lead VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS (NULL, 'nee')
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.CUBe_leadstatus
 SELECT A.Klant_nr,
        A.Maand_nr,
@@ -4966,437 +9345,130 @@ SELECT A.Klant_nr,
     ON D.Maand_einde_jaar = E.Maand
  WHERE (A.Klant_ind = 1 OR Klantstatus = 'S');
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+/*************************************************************************************
+
+    BASIS SET tabel CUBe_baten_hist
+
+*************************************************************************************/
+
+/* maak columns (zeker primary index columns) zo mogelijk NOT NULL
+   COMPRESS zo veel mogelijk */
+
+/* kopie */
+CREATE TABLE MI_SAS_AA_MB_C_MB.CIAA_Cube_Baten_hist_NEW AS MI_SAS_AA_MB_C_MB.CIAA_Cube_Baten_hist WITH DATA
+UNIQUE PRIMARY INDEX ( Klant_nr ,Maand_nr)
+PARTITION BY ( RANGE_N(Maand_nr  BETWEEN 201001  AND 201012  EACH 1 ,
+201101  AND 201112  EACH 1 ,
+201201  AND 201212  EACH 1 ,
+201301  AND 201312  EACH 1 ,
+201401  AND 201412  EACH 1 ,
+201501  AND 201512  EACH 1 ,
+201601  AND 201612  EACH 1 ,
+201701  AND 201712  EACH 1 ,
+201801  AND 201812  EACH 1 ,
+201901  AND 201912  EACH 1 ,
+202001  AND 202012  EACH 1 ,
+ NO RANGE, UNKNOWN));
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Cube_Baten_hist_NEW COLUMN (PARTITION);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* WEEKCIJFERS VERWIJDEREN INDIEN MAAND REEDS AANWEZIG VAN VORIGE WEEK */
+DELETE FROM MI_SAS_AA_MB_C_MB.CIAA_Cube_Baten_hist_NEW
+WHERE maand_nr = (SEL Maand_nr FROM Mi_temp.Mia_week GROUP BY 1)
+;
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Cube_Baten_hist_NEW COLUMN (PARTITION);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* WEEKCIJFERS TOEVOEGEN */
+
 INSERT INTO MI_SAS_AA_MB_C_MB.CIAA_Cube_Baten_hist_NEW
 SELECT *
   FROM Mi_temp.CUBe_baten;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Cube_Baten_hist_NEW COLUMN (PARTITION);
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Cube_Baten_hist_NEW COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Cube_Baten_hist_NEW COLUMN (MAAND_NR);
+
+
+/* actuele maand niet in samenv tabellen --> uiteindelijk meest recente hist data tonen in score views */
+UPDATE MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW
+SET Maand_nr_Cube_baten = (CASE  WHEN MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW.Maand_nr > (SEL MAX(Maand_nr) AS Maand_nr FROM MI_SAS_AA_MB_C_MB.CIAA_Cube_Baten_hist_NEW) THEN (SEL MAX(Maand_nr) AS Maand_nr FROM MI_SAS_AA_MB_C_MB.CIAA_Cube_Baten_hist_NEW)
+                             ELSE MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW.Maand_nr
+                         END)
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW;
+
+
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+DELETE
+  FROM Mi_cmb.CUBe_leadstatus_hist
+ WHERE Maand_nr IN (SELECT Maand_nr FROM MI_SAS_AA_MB_C_MB.Mia_periode_NEW);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_cmb.CUBe_leadstatus_hist
 SELECT *
   FROM Mi_temp.CUBe_leadstatus;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+DELETE
+  FROM MI_SAS_AA_MB_C_MB.CUBe_model
+ WHERE Maand_nr IN (SELECT Maand_nr FROM MI_SAS_AA_MB_C_MB.Mia_periode_NEW);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO MI_SAS_AA_MB_C_MB.CUBe_model
 SELECT *
   FROM Mi_temp.CUBe_benchmark_003;
 
-INSERT INTO Mi_temp.Part_zak_periode SELECT (SELECT MAX(Maand) AS Maand_FHH FROM Mi_vm_info.vLU_FHH), (SELECT MAX(Maand) AS Maand_PBNL FROM Mi_vm_info.vLU_PBNL);
-
-CREATE TABLE Mi_temp.Part_zak_t1_BC
-AS
-(
-SEL  a.Maand_nr
-    ,a.Klant_nr
-    ,a.Klantstatus
-    ,a.Klant_ind
-    ,c.cbc_part_bc_relatie_type_code AS Relatie_code
-    ,CASE WHEN c.cbc_part_bc_relatie_type_code = 'UBOOND' THEN '01 UBO'
-          WHEN c.cbc_part_bc_relatie_type_code = 'BSTOND' THEN '02 Bestuurder'
-          WHEN c.cbc_part_bc_relatie_type_code = 'OANDO'  THEN '03 O en O'
-          WHEN c.cbc_part_bc_relatie_type_code = 'ENMSZK' THEN '04 Eenmanszaak'
-          WHEN c.cbc_part_bc_relatie_type_code = 'VNTCOM' THEN '05 Commanditaire Vennootschap'
-          WHEN c.cbc_part_bc_relatie_type_code = 'VNTVOF' THEN '06 Vennootschap Onder Firma'
-          WHEN c.cbc_part_bc_relatie_type_code = 'MTSCHP' THEN '07 Maatschap'
-          WHEN c.cbc_part_bc_relatie_type_code = 'BVNVOP' THEN '08 BV of NV in oprichting'
-          WHEN c.cbc_part_bc_relatie_type_code = 'BCTCBC' THEN '09 Particulier-Zakelijk'
-          ELSE '10 Overig'
-         END AS Relatie_oms
-
-    ,c.part_bc_oid    AS Part_BC_nr
-    ,e.Segment_id       AS Part_bc_CGC
-    ,f.Segment_id       AS Part_bc_RelCat
-    ,i.Naam           AS Part_bc_naam
-    ,g.Nationaliteit  AS Part_bc_Nationaliteit
-    ,g.Geboorte_datum AS Part_bc_Geb_datum
-    ,(CASE
-        WHEN EXTRACT(DAY FROM A.Datum_gegevens) < EXTRACT(DAY FROM g.Geboorte_datum) THEN (((A.Datum_gegevens - g.Geboorte_datum) MONTH(4)) (INTEGER)) - 1
-        ELSE (((A.Datum_gegevens - g.Geboorte_datum) MONTH(4)) (INTEGER))
-        END) / 12 AS Part_bc_Leeftijd
-    ,g.Overleden_ind     AS Part_bc_Overleden_ind
-    ,g.Geslacht         AS Part_bc_geslacht
-    ,j.Post_adres_id    AS Part_bc_Post_adres_id
-    ,h.Gerelateerd_party_id AS FHH
-    /*,h2.Gerelateerd_party_id AS PBNL*/
-    ,h3.PBNL AS PBNL
-
-FROM Mi_temp.Mia_week    a
-
-INNER JOIN Mi_vm_nzdb.vCommercieel_business_contact  b
-   ON b.maand_nr = a.maand_nr
-  AND b.cc_nr = a.Klant_nr
-
-INNER JOIN Mi_vm_nzdb.vCbc_part_bc_relatie c
-   ON c.maand_nr = b.maand_nr
-  AND c.cbc_oid = b.cbc_oid
-
-LEFT OUTER JOIN mi_vm_ldm.aParty_relatie_type d
-   ON d.Party_relatie_type_code = c.cbc_part_bc_relatie_type_code
-
-LEFT OUTER JOIN MI_vm_ldm.aSegment_klant e
-   ON e.Party_id = c.part_bc_oid
-  AND e.Segment_type_code = 'CG'
-  AND e.Party_sleutel_type = 'BC'
-
-LEFT OUTER JOIN MI_vm_ldm.aSegment_klant f
-   ON f.Party_id = c.part_bc_oid
-  AND f.Segment_type_code = 'RELCAT'
-  AND f.Party_sleutel_type = 'BC'
-
-LEFT OUTER JOIN MI_vm_ldm.aIndividu g
-   ON g.Party_id = c.part_bc_oid
-  AND g.Party_sleutel_type = 'BC'
-
-LEFT OUTER JOIN Mi_vm_ldm.aParty_party_relatie h
-   ON h.Party_id = c.part_bc_oid
-  AND h.Party_sleutel_type = 'BC'
-  AND h.Gerelateerd_party_sleutel_type = 'FH'
-
-LEFT OUTER JOIN Mi_vm_ldm.aParty_party_relatie h2
-   ON h2.Party_id = c.part_bc_oid
-  AND h2.Party_sleutel_type = 'BC'
-  AND h2.Gerelateerd_party_sleutel_type = 'PC'
-
-LEFT OUTER JOIN (
-                  SELECT PBNL
-                  FROM  Mi_vm_info.vLU_PBNL    a
-                  INNER JOIN Mi_temp.Part_zak_periode   b
-                   ON b.Maand_PBNL = a.Maand
-                  /*AND Bediening_Nr > 0
-                  AND NOT (Bediening_Nr BETWEEN 50820301 AND 50820306)
-                  AND NOT (Prv_Bnk_Nr   BETWEEN 50820701 AND 50820702)
-                  AND NOT Prv_Bnk_Nr MOD 100 IN (98,99)
-                  */
-                  GROUP BY 1
-                ) h3
-  ON h3.PBNL = h2.Gerelateerd_party_id
-
-LEFT OUTER JOIN Mi_vm_ldm.aParty_naam i
-   ON i.Party_id = c.part_bc_oid
-  AND i.Party_sleutel_type = 'BC'
-
-LEFT OUTER JOIN Mi_vm_ldm.aParty_post_adres  j
-   ON j.Party_id = c.part_bc_oid
-  AND j.Party_sleutel_type = 'BC'
-
-
-WHERE a.Business_line in ('CBC', 'SME', 'CIB')
-  AND c.cbc_part_bc_relatie_type_code <> 'FHPART'
-  AND e.Segment_id BETWEEN '0100' AND '0599'
-  AND TRIM(f.Segment_id) = '20'
-  AND g.Geslacht IN ('M', 'V')
-) WITH DATA
-PRIMARY INDEX(Klant_nr)
-;
-
-INSERT INTO Mi_temp.Part_zak_t1_BC
-SEL  a.Maand_nr
-    ,a.Klant_nr
-    ,a.Klantstatus
-    ,a.Klant_ind
-     ,TRIM(BOTH FROM k.Contract_soort_oms_kort) AS Relatie_code
-    ,'99 Gemachtigd zakelijk contr' AS Relatie_oms
-    /*
-    ,c.Contract_nr
-    ,c.Contract_soort_code
-    ,c.Contract_hergebruik_volgnr
-    */
-    ,d2.Party_id AS Part_bc_nr
-    ,e.Segment_id       AS Part_bc_CGC
-    ,f.Segment_id       AS Part_bc_RelCat
-    ,i.Naam           AS Part_bc_naam
-    ,g.Nationaliteit  AS Part_bc_Nationaliteit
-    ,g.Geboorte_datum AS Part_bc_Geb_datum
-    ,(CASE
-        WHEN EXTRACT(DAY FROM A.Datum_gegevens) < EXTRACT(DAY FROM g.Geboorte_datum) THEN (((A.Datum_gegevens - g.Geboorte_datum) MONTH(4)) (INTEGER)) - 1
-        ELSE (((A.Datum_gegevens - g.Geboorte_datum) MONTH(4)) (INTEGER))
-        END) / 12 AS Part_bc_Leeftijd
-    ,g.Overleden_ind     AS Part_bc_Overleden_ind
-    ,g.Geslacht         AS Part_bc_geslacht
-    ,j.Post_adres_id    AS Part_bc_Post_adres_id
-    ,h.Gerelateerd_party_id AS FHH
-    /*,h2.Gerelateerd_party_id AS PBNL*/
-    ,h3.PBNL AS PBNL
-
-FROM Mi_temp.Mia_week    a
-
-INNER JOIN Mi_vm_nzdb.vCommercieel_business_contact  b
-   ON b.maand_nr = a.maand_nr
-  AND b.cc_nr = a.Klant_nr
-
-INNER JOIN mi_vm_ldm.aparty_contract        c
-   ON c.Party_id = b.cBc_nr
-  AND c.Party_sleutel_type = 'BC'
-
-INNER JOIN mi_vm_ldm.aContract d
-   ON c.Contract_nr = d.Contract_nr
-  AND c.Contract_soort_code = d.Contract_soort_code
-  AND c.Contract_hergebruik_volgnr = d.Contract_hergebruik_volgnr
-
-INNER JOIN mi_vm_ldm.aparty_contract        d2
- ON d2.Contract_nr = c.Contract_nr
- AND d2.Contract_soort_code = c.Contract_soort_code
- AND d2.Contract_hergebruik_volgnr = c.Contract_hergebruik_volgnr
- AND d2.Party_sleutel_type = c.Party_sleutel_type
-
-INNER JOIN MI_vm_ldm.aSegment_klant e
-   ON e.Party_id = d2.Party_id
-  AND e.Segment_type_code = 'CG'
-  AND e.Party_sleutel_type = 'BC'
-
-INNER JOIN MI_vm_ldm.aSegment_klant f
-   ON f.Party_id = d2.Party_id
-  AND f.Segment_type_code = 'RELCAT'
-  AND f.Party_sleutel_type = 'BC'
-
-LEFT OUTER JOIN MI_vm_ldm.aIndividu g
-   ON g.Party_id = d2.Party_id
-  AND g.Party_sleutel_type = 'BC'
-
-LEFT OUTER JOIN Mi_vm_ldm.aParty_party_relatie h
-   ON h.Party_id = d2.Party_id
-  AND h.Party_sleutel_type = 'BC'
-  AND h.Gerelateerd_party_sleutel_type = 'FH'
-
-LEFT OUTER JOIN Mi_vm_ldm.aParty_party_relatie h2
-   ON h2.Party_id = d2.Party_id
-  AND h2.Party_sleutel_type = 'BC'
-  AND h2.Gerelateerd_party_sleutel_type = 'PC'
-
-LEFT OUTER JOIN (
-                  SELECT PBNL
-                  FROM  Mi_vm_info.vLU_PBNL    a
-                  INNER JOIN Mi_temp.Part_zak_periode   b
-                   ON b.Maand_PBNL = a.Maand
-                  /*AND Bediening_Nr > 0
-                  AND NOT (Bediening_Nr BETWEEN 50820301 AND 50820306)
-                  AND NOT (Prv_Bnk_Nr   BETWEEN 50820701 AND 50820702)
-                  AND NOT Prv_Bnk_Nr MOD 100 IN (98,99)
-                  */
-                  GROUP BY 1
-                ) h3
-  ON h3.PBNL = h2.Gerelateerd_party_id
-
-LEFT OUTER JOIN Mi_vm_ldm.aParty_naam i
-   ON i.Party_id = d2.Party_id
-  AND i.Party_sleutel_type = 'BC'
-
-LEFT OUTER JOIN Mi_vm_ldm.aParty_post_adres  j
-   ON j.Party_id = d2.Party_id
-  AND j.Party_sleutel_type = 'BC'
-
-LEFT OUTER JOIN mi_vm_ldm.acontract_soort   k
-   ON k.Contract_soort_code = c.Contract_soort_code
-
-WHERE a.Business_line in ('CBC', 'SME', 'CIB')
-  AND c.Party_sleutel_type = 'BC'
-  AND c.Party_contract_rol_code = 'C'
-  AND d2.Party_contract_rol_code = 'G'
-  AND d.Contract_status_code <> 3
-
-  AND e.Segment_id BETWEEN '0100' AND '0599'
-  AND TRIM(f.Segment_id) = '20'
-  AND g.Geslacht IN ('M', 'V')
-;
-
-CREATE TABLE Mi_temp.Part_zak_t2_BC
-AS
-(
-SEL a.Part_BC_nr
-        ,MAX(CASE WHEN b.Party_Contract_rol_code = 'C' AND c.Product_id > 1 /* negatief = zelf verzonnen en 1 is toegangscontract */ THEN 1 ELSE 0 END) AS Contractant_ind
-        ,MAX(CASE WHEN b.Party_Contract_rol_code = 'G' THEN 1 ELSE 0 END) AS Gemachtigd_ind
-
-FROM Mi_temp.Part_zak_t1_BC a
-
-LEFT OUTER JOIN mi_vm_ldm.aParty_contract b
-   ON b.Party_id = a.Part_BC_nr
-  AND b.Party_sleutel_type = 'BC'
-/*AND b.Contract_soort_code  > 0*/
-
-LEFT OUTER JOIN mi_vm_ldm.aContract c
-   ON c.Contract_nr = b.Contract_nr
-  AND c.Contract_soort_code = b.Contract_soort_code
-  AND c.Contract_hergebruik_volgnr = b.Contract_hergebruik_volgnr
-
-WHERE c.Contract_status_code <> 3
-/*  AND  b.Party_Contract_rol_code = 'C'*/
-GROUP BY 1
-) WITH DATA
-PRIMARY INDEX(Part_BC_nr)
-;
-
 .IF ERRORCODE <> 0 THEN .GOTO EOP
 
 
-COLLECT STATISTICS Mi_temp.Part_zak_t2_BC COLUMN (Part_BC_nr);
 
-.IF ERRORCODE <> 0 THEN .GOTO EOP
+/*************************************************************************************
+
+   4. Advanced Analytics
+
+*************************************************************************************/
 
 
-CREATE TABLE Mi_temp.Part_zak_BC
-AS
-(
-SEL
-     a.*
-    ,ZEROIFNULL(b.Contractant_ind) AS Contractant_ind
-    ,ZEROIFNULL(b.Gemachtigd_ind)  AS Gemachtigd_ind
 
-FROM Mi_temp.Part_zak_t1_BC a
+/*************************************************************************************
 
-LEFT OUTER JOIN Mi_temp.Part_zak_t2_BC b
-  ON b.Part_BC_nr = a.Part_BC_nr
-) WITH DATA
-PRIMARY INDEX(Klant_nr)
-;
+   5. Zakelijk-Particuliere koppelingen
 
-CREATE TABLE Mi_temp.Part_zak_FHH
-AS
-(
-SELECT
-        a.Klant_nr
-       ,a.Maand_nr
-       ,a.Klantstatus
-       ,a.Klant_ind
-       ,a.FHH
-       ,a.FHH_relatie_oms
+*************************************************************************************/
 
-       ,b.Vervallen_ind
-       /*,b.Commercieel_vervallen_ind*/
-       ,b.Clientgroep
-       ,b.Huisbank_kleur
-       ,b.Loyaliteit
 
-       ,c.N_maanden_klant
-       ,c.N_personen
-       ,b.Cross_sell
-       ,c.Deep_sell
-       ,c.Business_volume_totaal AS Business_volume
-       ,c.Credit_volume_totaal   AS Credit_volume
-       ,c.Debet_volume_totaal    AS Debet_volume
-       ,c.Gem_Voeding_min_6mnd
-       ,c.Gem_Credit_volume_6mnd
-       ,c.Datum_laatste_productafname
-       ,c.Baten_12mnd
 
-       ,CASE WHEN (b.Betalingsprobleem_ind + b.Beschikkingsmacht_ind + b.Curatele_ind) > 0 THEN 1 ELSE 0 END AS Betalprobl_curatele
-FROM
-      (
-      SELECT  a.FHH
-             ,a.Klant_nr
-             ,a.Maand_nr
-             ,a.Klantstatus
-             ,a.Klant_ind
-               ,MIN(Relatie_oms) AS FHH_relatie_oms
-      FROM Mi_temp.Part_zak_t1_BC a
-      WHERE a.PBNL IS NULL            /* geen PBNL */
-      GROUP BY 1,2,3,4,5
-      ) a
+/*************************************************************************************
 
-INNER JOIN Mi_temp.Part_zak_periode   per
-   ON 1 = 1
+   6. Beleggen
 
-INNER JOIN Mi_vm_info.vLU_Fhh       b
-   ON b.Maand = per.Maand_FHH
-  AND b.FHH = a.FHH
+*************************************************************************************/
 
-INNER JOIN Mi_vm_info.vFhh_totaal    c
-   ON c.Maand = per.Maand_FHH
-  AND c.FHH = a.FHH
-
-  ) WITH DATA
-PRIMARY INDEX(Klant_nr)
-;
-
-INSERT INTO Mi_temp.Part_zak_FHH
-SELECT
-        a.Klant_nr
-       ,a.Maand_nr
-       ,a.Klantstatus
-       ,a.Klant_ind
-       ,a.PBNL
-       ,a.FHH_relatie_oms
-
-       ,b.Vervallen_ind
-       /*,b.Commercieel_vervallen_ind*/
-       ,b.Clientgroep
-       ,b.Huisbank_kleur
-       ,b.Loyaliteit
-
-       ,c.N_maanden_klant
-       ,c.N_personen
-       ,b.Cross_sell
-       ,c.Deep_sell
-       ,c.Business_volume_totaal AS Business_volume
-       ,c.Credit_volume_totaal   AS Credit_volume
-       ,c.Debet_volume_totaal    AS Debet_volume
-       ,c.Gem_Voeding_min_6mnd
-       ,c.Gem_Credit_volume_6mnd
-       ,c.Datum_laatste_productafname
-       ,c.Baten_12mnd
-
-       ,CASE WHEN (b.Betalingsprobleem_ind + b.Beschikkingsmacht_ind + b.Curatele_ind) > 0 THEN 1 ELSE 0 END AS Betalprobl_curatele
-FROM
-      (
-      SELECT  a.PBNL
-             ,a.Klant_nr
-             ,a.Maand_nr
-             ,a.Klantstatus
-             ,a.Klant_ind
-               ,MIN(Relatie_oms) AS FHH_relatie_oms
-      FROM Mi_temp.Part_zak_t1_BC a
-      WHERE ZEROIFNULL(a.PBNL) > 0            /* PBNL */
-      GROUP BY 1,2,3,4,5
-      ) a
-
-INNER JOIN Mi_temp.Part_zak_periode   per
-   ON 1 = 1
-
-INNER JOIN Mi_vm_info.vLU_PBNL       b
-   ON b.Maand = per.Maand_PBNL
-  AND b.PBNL = a.PBNL
-
-INNER JOIN Mi_vm_info.vm_PBNL_totaal    c
-   ON c.Maand = per.Maand_PBNL
-  AND c.PBNL = a.PBNL
-;
-
-.IF ERRORCODE <> 0 THEN .GOTO EOP
-
-INSERT INTO MI_SAS_AA_MB_C_MB.CIAA_Part_zak_NEW
-SEL
-     Klant_nr
-    ,Maand_nr
-    ,Klantstatus
-    ,Klant_ind
-
-    ,COUNT(DISTINCT FHH)                                                                AS N_FHH
-    ,SUM(CASE WHEN FHH_relatie_oms = '01 UBO'                        THEN 1 ELSE 0 END) AS N_FHH_UBO
-    ,SUM(CASE WHEN FHH_relatie_oms = '02 Bestuurder'                 THEN 1 ELSE 0 END) AS N_FHH_Bestuurder
-    ,SUM(CASE WHEN FHH_relatie_oms = '03 O en O'                     THEN 1 ELSE 0 END) AS N_FHH_O_en_O
-    ,SUM(CASE WHEN FHH_relatie_oms = '04 Eenmanszaak'                THEN 1 ELSE 0 END) AS N_FHH_Eenmanszaak
-    ,SUM(CASE WHEN FHH_relatie_oms = '05 Commanditaire Vennootschap' THEN 1 ELSE 0 END) AS N_FHH_Comm_Venn
-    ,SUM(CASE WHEN FHH_relatie_oms = '06 Vennootschap Onder Firma'   THEN 1 ELSE 0 END) AS N_FHH_VOF
-    ,SUM(CASE WHEN FHH_relatie_oms = '07 Maatschap'                  THEN 1 ELSE 0 END) AS N_FHH_Maatschap
-    ,SUM(CASE WHEN FHH_relatie_oms = '08 BV of NV in oprichting'     THEN 1 ELSE 0 END) AS N_FHH_BV_NV_opricht
-    ,SUM(CASE WHEN FHH_relatie_oms = '09 Particulier-Zakelijk'       THEN 1 ELSE 0 END) AS N_FHH_Part_zak
-    ,SUM(CASE WHEN FHH_relatie_oms = '99 Gemachtigd zakelijk contr'  THEN 1 ELSE 0 END) AS N_FHH_gemachtigde
-
-    ,COUNT(DISTINCT (CASE WHEN Vervallen_ind = 0 THEN FHH ELSE NULL END))               AS N_act_FHH
-    ,SUM(CASE WHEN FHH_relatie_oms = '01 UBO'                          AND Vervallen_ind = 0 THEN 1 ELSE 0 END) AS N_act_FHH_UBO
-    ,SUM(CASE WHEN FHH_relatie_oms = '02 Bestuurder'                   AND Vervallen_ind = 0 THEN 1 ELSE 0 END) AS N_act_FHH_Bestuurder
-    ,SUM(CASE WHEN FHH_relatie_oms = '03 O en O'                       AND Vervallen_ind = 0 THEN 1 ELSE 0 END) AS N_act_FHH_O_en_O
-    ,SUM(CASE WHEN FHH_relatie_oms = '04 Eenmanszaak'                  AND Vervallen_ind = 0 THEN 1 ELSE 0 END) AS N_act_FHH_Eenmanszaak
-    ,SUM(CASE WHEN FHH_relatie_oms = '05 Commanditaire Vennootschap'   AND Vervallen_ind = 0 THEN 1 ELSE 0 END) AS N_act_FHH_Comm_Venn
-    ,SUM(CASE WHEN FHH_relatie_oms = '06 Vennootschap Onder Firma'     AND Vervallen_ind = 0 THEN 1 ELSE 0 END) AS N_act_FHH_VOF
-    ,SUM(CASE WHEN FHH_relatie_oms = '07 Maatschap'                    AND Vervallen_ind = 0 THEN 1 ELSE 0 END) AS N_act_FHH_Maatschap
-    ,SUM(CASE WHEN FHH_relatie_oms = '08 BV of NV in oprichting'       AND Vervallen_ind = 0 THEN 1 ELSE 0 END) AS N_act_FHH_BV_NV_opricht
-    ,SUM(CASE WHEN FHH_relatie_oms = '09 Particulier-Zakelijk'         AND Vervallen_ind = 0 THEN 1 ELSE 0 END) AS N_act_FHH_Part_zak
-    ,SUM(CASE WHEN FHH_relatie_oms = '99 Gemachtigd zakelijk contr'    AND Vervallen_ind = 0 THEN 1 ELSE 0 END) AS N_act_FHH_gemachtigde
-
-    ,MAX(ZEROIFNULL(Betalprobl_curatele)) AS Max_Betalprobl_curatele
-    ,SUM(Baten_12mnd)                     AS Sum_Baten_12mnd
-
-FROM Mi_temp.Part_zak_FHH
-
-GROUP BY 1,2,3,4
-;
+/* BCnrs met zorgplicht signalen */
 
 CREATE TABLE MI_temp.CIAA_Beleggen_t1
 AS
@@ -5452,6 +9524,14 @@ GROUP BY 1,2,3
 ) WITH DATA
 UNIQUE PRIMARY INDEX ( Klant_nr ,Maand_nr, BC_nr)
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_temp.CIAA_Beleggen_t1 COLUMN (Klant_nr, Maand_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* AGGREGATIE KLANTINFORMATIE */
 
 CREATE TABLE MI_temp.CIAA_Beleggen
 AS
@@ -5639,7 +9719,7 @@ SELECT
 
     ,TRIM(BOTH FROM f.Rechtsvorm_oms) AS Rechtsvorm
     ,mia.Aantal_bcs
-    ,g.Part_BC_nr
+    ,NULL (DECIMAL(12,0)) AS Part_BC_nr
 
 FROM MI_SAS_AA_MB_C_MB.CIAA_Mia_hist_NEW     MIa
 
@@ -5892,14 +9972,6 @@ LEFT OUTER JOIN MI_vm_nzdb.vRechtsvorm  f
    ON f.Maand_nr = e.Maand_nr
   AND f.Rechtsvorm_code = e.CC_AAB_rechtsvorm_code
 
-LEFT OUTER JOIN (
-                SEL *
-                FROM  Mi_temp.Part_zak_BC
-                GROUP BY 1,2
-                QUALIFY RANK (Relatie_oms ASC, Part_bc_CGC DESC, Part_BC_nr DESC) = 1
-                ) g
-  ON g.Klant_nr = a.CC_nr
-
 /* zorgplicht signaal 3 maanden oud */
 LEFT OUTER JOIN
                  (
@@ -5936,6 +10008,249 @@ WHERE Mia.Klant_ind = 1
 UNIQUE PRIMARY INDEX (Maand_nr, Klant_nr)
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* VERWIJDER LEESTEKENS IN DOCUMENTNAAM */
+UPDATE MI_temp.CIAA_Beleggen
+SET Bediening_beleggen_naam =  TRIM(BOTH FROM Char_Subst(Bediening_beleggen_naam,'''',''))
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_temp.CIAA_Beleggen
+SET Bediening_naam =  TRIM(BOTH FROM Char_Subst(Bediening_naam,'''',''))
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* UPDATE DISLOCATIE */
+UPDATE MI_temp.CIAA_Beleggen
+SET Dislocatie_beleggen = Word_subst(Dislocatie_beleggen, 'BELEGGINGSSPECIALISTEN', 'BA')
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_temp.CIAA_Beleggen
+SET Dislocatie_beleggen = Word_subst(Dislocatie_beleggen, 'BELEGGINGSSPECIALSTEN', 'BA')
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_temp.CIAA_Beleggen
+SET Dislocatie_beleggen = Word_subst(Dislocatie_beleggen, 'AMSTERDAM', 'Amsterdam')
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_temp.CIAA_Beleggen
+SET Dislocatie_beleggen = Word_subst(Dislocatie_beleggen, 'BREDA', 'Breda')
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_temp.CIAA_Beleggen
+SET Dislocatie_beleggen = Word_subst(Dislocatie_beleggen, 'DEN HAAG', 'Den Haag')
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_temp.CIAA_Beleggen
+SET Dislocatie_beleggen = Word_subst(Dislocatie_beleggen, 'DORDRECHT', 'Dordrecht')
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_temp.CIAA_Beleggen
+SET Dislocatie_beleggen = Word_subst(Dislocatie_beleggen, 'EINDHOVEN', 'Eindhoven')
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_temp.CIAA_Beleggen
+SET Dislocatie_beleggen = Word_subst(Dislocatie_beleggen, 'GRONINGEN', 'Groningen')
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_temp.CIAA_Beleggen
+SET Dislocatie_beleggen = Word_subst(Dislocatie_beleggen, 'HAARLEM', 'Haarlem')
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_temp.CIAA_Beleggen
+SET Dislocatie_beleggen = Word_subst(Dislocatie_beleggen, 'HILVERSUM', 'Hilversum')
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_temp.CIAA_Beleggen
+SET Dislocatie_beleggen = Word_subst(Dislocatie_beleggen, 'MAASTRICHT', 'Maastricht')
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_temp.CIAA_Beleggen
+SET Dislocatie_beleggen = Word_subst(Dislocatie_beleggen, 'ROTTERDAM', 'Rotterdam')
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_temp.CIAA_Beleggen
+SET Dislocatie_beleggen = Word_subst(Dislocatie_beleggen, 'VELP', 'Velp')
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_temp.CIAA_Beleggen
+SET Dislocatie_beleggen = Word_subst(Dislocatie_beleggen, 'ZEIST', 'Zeist')
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_temp.CIAA_Beleggen
+SET Dislocatie_beleggen = Word_subst(Dislocatie_beleggen, 'ALKMAAR', 'Alkmaar')
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* kopie */
+CREATE TABLE MI_SAS_AA_MB_C_MB.CIAA_beleggen_NEW AS MI_SAS_AA_MB_C_MB.CIAA_beleggen WITH DATA
+UNIQUE PRIMARY INDEX ( Klant_nr ,Maand_nr)
+PARTITION BY (
+               RANGE_N(maand_nr  BETWEEN
+                      201001  AND 201012  EACH 1,
+                      201101  AND 201112  EACH 1,
+                      201201  AND 201212  EACH 1,
+                      201301  AND 201312  EACH 1,
+                      201401  AND 201412  EACH 1,
+                      201501  AND 201512  EACH 1,
+                      201601  AND 201612  EACH 1,
+                      201701  AND 201712  EACH 1,
+                      201801  AND 201812  EACH 1,
+                      201901  AND 201912  EACH 1,
+                      202001  AND 202012  EACH 1,
+                      NO RANGE,
+                      UNKNOWN))
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_beleggen_NEW COLUMN (PARTITION);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_beleggen_NEW COLUMN (Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_beleggen_NEW COLUMN (Klant_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_beleggen_NEW COLUMN (Klant_nr, Maand_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_beleggen_NEW COLUMN (Klant_nr, Maand_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* weekdata actuele maand verwijderen */
+DELETE FROM MI_SAS_AA_MB_C_MB.CIAA_beleggen_NEW
+WHERE MI_SAS_AA_MB_C_MB.CIAA_beleggen_NEW.Maand_nr = MI_temp.CIAA_Beleggen.Maand_nr
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* nieuwe data toevoegen */
+INSERT INTO MI_SAS_AA_MB_C_MB.CIAA_beleggen_NEW
+SELECT
+        a.*
+FROM MI_temp.CIAA_Beleggen    a
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.CIAA_beleggen_NEW;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* maand_nr gegevens */
+UPDATE MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW
+SET Maand_nr_beleggen = (CASE  WHEN MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW.Maand_nr > (SEL MAX(Maand_nr) AS Maand_nr FROM MI_SAS_AA_MB_C_MB.CIAA_beleggen_NEW) THEN (SEL MAX(Maand_nr) AS Maand_nr FROM MI_SAS_AA_MB_C_MB.CIAA_beleggen_NEW)
+                             ELSE MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW.Maand_nr
+                       END                       )
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.CIAA_Mia_MaandNr_NEW;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/*************************************************************************************
+
+   7. Kredieten
+
+*************************************************************************************/
+
+/* Mia_kredieten_hfd uitgefaseerd */
+
+
+/*************************************************************************************
+
+   9. KEM pijplijn
+
+*************************************************************************************/
+
+/*-----------------------------------------
+KEM faciliteiten
+-----------------------------------------*/
+
+/* view mi_vm_load.vTWK_3_FACILITEITEN wel eens leeg waardoor het schedule klapt/KEM tabellen leeg zijn. vandaar onderstaande sql */
+CREATE SET TABLE Mi_temp.CIAA_TWK_3_FAC ,NO FALLBACK ,
+     NO BEFORE JOURNAL,
+     NO AFTER JOURNAL,
+     CHECKSUM = DEFAULT,
+     DEFAULT MERGEBLOCKRATIO
+     (
+      Recent_ind BYTEINT,
+      Datum_gegevens DATE FORMAT 'YYYY-MM-DD',
+      fk_aanvr_wkmid DECIMAL(18,0),
+      fk_aanvr_versie SMALLINT,
+      fk_voorstel_ver SMALLINT,
+      rc_bestaande_kredi DECIMAL(12,0),
+      rc_gewenste_kredie DECIMAL(12,0),
+      rc_bestaande_kred0 DECIMAL(12,0),
+      rc_gewenste_kredi0 DECIMAL(12,0),
+      bestaande_leningen DECIMAL(12,0),
+      gewenste_leningen DECIMAL(12,0),
+      bestaande_lease_aa DECIMAL(12,0),
+      gewenste_lease_aa DECIMAL(12,0),
+      bestaande_obsi_vta DECIMAL(12,0),
+      gewenste_obsi_vta DECIMAL(12,0),
+      totaal_faciliteite DECIMAL(14,0),
+      totaal_faciliteit0 DECIMAL(14,0),
+      samenhang_facilite DECIMAL(12,0),
+      samenhang_facilit0 DECIMAL(12,0),
+      samenhang_facilit1 CHAR(120) CHARACTER SET LATIN NOT CASESPECIFIC,
+      totaal_one_obligor DECIMAL(14,0),
+      totaal_one_obligo0 DECIMAL(14,0),
+      ml_lening_lease_3e DECIMAL(12,0),
+      ml_lening_lease_30 DECIMAL(12,0),
+      ml_lening_lease_31 CHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+      rc_bestaande_krd_t DECIMAL(14,0),
+      gewenste_extra_afl DECIMAL(12,0),
+      notatie_vorm SMALLINT,
+      date_time_created CHAR(26) CHARACTER SET LATIN NOT CASESPECIFIC,
+      userid_created CHAR(8) CHARACTER SET LATIN NOT CASESPECIFIC,
+      date_time_last_upd CHAR(26) CHARACTER SET LATIN NOT CASESPECIFIC,
+      userid_last_update CHAR(8) CHARACTER SET LATIN NOT CASESPECIFIC,
+      bsk_dekkingstekort DECIMAL(12,0),
+      max_bsk DECIMAL(12,0),
+      totaal_6_maand_afl DECIMAL(12,0),
+      totaal_kredieten_b DECIMAL(14,0),
+      totaal_kredieten_g DECIMAL(14,0),
+      bestaande_len_extr DECIMAL(12,0),
+      bestde_mddr_limiet DECIMAL(12,0),
+      gewnst_mddr_limiet DECIMAL(12,0))
+UNIQUE PRIMARY INDEX (Recent_ind,fk_aanvr_wkmid,fk_aanvr_versie );
+
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+    /* data van vorige week */
 INSERT INTO Mi_temp.CIAA_TWK_3_FAC
 SELECT
        0
@@ -5943,6 +10258,10 @@ SELECT
 FROM MI_SAS_AA_MB_C_MB.CIAA_TWK_3_FAC a
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* meest recente data */
+/* onderstaande sql kan stuklopen vanwege ontbreken tabel, script moet dan echter niet worden afgebroken */
 INSERT INTO Mi_temp.CIAA_TWK_3_FAC
 SELECT
        1
@@ -5988,7 +10307,15 @@ SELECT
 
 FROM mi_vm_load.vTWK_3_FACILITEITEN a
 ;
+/*.IF ERRORCODE <> 0 THEN .GOTO EOP*/
 
+
+DEL FROM MI_SAS_AA_MB_C_MB.CIAA_TWK_3_FAC
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* neem bij voorkeur de meest recente data, indien ontbrekend de data van vorige week */
 INSERT INTO MI_SAS_AA_MB_C_MB.CIAA_TWK_3_FAC
 SEL    a.Datum_gegevens
       ,a.fk_aanvr_wkmid
@@ -6032,6 +10359,47 @@ SEL    a.Datum_gegevens
 FROM Mi_temp.CIAA_TWK_3_FAC a
 QUALIFY RANK (Recent_ind DESC) = 1
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS COLUMN (FK_AANVR_WKMID) ON MI_SAS_AA_MB_C_MB.CIAA_TWK_3_FAC;
+COLLECT STATISTICS COLUMN (FK_AANVR_WKMID ,FK_AANVR_VERSIE) ON MI_SAS_AA_MB_C_MB.CIAA_TWK_3_FAC;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*************************************************************************************
+
+   9. KEM pijplijn
+
+*************************************************************************************/
+
+CREATE TABLE Mi_temp.KEM_funnel_rapp_moment
+      (
+       Maand_Nr            INTEGER,
+       Maand_sdat          DATE FORMAT 'YYYYMMDD',
+       Maand_edat          DATE FORMAT 'YYYYMMDD',
+       Maand_edat_timestmp TIMESTAMP(6),
+       KEM_gegevens_datum  DATE FORMAT 'YYYYMMDD',
+       KEM_gegevens_timestmp TIMESTAMP(6),
+       Maand_NrLm        INTEGER,
+       Maand_Lm_sdat     DATE FORMAT 'YYYYMMDD',
+       Maand_Lm_edat     DATE FORMAT 'YYYYMMDD',
+       Maand_NrL3m        INTEGER,
+       Maand_L3m_sdat     DATE FORMAT 'YYYYMMDD',
+       Maand_L3m_edat     DATE FORMAT 'YYYYMMDD',
+       Maand_NrL6m        INTEGER,
+       Maand_L6m_sdat     DATE FORMAT 'YYYYMMDD',
+       Maand_L6m_edat     DATE FORMAT 'YYYYMMDD',
+       Maand_NrL12m        INTEGER,
+       Maand_L12m_sdat     DATE FORMAT 'YYYYMMDD',
+       Maand_L12m_edat     DATE FORMAT 'YYYYMMDD',
+       Max_maand_Mia_kred  INTEGER
+       )
+UNIQUE PRIMARY INDEX ( Maand_nr )
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 
 INSERT INTO Mi_temp.KEM_funnel_rapp_moment
 SEL
@@ -6083,6 +10451,56 @@ INNER JOIN (SEL MAX(CAST (  SUBSTR( (TRIM(BOTH FROM (CASE WHEN SUBSTR(timestamp_
 
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE  Mi_temp.KEM_funnel_rapp_moment
+FROM
+     (
+     SEL MAX(a.Maand_nr) AS Maand_nr
+     FROM mi_cmb.vCIF_complex_MF a
+
+     INNER JOIN Mi_temp.KEM_funnel_rapp_moment per
+        ON 1 = 1
+
+     WHERE  a.Maand_nr <= per.Maand_nr
+     ) a
+
+SET Max_maand_Mia_kred = a.Maand_nr
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN Maand_Nr;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN Maand_sdat;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN Maand_edat;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN Maand_NrLm;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN Maand_Lm_sdat;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN Maand_Lm_edat;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN Maand_NrL3m;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN Maand_L3m_sdat;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN Maand_L3m_edat;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN Maand_NrL6m;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN Maand_L6m_sdat;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN Maand_L6m_edat;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN Maand_NrL12m;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN Maand_L12m_sdat;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN Maand_L12m_edat;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN Max_maand_Mia_kred;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN KEM_gegevens_datum;
+COLLECT STATISTICS Mi_temp.KEM_funnel_rapp_moment COLUMN KEM_gegevens_timestmp;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/***************************************************************
+
+        Per aanvraag alles statussen van de LAATSTE versie (nieuwe versie bij een rebound)
+
+***************************************************************/
+
+
+/* alle aanvragen per versie chronologisch volgnr toekenen
+   !! bij een rebound wordt een nieuw versienr toegekend. Per nieuwe versie wordt (meestal) wel de 1e AANVRAAG versie overgenomen met de initiele creatiedatum !! */
+
 CREATE TABLE Mi_temp.KEM_funnel_t1a
 AS
 (
@@ -6105,6 +10523,15 @@ LEFT OUTER JOIN MI_SAS_AA_MB_C_MB.KEM_LU_funnel d
 ) WITH DATA
 UNIQUE PRIMARY INDEX (fk_aanvr_wkmid, fk_aanvr_versie, KEM_status_nr)
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.KEM_funnel_t1a COLUMN FK_AANVR_WKMID;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* initiele datum uit de aanvraag (vTWK_3_KREDIET_AANV) ophalen, deze kan voor de 1e datum in (TWK_3_KRD_V_STAT) liggen */
 
 CREATE TABLE Mi_temp.KEM_funnel_t1b
 AS
@@ -6142,6 +10569,43 @@ LEFT OUTER JOIN
 ) WITH DATA
 UNIQUE PRIMARY INDEX (fk_aanvr_wkmid, fk_aanvr_versie, KEM_status_nr)
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.KEM_funnel_t1b COLUMN (FK_AANVR_VERSIE, VOLGNR_CHRONO_OLD_NEW);
+COLLECT STATISTICS Mi_temp.KEM_funnel_t1b COLUMN DATE_CREATED_STAP;
+COLLECT STATISTICS Mi_temp.KEM_funnel_t1b COLUMN (FK_AANVR_WKMID, FK_AANVR_VERSIE);
+COLLECT STATISTICS Mi_temp.KEM_funnel_t1b COLUMN (FK_AANVR_WKMID, DATE_CREATED_STAP);
+COLLECT STATISTICS Mi_temp.KEM_funnel_t1b COLUMN (FK_AANVR_WKMID);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* indien de aanvraagdatum uit de aanvraag gelijk is aan de creatie datum van de eerste stap uit de eerste versie dan de Timestamp uit de status tabel overnemen
+   in het aanvraagbestand zit namelijk geen timestamp */
+UPDATE Mi_temp.KEM_funnel_t1b
+FROM
+     (
+     SEL  a.FK_AANVR_WKMID
+        , a.Timestamp_created_stap
+     FROM  Mi_temp.KEM_funnel_t1b       a
+     WHERE a.Volgnr_chrono_old_new = 1                         /* eerste stap                                             */
+       AND a.FK_AANVR_VERSIE = 1                               /* van eerste versie                                       */
+       AND a.Date_created_stap = a.Date_aanvraag               /* creatie en aanvraag DATUM gelijk                        */
+       AND a.Timestamp_created_stap <> a.Timestamp_aanvraag    /* dan creatie timestamp stap als aanvraag timestamp nemen */
+     GROUP BY 1,2
+     ) a
+
+SET Timestamp_aanvraag = a.Timestamp_created_stap
+WHERE Mi_temp.KEM_funnel_t1b.FK_AANVR_WKMID = a.FK_AANVR_WKMID
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.KEM_funnel_t1b;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* Selecteren relevante aanvraag versies mbt rapportagemaand */
 
 CREATE TABLE Mi_temp.KEM_funnel_t1c
 AS
@@ -6186,6 +10650,14 @@ WHERE a.Date_created_stap <= per.Maand_edat
 UNIQUE PRIMARY INDEX (fk_aanvr_wkmid, fk_aanvr_versie, KEM_status_nr)
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.KEM_funnel_t1c COLUMN (FK_AANVR_WKMID, FK_AANVR_VERSIE ,FUNNEL_STAP ,FUNNEL_STAP_NR);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* Naar soort pijplijn opsplitsen */
 CREATE TABLE Mi_temp.KEM_funnel_t1d
 AS
 (
@@ -6206,6 +10678,8 @@ FROM Mi_temp.KEM_funnel_t1c a
 UNIQUE PRIMARY INDEX (fk_aanvr_wkmid, fk_aanvr_versie, Soort_pijplijn, Status_nr)
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.KEM_funnel_t1d
 SEL
      a.FK_AANVR_WKMID
@@ -6223,6 +10697,10 @@ FROM Mi_temp.KEM_funnel_t1c a
 GROUP BY 1,2,3,4,5
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* DLT obv KEM stappen */
 CREATE TABLE Mi_temp.KEM_funnel_t2
 AS
 (
@@ -6272,6 +10750,213 @@ INNER JOIN Mi_temp.KEM_funnel_rapp_moment per
 UNIQUE PRIMARY INDEX (fk_aanvr_wkmid, fk_aanvr_versie, Soort_pijplijn, Status_nr)
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS Mi_temp.KEM_funnel_t2 COLUMN (fk_aanvr_wkmid, fk_aanvr_versie, Soort_pijplijn, Volgnr_chrono_new_old);
+COLLECT STATS Mi_temp.KEM_funnel_t2 COLUMN (Volgnr_chrono_new_old);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+/* Indicatie of laatste KEM status in rapportage maand actueel is.
+   Actueel indien:
+    - status ongelijk aan Afgesloten of Afgebroken
+    of
+    - status Afgesloten of Afgebroken en date_created_stap in rapportage maand
+*/
+
+UPDATE Mi_temp.KEM_funnel_t2
+FROM
+     (
+     SEL  a.fk_aanvr_wkmid
+         ,a.fk_aanvr_versie
+         ,a.Soort_pijplijn
+         ,CASE WHEN a.Status_nr >=89  AND a.Date_created_stap < per.Maand_sdat THEN 0
+               ELSE 1
+          END AS Stap_actueel_indX
+
+     FROM Mi_temp.KEM_funnel_t2 a
+
+     INNER JOIN Mi_temp.KEM_funnel_rapp_moment per
+        ON 1 = 1
+
+     WHERE a.Volgnr_chrono_new_old = 1
+       AND Stap_actueel_indX = 1
+     ) a
+
+SET Stap_actueel_ind = a.Stap_actueel_indX
+WHERE Mi_temp.KEM_funnel_t2.fk_aanvr_wkmid = a.fk_aanvr_wkmid
+  AND Mi_temp.KEM_funnel_t2.fk_aanvr_versie = a.fk_aanvr_versie
+  AND Mi_temp.KEM_funnel_t2.Soort_pijplijn = a.Soort_pijplijn
+  AND Mi_temp.KEM_funnel_t2.Volgnr_chrono_new_old = 1
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* Indicatie of laatste KEM status in afgelopen 3 mnd actueel is.
+   Actueel indien:
+    - status ongelijk aan Afgesloten of Afgebroken
+    of
+    - status Afgesloten of Afgebroken en date_created_stap in rapportage maand
+*/
+
+UPDATE Mi_temp.KEM_funnel_t2
+FROM
+     (
+     SEL  a.fk_aanvr_wkmid
+         ,a.fk_aanvr_versie
+         ,a.Soort_pijplijn
+         ,a.Volgnr_chrono_new_old
+         ,1 AS Stap_3mnd_indX
+
+     FROM Mi_temp.KEM_funnel_t2 a
+
+     INNER JOIN Mi_temp.KEM_funnel_rapp_moment per
+        ON 1 = 1
+
+     WHERE (a.Date_created_stap > per.Maand_L3m_edat         /* alles afgelopen 3 maanden created */
+
+            OR (a.Date_created_stap <= per.Maand_L3m_edat    /* ouder dan 3 maanden, MAAR         */
+                AND a.Volgnr_chrono_new_old = 1              /* het is de meest recente versie    */
+                AND ZEROIFNULL(a.Status_nr) < 89             /* die niet afgesloten/afgebroken is */
+                )
+            )
+     ) a
+
+SET Stap_3mnd_ind = a.Stap_3mnd_indX
+WHERE Mi_temp.KEM_funnel_t2.fk_aanvr_wkmid = a.fk_aanvr_wkmid
+  AND Mi_temp.KEM_funnel_t2.fk_aanvr_versie = a.fk_aanvr_versie
+  AND Mi_temp.KEM_funnel_t2.Soort_pijplijn = a.Soort_pijplijn
+  AND Mi_temp.KEM_funnel_t2.Volgnr_chrono_new_old = a.Volgnr_chrono_new_old
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* Indicatie of laatste KEM status in afgelopen 6 mnd actueel is.
+   Actueel indien:
+    - status ongelijk aan Afgesloten of Afgebroken
+    of
+    - status Afgesloten of Afgebroken en date_created_stap in rapportage maand
+*/
+
+UPDATE Mi_temp.KEM_funnel_t2
+FROM
+     (
+     SEL  a.fk_aanvr_wkmid
+         ,a.fk_aanvr_versie
+         ,a.Soort_pijplijn
+         ,a.Volgnr_chrono_new_old
+         ,1 AS Stap_6mnd_indX
+
+     FROM Mi_temp.KEM_funnel_t2 a
+
+     INNER JOIN Mi_temp.KEM_funnel_rapp_moment per
+        ON 1 = 1
+
+     WHERE (a.Date_created_stap > per.Maand_L6m_edat         /* alles afgelopen 6 maanden created */
+
+            OR (a.Date_created_stap <= per.Maand_L6m_edat    /* ouder dan 6 maanden, MAAR         */
+                AND a.Volgnr_chrono_new_old = 1              /* het is de meest recente versie    */
+                AND ZEROIFNULL(a.Status_nr) < 89             /* die niet afgesloten/afgebroken is */
+                )
+            )
+     ) a
+
+SET Stap_6mnd_ind = a.Stap_6mnd_indX
+WHERE Mi_temp.KEM_funnel_t2.fk_aanvr_wkmid = a.fk_aanvr_wkmid
+  AND Mi_temp.KEM_funnel_t2.fk_aanvr_versie = a.fk_aanvr_versie
+  AND Mi_temp.KEM_funnel_t2.Soort_pijplijn = a.Soort_pijplijn
+  AND Mi_temp.KEM_funnel_t2.Volgnr_chrono_new_old = a.Volgnr_chrono_new_old
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* Indicatie of laatste KEM status in afgelopen 12 mnd actueel is.
+   Actueel indien:
+    - status ongelijk aan Afgesloten of Afgebroken
+    of
+    - status Afgesloten of Afgebroken en date_created_stap in rapportage maand
+*/
+
+UPDATE Mi_temp.KEM_funnel_t2
+FROM
+     (
+     SEL  a.fk_aanvr_wkmid
+         ,a.fk_aanvr_versie
+         ,a.Soort_pijplijn
+         ,a.Volgnr_chrono_new_old
+         ,1 AS Stap_12mnd_indX
+
+     FROM Mi_temp.KEM_funnel_t2 a
+
+     INNER JOIN Mi_temp.KEM_funnel_rapp_moment per
+        ON 1 = 1
+
+     WHERE (a.Date_created_stap > per.Maand_L12m_edat        /* alles afgelopen 12 maanden created */
+
+            OR (a.Date_created_stap <= per.Maand_L12m_edat   /* ouder dan 12 maanden, MAAR         */
+                AND a.Volgnr_chrono_new_old = 1              /* het is de meest recente versie     */
+                AND ZEROIFNULL(a.Status_nr) < 89             /* die niet afgesloten/afgebroken is  */
+                )
+            )
+     ) a
+
+SET Stap_12mnd_ind = a.Stap_12mnd_indX
+WHERE Mi_temp.KEM_funnel_t2.fk_aanvr_wkmid = a.fk_aanvr_wkmid
+  AND Mi_temp.KEM_funnel_t2.fk_aanvr_versie = a.fk_aanvr_versie
+  AND Mi_temp.KEM_funnel_t2.Soort_pijplijn = a.Soort_pijplijn
+  AND Mi_temp.KEM_funnel_t2.Volgnr_chrono_new_old = a.Volgnr_chrono_new_old
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS Mi_temp.KEM_funnel_t2 COLUMN (fk_aanvr_wkmid, fk_aanvr_versie, Soort_pijplijn);
+COLLECT STATS Mi_temp.KEM_funnel_t2 COLUMN (fk_aanvr_wkmid, fk_aanvr_versie);
+COLLECT STATS Mi_temp.KEM_funnel_t2 COLUMN (Volgnr_chrono_old_new);
+COLLECT STATS Mi_temp.KEM_funnel_t2 COLUMN fk_aanvr_wkmid;
+COLLECT STATS Mi_temp.KEM_funnel_t2 COLUMN Stap_actueel_ind;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/***************************************************************
+
+        hulptabellen (overgenomen uit Script mia_kredieten_KEM.sql)
+
+***************************************************************/
+
+
+/* KEM / financieringsoverzicht
+   Financiering_lang = Faciliteit_kort + OBSI + Leningen_lang
+*/
+
+CREATE TABLE Mi_temp.KEM_funnel_faciliteit
+    (
+      fk_aanvr_wkmid                DECIMAL(21,0)
+    , fk_aanvr_versie               INTEGER
+    , Faciliteit_kort_bestaand      DECIMAL(12,0)
+    , Faciliteit_kort_gevraagd      DECIMAL(12,0)
+    , OBSI_bestaand                 DECIMAL(12,0)
+    , OBSI_gevraagd                 DECIMAL(12,0)
+    , Lease_AA_bestaand             DECIMAL(12,0)
+    , Lease_AA_gevraagd             DECIMAL(12,0)
+    , Leningen_lang_bestaand        DECIMAL(12,0)
+    , Leningen_lang_gevraagd        DECIMAL(12,0)
+    , Financiering_lang_bestaand    DECIMAL(12,0)
+    , Financiering_lang_gevraagd    DECIMAL(12,0)
+    , One_Obligor_lang_bestaand     DECIMAL(12,0)
+    , One_Obligor_lang_gevraagd     DECIMAL(12,0)
+    , Totaal6mnds_aflossing         DECIMAL(12,0)
+    , BSK_max                       DECIMAL(12,0)
+    , BSK_dekkingstekort            DECIMAL(12,0)
+    )
+UNIQUE PRIMARY INDEX ( fk_aanvr_wkmid, fk_aanvr_versie )
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.KEM_funnel_faciliteit
 SEL
      a.fk_aanvr_wkmid
@@ -6306,6 +10991,13 @@ INNER JOIN (SEL
 GROUP BY a.fk_aanvr_wkmid, a.fk_aanvr_Versie
 QUALIFY RANK (a.date_time_created DESC, a.date_time_last_upd DESC ) = 1
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.KEM_funnel_faciliteit COLUMN (FK_AANVR_WKMID, FK_AANVR_VERSIE);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 
 CREATE TABLE mi_temp.KEM_funnel_jaarrekening AS
 (
@@ -6356,6 +11048,84 @@ QUALIFY RANK(a.FK_AANVR_WKMID, a.FK_AANVR_VERSIE, a.date_time_created  DESC, a.d
 )WITH DATA
 UNIQUE PRIMARY INDEX ( fk_aanvr_wkmid, fk_aanvr_versie )
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.KEM_funnel_jaarrekening COLUMN (FK_AANVR_WKMID, FK_AANVR_VERSIE);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE mi_temp.KEM_funnel_PRCDTL_KRDVS
+    (fk_aanvr_wkmid                  DECIMAL(21,0),
+     fk_aanvr_versie                 INTEGER,
+     RARORAC_indicatief              DECIMAL (16,4),
+     RARORAC_fiat                    DECIMAL (16,4),
+     RARORAC_offerte                 DECIMAL (16,4),
+     RARORAC_geaccepteerd            DECIMAL (16,4),
+     RARORAC                         DECIMAL (16,4),
+     EP_indicatief                   DECIMAL (16,4),
+     EP_fiat                         DECIMAL (16,4),
+     EP_offerte                      DECIMAL (16,4),
+     EP_geaccepteerd                 DECIMAL (16,4),
+     EP                              DECIMAL (16,4),
+     UCR_indicatief                  CHAR(2),
+     UCR_fiat                        CHAR(2),
+     UCR_offerte                     CHAR(2),
+     UCR_geaccepteerd                CHAR(2),
+     UCR                             CHAR(2),
+     Client_RARORAC_indicatief         DECIMAL(16,4),
+     Client_RARORAC_fiat             DECIMAL(16,4),
+     Client_RARORAC_offerte          DECIMAL(16,4),
+     Client_RARORAC_geaccepteerd     DECIMAL(16,4),
+     Client_EP_indicatief             DECIMAL(16,4),
+     Client_EP_fiat                     DECIMAL(16,4),
+     Client_EP_offerte                 DECIMAL(16,4),
+     Client_EP_geaccepteerd          DECIMAL(16,4),
+     EC_indicatief                     DECIMAL(16,4),
+     EC_fiat                         DECIMAL(16,4),
+     EC_offerte                         DECIMAL(16,4),
+     EC_geaccepteerd                 DECIMAL(16,4),
+     Inkomsten_totaal_indicatief     DECIMAL(16,4),
+     Inkomsten_totaal_fiat             DECIMAL(16,4),
+     Inkomsten_totaal_offerte         DECIMAL(16,4),
+     Inkomsten_totaal_geaccepteerd     DECIMAL(16,4),
+     Client_AAEBREFFECT_TO_ind         DECIMAL(16,4),
+     Client_AAEBREFFECT_TO_fiat         DECIMAL(16,4),
+     Client_AAEBREFFECT_TO_offerte     DECIMAL(16,4),
+     Client_AAEBREFFECT_TO_geacc     DECIMAL(16,4),
+     Client_inkomsten_totaal_ind     DECIMAL(16,4),
+     Client_inkomsten_totaal_fiat     DECIMAL(16,4),
+     Client_inkomsten_totaal_off     DECIMAL(16,4),
+     Client_inkomsten_totaal_geacc   DECIMAL(16,4),
+     Client_optiekosten_indicatief     DECIMAL(16,4),
+     Client_optiekosten_fiat         DECIMAL(16,4),
+     Client_optiekosten_offerte         DECIMAL(16,4),
+     Client_optiekosten_geacc        DECIMAL(16,4),
+     Client_belastingen_indicatief     DECIMAL(16,4),
+     Client_belastingen_fiat         DECIMAL(16,4),
+     Client_belastingen_offerte         DECIMAL(16,4),
+     Client_belastingen_geacc        DECIMAL(16,4),
+     Client_exp_loss_indicatief         DECIMAL(16,4),
+     Client_exp_loss_fiat            DECIMAL(16,4),
+     Client_exp_loss_offerte         DECIMAL(16,4),
+     Client_exp_loss_geaccepteerd     DECIMAL(16,4),
+     Client_EC_indicatief             DECIMAL(16,4),
+     Client_EC_fiat                     DECIMAL(16,4),
+     Client_EC_offerte                 DECIMAL(16,4),
+     Client_EC_geaccepteerd             DECIMAL(16,4),
+     Client_oper_kosten_indicatief     DECIMAL(16,4),
+     Client_oper_kosten_fiat         DECIMAL(16,4),
+     Client_oper_kosten_offerte         DECIMAL(16,4),
+     Client_oper_kosten_geacc         DECIMAL(16,4),
+     Client_result_na_bel_ind         DECIMAL(16,4),
+     Client_result_na_bel_fiat         DECIMAL(16,4),
+     Client_result_na_bel_offerte     DECIMAL(16,4),
+     Client_result_na_bel_geacc         DECIMAL(16,4)
+    )
+UNIQUE PRIMARY INDEX ( fk_aanvr_wkmid, fk_aanvr_versie )
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO mi_temp.KEM_funnel_PRCDTL_KRDVS
 SEL
@@ -6511,6 +11281,27 @@ FROM
      ) a
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS mi_temp.KEM_funnel_PRCDTL_KRDVS INDEX ( fk_aanvr_wkmid, fk_aanvr_versie );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.KEM_funnel_KENMERK_P_KR
+    (
+     fk_aanvr_wkmid                DECIMAL(21,0),
+     fk_aanvr_versie               INTEGER,
+     Type_krediet_code             VARCHAR (5),
+     Type_Doelgroep                CHAR(3),
+     Type_VST                      CHAR(3)
+    )
+UNIQUE PRIMARY INDEX ( fk_aanvr_wkmid, fk_aanvr_versie )
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/* wanneer sprake van XL? Indien type XL aanwezig? (aanvraag kan meerdere typen tegelijk hebben (bv. MBO, COOG, MKN, APT, fk_aanvr_wkmid = 130822142542712922 ) */
 INSERT INTO Mi_temp.KEM_funnel_KENMERK_P_KR
 SEL
       a.fk_aanvr_wkmid  AS WKM_ID
@@ -6534,6 +11325,22 @@ GROUP BY a.fk_aanvr_wkmid, a.fk_aanvr_Versie
 QUALIFY RANK (CASE WHEN TRIM(BOTH FROM a.FK_type_kenm_code ) = 'XL' THEN 1 ELSE 0 END DESC, a.date_time_created DESC, a.date_time_last_upd DESC ) = 1
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS Mi_temp.KEM_funnel_KENMERK_P_KR INDEX ( fk_aanvr_wkmid, fk_aanvr_versie );
+COLLECT STATISTICS COLUMN (VOLGNR_CHRONO_NEW_OLD,FK_AANVR_WKMID ,SOORT_PIJPLIJN) ON Mi_temp.KEM_funnel_t2;
+COLLECT STATISTICS COLUMN (SOORT_PIJPLIJN) ON Mi_temp.KEM_funnel_t2;
+COLLECT STATISTICS COLUMN (FK_AANVR_VERSIE) ON Mi_temp.KEM_funnel_t2;
+COLLECT STATISTICS COLUMN (VOLGNR_CHRONO_NEW_OLD ,SOORT_PIJPLIJN) ON Mi_temp.KEM_funnel_t2;
+COLLECT STATISTICS COLUMN (DATE_CREATED_STAP) ON Mi_temp.KEM_funnel_t2;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS COLUMN (TD_SYSFNLIB.TO_NUMBER (TRANSLATE((Fac_BC_nr )USING LATIN_TO_UNICODE)(VARCHAR(32000), CHARACTER SET UNICODE, NOT CASESPECIFIC))) AS ST_260411063105_3_CIF_Complex ON Mi_cmb.CIF_Complex;
+COLLECT STATISTICS COLUMN (ZEROIFNULL(TD_SYSFNLIB.TO_NUMBER (TRANSLATE((Hoofdrekening )USING LATIN_TO_UNICODE)(VARCHAR(32000), CHARACTER SET UNICODE, NOT CASESPECIFIC)))) AS ST_260411063105_1_CIF_Complex ON Mi_cmb.CIF_Complex;
+COLLECT STATISTICS COLUMN (DATE_AANVRAAG) ON  Mi_temp.KEM_funnel_t2;
+
+/* detail info aanvraagversie */
 CREATE TABLE Mi_temp.KEM_funnel_t3
 AS
 (
@@ -6992,6 +11799,50 @@ LEFT OUTER JOIN
 UNIQUE PRIMARY INDEX ( fk_aanvr_wkmid, fk_aanvr_versie )
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*************************************************************************************/
+
+CREATE SET TABLE MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW ,NO FALLBACK ,
+     NO BEFORE JOURNAL,
+     NO AFTER JOURNAL,
+     CHECKSUM = DEFAULT,
+     DEFAULT MERGEBLOCKRATIO
+     (
+      FK_AANVR_WKMID DECIMAL(18,0),
+      FK_AANVR_VERSIE SMALLINT,
+      Maand_nr INTEGER,
+      Datum_KEM_gegevens DATE FORMAT 'YY/MM/DD',
+      Soort_pijplijn CHAR(6) CHARACTER SET UNICODE NOT CASESPECIFIC,
+      Status VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('AFGESLOTEN','Voorstel maken','AFGEBROKEN','AANVRAAG','Voorstel bekrachtigen & Fiatteren','BEKRACHTIGING AANGEBODEN','BEKRACHTIGD','GEFIATTEERD','FIAT AANGEBODEN','TER CONTROLE AANGEBODEN'),
+      Status_nr INTEGER,
+      Timestamp_created_stap TIMESTAMP(6),
+      Date_created_stap DATE FORMAT 'YY/MM/DD',
+      Volgnr_chrono_old_new INTEGER,
+      Volgnr_chrono_new_old INTEGER,
+      Timestamp_aanvraag TIMESTAMP(6),
+      Date_aanvraag DATE FORMAT 'YY/MM/DD',
+      Timestmp_voorg_stap TIMESTAMP(6),
+      Date_voorg_stap DATE FORMAT 'YY/MM/DD',
+      Status_voorg_stap VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('AFGESLOTEN','Voorstel maken','AFGEBROKEN','AANVRAAG','Voorstel bekrachtigen & Fiatteren','BEKRACHTIGING AANGEBODEN','BEKRACHTIGD','GEFIATTEERD','FIAT AANGEBODEN','TER CONTROLE AANGEBODEN'),
+      Status_nr_voorg_stap INTEGER,
+      Timestmp_volg_stap TIMESTAMP(6),
+      Date_volg_stapv DATE FORMAT 'YY/MM/DD',
+      Status_volg_stap VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('AFGESLOTEN','Voorstel maken','AFGEBROKEN','AANVRAAG','Voorstel bekrachtigen & Fiatteren','BEKRACHTIGING AANGEBODEN','BEKRACHTIGD','GEFIATTEERD','FIAT AANGEBODEN','TER CONTROLE AANGEBODEN'),
+      Status_nr_volg_stap INTEGER,
+      DLT_stap INTEGER,
+      DLT_cumulatief INTEGER,
+      Stap_actueel_ind BYTEINT,
+      /*Stap_3mnd_ind BYTEINT,*/
+      /*Stap_6mnd_ind BYTEINT,*/
+      Stap_12mnd_ind BYTEINT
+      )
+UNIQUE PRIMARY INDEX ( FK_AANVR_WKMID ,FK_AANVR_VERSIE ,Soort_pijplijn ,Status_nr )
+PARTITION BY (CASE_N(Soort_pijplijn = 'KEM', Soort_pijplijn = 'Funnel', NO CASE, UNKNOWN) )
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW
 SELECT
         FK_AANVR_WKMID
@@ -7021,8 +11872,271 @@ SELECT
        ,Stap_12mnd_ind
 FROM Mi_temp.KEM_funnel_t2;
 
+COMMENT ON MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW   AS 'NIET VERWIJDEREN - Afdelingstabel in schedulescript (KEM)' ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN (PARTITION);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN (PARTITION ,SOORT_PIJPLIJN);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN (fk_aanvr_wkmid, fk_aanvr_versie, Soort_pijplijn, Volgnr_chrono_new_old);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN (Volgnr_chrono_new_old);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN (fk_aanvr_wkmid, fk_aanvr_versie, Soort_pijplijn);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN (fk_aanvr_wkmid, fk_aanvr_versie);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN (Volgnr_chrono_old_new);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN fk_aanvr_wkmid;
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN Stap_actueel_ind;
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN (FK_AANVR_WKMID ,SOORT_PIJPLIJN);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN Stap_12mnd_ind;
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN DATE_CREATED_STAP;
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN (PARTITION ,SOORT_PIJPLIJN ,VOLGNR_CHRONO_NEW_OLD);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN  STATUS_NR;
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN (SOORT_PIJPLIJN ,STATUS_NR ,VOLGNR_CHRONO_OLD_NEW);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN STATUS_NR;
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN (FK_AANVR_WKMID, SOORT_PIJPLIJN ,STAP_12MND_IND);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN (SOORT_PIJPLIJN, STAP_12MND_IND);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN (SOORT_PIJPLIJN, VOLGNR_CHRONO_NEW_OLD);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN (PARTITION ,SOORT_PIJPLIJN ,STAP_12MND_IND);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN(SOORT_PIJPLIJN ,STATUS ,STATUS_NR ,STATUS_VOORG_STAP,STATUS_NR_VOORG_STAP);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_pijplijn_NEW COLUMN MAAND_NR;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE SET TABLE MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW ,NO FALLBACK ,
+     NO BEFORE JOURNAL,
+     NO AFTER JOURNAL,
+     CHECKSUM = DEFAULT,
+     DEFAULT MERGEBLOCKRATIO
+     (
+      FK_AANVR_WKMID DECIMAL(18,0),
+      FK_AANVR_VERSIE SMALLINT,
+      Maand_nr INTEGER,
+      UserID_laatste_stap CHAR(8) CHARACTER SET LATIN NOT CASESPECIFIC,
+      BOnr_laatste_stap INTEGER,
+      Doelgroep CHAR(3) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('BIN','MED','PAR','AGR','MKB'),
+      Datum_laatste_gesp DATE FORMAT 'YY/MM/DD',
+      RM_naam CHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('Conversiepost','x','YourBusiness Banking', ''),
+      RM_UserID CHAR(6) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS(''),
+      Specialist_advies_datum DATE FORMAT 'YY/MM/DD',
+      Specialist_type CHAR(5) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('','AS','RAMB','SOB','VG','KR'),
+      Specialist_advies_type CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('','1','2','3','4','5'),
+      Specialist_BOnr INTEGER,
+      Specialist_naam CHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS(''),
+      Specialist_UserID CHAR(6) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Voorstel_status_actueel_nr SMALLINT COMPRESS(80,85,0,75),
+      Voorstel_status_actueel CHAR(25) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('AFGEBROKEN','AFGESLOTEN'),
+      Voorstel_Dossier_nr DECIMAL(12,0),
+      Voorstel_Klant_nr DECIMAL(13,0),
+      Voorstel_BCnr_hfdrek_nr DECIMAL(12,0),
+      Voorstel_BC_CGC INTEGER,
+      Voorstel_BC_CGC_einde INTEGER,
+      Voorstel_Hoofdrekening_nr DECIMAL(10,0),
+      Voorstel_sector CHAR(12) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('','DIENSTVERL','HANDEL','LANDBOUW','MEDICI','PRODUCTIE','TRANSPORT'),
+      Voorstel_type_bron CHAR(3) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('AAN','REV','REN','AFL','KRB'),
+      Voorstel_type VARCHAR(9) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('REV','WIJZIGING','NIEUW','REN','AFL','KRB','OD','RCM','ACT'),
+      Voorstel_type_instroom VARCHAR(35) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('Revisie','Nieuw','Renteherziening','Aflossen ML','Krediet beëindigen','Overdispositie','Saldo rentecompensatie','Actualisatie','Correctie renteperc lening','Opschorten ML','Mutatiekredietnemer','Omzetten variabele naar vaste rente','Wijziging - verhoging','Wijziging - verlaging'),
+      Voorstel_beoordeling_policy CHAR(12) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('','ORANJE','ROOD','GROEN'),
+      Voorstel_beoordeling_model CHAR(12) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('','ORANJE','ROOD','GROEN'),
+      Voorstel_beoordeling_totaal CHAR(12) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('','ORANJE','ROOD','GROEN','ORANJEGROEN','verl. zonder','akkoord','verl. met','rev.dat.hh'),
+      Voorstel_Kantoor_naam VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('Retail/CV/Beroepsgroep Arrangementen'),
+      Voorstel_Kantoor_BOnr INTEGER,
+      Voorstel_Kantoor_naam_act VARCHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('Retail/CV/Beroepsgroep Arrangementen'),
+      Voorstel_SBU_srt_bo_code_act CHAR(3) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Voorstel_Type_bo_nr_act VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Voorstel_BU_code_act CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Voorstel_BU_decode_mi_act VARCHAR(60) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Voorstel_Regio_nr_act INTEGER,
+      Voorstel_Regio_naam_act CHAR(40) CHARACTER SET LATIN NOT CASESPECIFIC,
+      FI_CODE_OUD CHAR(3) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('E23','E53','E93','E83','E43','E99','E55'),
+      FI_CODE_NEW CHAR(3) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('E23','E53','E93','E83','E43','E99','E55'),
+      Voorstel_Classificatie CHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('','RETAIL','NON-RETAIL'),
+      Voorstel_FRR_beoordeling CHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('','AKKOORD','NIET AKKOORD'),
+      Voorstel_FRR_behandelpad CHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('','NVT','RES_REG','RES_HOK'),
+      Voorstel_FRR_te_starten_dos CHAR(15) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('','GEEN','AAN'),
+      Voorstel_FRR_target_ficode CHAR(3) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS(''),
+      Voorstel_arrangement_code CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS(''),
+      Voorstel_huidige_revisie_dat DATE FORMAT 'YY/MM/DD',
+      Voorstel_nieuwe_revisie_dat DATE FORMAT 'YY/MM/DD',
+      Voorstel_rek_saldocomp_ind CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('','N','J'),
+      Voorstel_Aanvraag_gegevens_ind BYTEINT,
+      Voorstel_Client_ind BYTEINT,
+      Voorstel_Jaarrekening_ind BYTEINT,
+      Voorstel_Kredietbehoefte_ind BYTEINT,
+      Voorstel_Kredietoplossing_ind BYTEINT,
+      Voorstel_zekerheden_ind BYTEINT,
+      Voorstel_non_financials_ind BYTEINT,
+      Voorstel_aflossverplicht_ind BYTEINT,
+      Voorstel_aanvraag_vragen_ind BYTEINT,
+      Voorstel_pricing_ind BYTEINT,
+      Voorstel_alg_toelichting_ind BYTEINT,
+      Voorstel_revisie_ind BYTEINT,
+      Faciliteit_kort_bestaand DECIMAL(12,0),
+      Faciliteit_kort_gevraagd DECIMAL(12,0),
+      OBSI_bestaand DECIMAL(12,0),
+      OBSI_gevraagd DECIMAL(12,0),
+      Lease_AA_bestaand DECIMAL(12,0),
+      Lease_AA_gevraagd DECIMAL(12,0),
+      Leningen_lang_bestaand DECIMAL(12,0),
+      Leningen_lang_gevraagd DECIMAL(12,0),
+      Financiering_lang_bestaand DECIMAL(12,0),
+      Financiering_lang_gevraagd DECIMAL(12,0),
+      One_Obligor_lang_bestaand DECIMAL(12,0),
+      One_Obligor_lang_gevraagd DECIMAL(12,0),
+      Totaal6mnds_aflossing DECIMAL(12,0),
+      BSK_max DECIMAL(12,0),
+      BSK_dekkingstekort DECIMAL(12,0),
+      Date_jaarrekening DATE FORMAT 'YY/MM/DD',
+      Bedrijfsomzet INTEGER,
+      Inkoopwaarde INTEGER,
+      Toegevoegde_waarde DECIMAL(10,0),
+      Personeelskosten INTEGER,
+      Bedrijfskosten INTEGER,
+      Bruto_resultaat DECIMAL(10,0),
+      Afschrijvingen INTEGER,
+      Rentelasten INTEGER,
+      Overige_baten_en_l INTEGER,
+      Bedrijfsresultaat DECIMAL(10,0),
+      Incidentele_baten INTEGER,
+      Belastingen INTEGER,
+      Winst_en_verlies_n DECIMAL(10,0),
+      Saldo_uitkering INTEGER,
+      Uitkering INTEGER,
+      Ingehouden_winst_e DECIMAL(10,0),
+      Gecorr_rentelasten DECIMAL(12,0),
+      RARORAC_indicatief DECIMAL(16,4),
+      RARORAC_fiat DECIMAL(16,4),
+      RARORAC_offerte DECIMAL(16,4),
+      RARORAC_geaccepteerd DECIMAL(16,4),
+      RARORAC DECIMAL(16,4),
+      EP_indicatief DECIMAL(16,4),
+      EP_fiat DECIMAL(16,4),
+      EP_offerte DECIMAL(16,4),
+      EP_geaccepteerd DECIMAL(16,4),
+      EP DECIMAL(16,4),
+      UCR_indicatief CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+      UCR_fiat CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+      UCR_offerte CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+      UCR_geaccepteerd CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+      UCR CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Client_RARORAC_indicatief DECIMAL(16,4),
+      Client_RARORAC_fiat DECIMAL(16,4),
+      Client_RARORAC_offerte DECIMAL(16,4),
+      Client_RARORAC_geaccepteerd DECIMAL(16,4),
+      Client_EP_indicatief DECIMAL(16,4),
+      Client_EP_fiat DECIMAL(16,4),
+      Client_EP_offerte DECIMAL(16,4),
+      Client_EP_geaccepteerd DECIMAL(16,4),
+      EC_indicatief DECIMAL(16,4),
+      EC_fiat DECIMAL(16,4),
+      EC_offerte DECIMAL(16,4),
+      EC_geaccepteerd DECIMAL(16,4),
+      Inkomsten_totaal_indicatief DECIMAL(16,4),
+      Inkomsten_totaal_fiat DECIMAL(16,4),
+      Inkomsten_totaal_offerte DECIMAL(16,4),
+      Inkomsten_totaal_geaccepteerd DECIMAL(16,4),
+      Client_AAEBREFFECT_TO_ind DECIMAL(16,4),
+      Client_AAEBREFFECT_TO_fiat DECIMAL(16,4),
+      Client_AAEBREFFECT_TO_offerte DECIMAL(16,4),
+      Client_AAEBREFFECT_TO_geacc DECIMAL(16,4),
+      Client_inkomsten_totaal_ind DECIMAL(16,4),
+      Client_inkomsten_totaal_fiat DECIMAL(16,4),
+      Client_inkomsten_totaal_off DECIMAL(16,4),
+      Client_inkomsten_totaal_geacc DECIMAL(16,4),
+      Client_optiekosten_indicatief DECIMAL(16,4),
+      Client_optiekosten_fiat DECIMAL(16,4),
+      Client_optiekosten_offerte DECIMAL(16,4),
+      Client_optiekosten_geacc DECIMAL(16,4),
+      Client_belastingen_indicatief DECIMAL(16,4),
+      Client_belastingen_fiat DECIMAL(16,4),
+      Client_belastingen_offerte DECIMAL(16,4),
+      Client_belastingen_geacc DECIMAL(16,4),
+      Client_exp_loss_indicatief DECIMAL(16,4),
+      Client_exp_loss_fiat DECIMAL(16,4),
+      Client_exp_loss_offerte DECIMAL(16,4),
+      Client_exp_loss_geaccepteerd DECIMAL(16,4),
+      Client_EC_indicatief DECIMAL(16,4),
+      Client_EC_fiat DECIMAL(16,4),
+      Client_EC_offerte DECIMAL(16,4),
+      Client_EC_geaccepteerd DECIMAL(16,4),
+      Client_oper_kosten_indicatief DECIMAL(16,4),
+      Client_oper_kosten_fiat DECIMAL(16,4),
+      Client_oper_kosten_offerte DECIMAL(16,4),
+      Client_oper_kosten_geacc DECIMAL(16,4),
+      Client_result_na_bel_ind DECIMAL(16,4),
+      Client_result_na_bel_fiat DECIMAL(16,4),
+      Client_result_na_bel_offerte DECIMAL(16,4),
+      Client_result_na_bel_geacc DECIMAL(16,4),
+      Type_krediet_code VARCHAR(5) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('XL','STRT','MKN'),
+      Type_Doelgroep CHAR(3) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('BIN','MED','PAR','AGR','MKB'),
+      Type_VST CHAR(3) CHARACTER SET LATIN NOT CASESPECIFIC COMPRESS('AAN','REV','AFL','REN','RCM'),
+      NPL_ind BYTEINT,
+      FRR_ind BYTEINT,
+
+      ACBS_Contract_nr DECIMAL(11,0),
+      ACBS_BC_nr DECIMAL(12,0),
+      ACBS_Klant_nr INTEGER,
+      ACBS_OOE  DECIMAL(18,2),
+      ACBS_Limiet_krediet DECIMAL(18,2),
+      ACBS_Saldo_doorlopend DECIMAL(18,2),
+      ACBS_Bron_ACBS_ind BYTEINT,
+      ACBS_Saldocompensatie_ind BYTEINT,
+      ACBS_Ingangdatum_krediet DATE FORMAT 'YY/MM/DD'
+      )
+UNIQUE PRIMARY INDEX ( FK_AANVR_WKMID ,FK_AANVR_VERSIE )
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW
 SELECT * FROM Mi_temp.KEM_funnel_t3;
+
+COMMENT ON MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW   AS 'NIET VERWIJDEREN - Afdelingstabel in schedulescript (KEM)' ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN (fk_aanvr_wkmid, fk_aanvr_versie);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN  FK_AANVR_WKMID;
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN VOORSTEL_BC_CGC;
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN VOORSTEL_BC_CGC_einde;
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN (VOORSTEL_BC_CGC,VOORSTEL_BC_CGC_einde);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN FK_AANVR_WKMID;
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN VOORSTEL_HOOFDREKENING_NR;
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN VOORSTEL_BCNR_HFDREK_NR;
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN (VOORSTEL_TYPE);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN (VOORSTEL_BC_CGC ,VOORSTEL_TYPE_INSTROOM);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN (FRR_ind);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN (FRR_ind);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN Voorstel_BU_decode_mi_act;
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN Voorstel_Regio_nr_act;
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN Voorstel_Regio_naam_act;
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN  (VOORSTEL_DOSSIER_NR);
+COLLECT STATS MI_SAS_AA_MB_C_MB.KEM_aanvraag_det_NEW COLUMN  VOORSTEL_KANTOOR_BONR;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+/*************************************************************************************
+
+   10. AHK tbv rapportage (in MSTR)
+
+*************************************************************************************/
+
+/*************************************************************************************
+
+       Kred_rapportage_moment_afdtabellen  -Hulptabel
+
+*************************************************************************************/
+
+CREATE TABLE Mi_temp.Kred_rapportage_moment_afdtabellen
+      (
+       Maand_nr                         INTEGER,
+       Ultimomaand_start_datum_tee      DATE FORMAT 'YYYYMMDD',
+       Ultimomaand_eind_datum_tee       DATE FORMAT 'YYYYMMDD'
+      )
+UNIQUE PRIMARY INDEX ( Maand_nr )
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Kred_rapportage_moment_afdtabellen
 SEL
@@ -7032,9 +12146,61 @@ SEL
 FROM Mi_vm.vlu_maand                      lm
 WHERE lm.maand = (SELECT MAX(maand_nr) FROM mi_cmb.cif_complex);
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_temp.Kred_rapportage_moment_afdtabellen COLUMN Ultimomaand_eind_datum_tee;
+COLLECT STATISTICS Mi_temp.Kred_rapportage_moment_afdtabellen COLUMN Ultimomaand_start_datum_tee;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*************************************************************************************
+
+       ahk_basis_NEW
+
+*************************************************************************************/
+
+CREATE SET TABLE MI_SAS_AA_MB_C_MB.ahk_basis_NEW ,NO FALLBACK ,
+     NO BEFORE JOURNAL,
+     NO AFTER JOURNAL,
+     CHECKSUM = DEFAULT,
+     DEFAULT MERGEBLOCKRATIO
+     (
+      contract_nr DECIMAL(12,0),
+      bc_nr DECIMAL(12,0),
+      maand_nr INTEGER, --CHAR(6) CHARACTER SET LATIN NOT CASESPECIFIC,
+      valuta_krediet VARCHAR(64) CHARACTER SET LATIN NOT CASESPECIFIC,
+      kredietsoort CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+      kred_lim DECIMAL(18,0),
+      avg_pos DECIMAL(18,0),
+      gem_obligopositie DECIMAL(18,0),
+      laagste_uitnutting DECIMAL(18,0),
+      hoogste_uitnutting DECIMAL(18,0))
+PRIMARY INDEX ( contract_nr ,bc_nr ,maand_nr ,valuta_krediet , kredietsoort );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* Historie overnemen */
 INSERT INTO MI_SAS_AA_MB_C_MB.ahk_basis_NEW
 SELECT * FROM MI_SAS_AA_MB_C_MB.ahk_basis;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.ahk_basis_NEW  COLUMN (maand_nr, contract_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.ahk_basis_NEW  COLUMN (maand_nr, bc_nr);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.ahk_basis_NEW  COLUMN (maand_nr, bc_nr, contract_nr);
+COLLECT STATISTICS MI_SAS_AA_MB_C_MB.ahk_basis_NEW COLUMN (maand_nr, valuta_krediet);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.ahk_basis_NEW COLUMN (maand_nr, kredietsoort);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* WEEKCIJFERS VERWIJDEREN INDIEN MAAND REEDS AANWEZIG VAN VORIGE WEEK */
+DELETE FROM MI_SAS_AA_MB_C_MB.ahk_basis_NEW
+WHERE Maand_nr = (SEL Maand_nr FROM MI_temp.Kred_rapportage_moment_afdtabellen)
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* insert nieuwe data */
 INSERT INTO MI_SAS_AA_MB_C_MB.ahk_basis_NEW
 SELECT
     char_subst(b.master_cr_facility ,'abcdefghijklmnopqrstuvwxyzÀÁÂÃÄÅÆàáâãäåæÇçÈÉÊËèéêëÌÍÎÏÒÓÔÕÖòóôõöÙÚÛÜùúûüýÿ+.,-/;:\_=','')  (DEC(12,0)) AS hoofdrekening
@@ -7063,6 +12229,63 @@ WHERE b.periode_datum  BETWEEN
   AND hoofdrekening GE 100000000
   AND c.klant_nr GT 0
 GROUP BY 1,2,3,4,5;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* hulptabel op Temp droppen */
+DROP TABLE  MI_temp.Kred_rapportage_moment_afdtabellen;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+
+/**********************************************************************************************/
+/* 11 IN- EN UITSTROOM IN- EN UITSTROOM IN- EN UITSTROOM IN- EN UITSTROOM IN- EN UITSTROOM IN */
+/**********************************************************************************************/
+
+/*--------------------------------------------------------------------------------------------*/
+/* STAP 1                                                                                     */
+/* Verzamel van alle BC’s de benodigde gegevens                                               */
+/* (aanwezig aan het begin van de periode en/of aan het einde van de periode)                 */
+/*--------------------------------------------------------------------------------------------*/
+
+CREATE TABLE Mi_temp.Mia_migratie_BC_basis
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Business_contact_nr DECIMAL(13,0),
+       Maand_nr_begin INTEGER,
+       Maand_nr_eind INTEGER,
+       In_begin BYTEINT,
+       In_eind BYTEINT,
+       Klant_ind_begin BYTEINT,
+       Klant_ind_eind BYTEINT,
+       Klant_nr_begin INTEGER,
+       Klant_nr_eind INTEGER,
+       Klant_nr_ongewijzigd BYTEINT,
+       Klant_nr_gewijzigd BYTEINT,
+       Klant_nr_weg BYTEINT,
+       Klant_nr_nieuw BYTEINT,
+       Samengevoegd BYTEINT,
+       Uiteengevallen BYTEINT,
+       Nieuw_BC BYTEINT,
+       Vervallen_BC BYTEINT,
+       CGC_begin CHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC,
+       CGC_eind CHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Business_line_begin VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Business_line_eind VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Segment_begin VARCHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Segment_eind VARCHAR(4) CHARACTER SET LATIN NOT CASESPECIFIC
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr, Business_contact_nr )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr )
+INDEX ( Business_contact_nr )
+INDEX ( Klant_nr_begin )
+INDEX ( Klant_nr_eind );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_migratie_BC_basis
 SELECT A.Klant_nr,
@@ -7157,6 +12380,57 @@ SELECT A.Klant_nr,
   LEFT OUTER JOIN Mi_sas_aa_mb_c_mb.Cgc_basis XI
     ON XG.Segment_id = XI.Clientgroep;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*--------------------------------------------------------------------------------------------*/
+/* STAP 2                                                                                     */
+/* Identificeer de uitzonderingen                                                             */
+/*--------------------------------------------------------------------------------------------*/
+
+/*--------------------------------------------------------------------------------------------*/
+/* STAP 2A                                                                                    */
+/* Identificeeer uiteengevallen klant(complex)en                                              */
+/* - Meerdere Klant_nr_eind's bij één Klant_nr_begin                                          */
+/*--------------------------------------------------------------------------------------------*/
+
+UPDATE Mi_temp.Mia_migratie_BC_basis
+   SET Uiteengevallen = 1
+ WHERE Mi_temp.Mia_migratie_BC_basis.Klant_nr_begin IN (SELECT Klant_nr_begin
+                                                          FROM Mi_temp.Mia_migratie_BC_basis
+                                                         WHERE Nieuw_BC + Vervallen_BC = 0
+                                                           AND Klant_nr_eind IS NOT NULL
+                                                         GROUP BY 1 HAVING COUNT(DISTINCT Klant_nr_eind) > 1);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*--------------------------------------------------------------------------------------------*/
+/* STAP 2B                                                                                    */
+/* Identificeeer samengevoegde klant(complex)en                                               */
+/* - Meerdere Klant_nr_begin's bij één Klant_nr_eind                                          */
+/*--------------------------------------------------------------------------------------------*/
+
+UPDATE Mi_temp.Mia_migratie_BC_basis
+   SET Samengevoegd = 1
+ WHERE Mi_temp.Mia_migratie_BC_basis.Klant_nr_eind IN (SELECT Klant_nr_eind
+                                                         FROM Mi_temp.Mia_migratie_BC_basis
+                                                        WHERE Nieuw_BC + Vervallen_BC = 0
+                                                        GROUP BY 1 HAVING COUNT(DISTINCT ZEROIFNULL(Klant_nr_begin)) > 1);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.Mia_klanten_uiteengevallen
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Uiteengevallen BYTEINT,
+       Ook_samengevoegd BYTEINT
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.Mia_klanten_uiteengevallen
 SELECT A.Klant_nr,
        A.Maand_nr,
@@ -7171,6 +12445,21 @@ SELECT A.Klant_nr,
     ON A.Klant_nr = B.Klant_nr
  WHERE A.Uiteengevallen = 1
  GROUP BY 1, 2;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.Mia_klanten_samengevoegd
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Samengevoegd BYTEINT,
+       Ook_uiteengevallen BYTEINT
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_klanten_samengevoegd
 SELECT A.Klant_nr,
@@ -7187,6 +12476,28 @@ SELECT A.Klant_nr,
  WHERE A.Samengevoegd = 1
  GROUP BY 1, 2;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*--------------------------------------------------------------------------------------------*/
+/* STAP 2C                                                                                    */
+/* Identificeeer nieuwe klant(complex)en                                                      */
+/* - Klant_nr_begin IS NULL                                                                   */
+/*--------------------------------------------------------------------------------------------*/
+
+CREATE TABLE Mi_temp.Mia_klanten_nieuw
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Nieuw BYTEINT,
+       Aantal_bcs INTEGER,
+       Aantal_bcs_nieuw INTEGER
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.Mia_klanten_nieuw
 SELECT *
   FROM (SELECT XA.Klant_nr,
@@ -7198,6 +12509,28 @@ SELECT *
          GROUP BY 1, 2) AS A
  WHERE A.Nieuw > 0;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*--------------------------------------------------------------------------------------------*/
+/* STAP 2D                                                                                    */
+/* Identificeeer vervallen klant(complex)en                                                   */
+/* - Klant_nr_eind IS NULL                                                                    */
+/*--------------------------------------------------------------------------------------------*/
+
+CREATE TABLE Mi_temp.Mia_klanten_weg
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Vervallen BYTEINT,
+       Aantal_bcs INTEGER,
+       Aantal_bcs_vervallen INTEGER
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_temp.Mia_klanten_weg
 SELECT A.*
   FROM (SELECT XA.Klant_nr,
@@ -7208,6 +12541,33 @@ SELECT A.*
           FROM Mi_temp.Mia_migratie_BC_basis XA
          GROUP BY 1, 2) AS A
  WHERE A.Vervallen > 0;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*--------------------------------------------------------------------------------------------*/
+/* STAP 2E                                                                                    */
+/* Identificeeer klant(complex)en met (alleen) wijziging Klant_nr                             */
+/*--------------------------------------------------------------------------------------------*/
+
+CREATE TABLE Mi_temp.Mia_klanten_klantnr_anders
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Klant_nr_nieuw INTEGER,
+       Wijziging_klantnummer BYTEINT,
+       Business_line_begin VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Business_line_eind VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Klant_ind_begin BYTEINT,
+       Klant_ind_eind BYTEINT,
+       Ook_instroom BYTEINT,
+       Ook_uitstroom BYTEINT
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr )
+INDEX ( Klant_nr_nieuw );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_klanten_klantnr_anders
 SELECT A.Klant_nr,
@@ -7259,6 +12619,26 @@ SELECT A.Klant_nr,
    AND A.Uiteen = 0
    AND A.Nieuw = 0
    AND A.Vervallen = 0;
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*--------------------------------------------------------------------------------------------*/
+/* STAP 2F                                                                                    */
+/* Identificeeer klant(complex)en waarvan alle BC's afkomstig zijn van of overgeboekt zijn    */
+/* naar een andere Businessline (en komt niet meer voor in de afdelingstabellen)              */
+/*--------------------------------------------------------------------------------------------*/
+
+CREATE TABLE Mi_temp.Mia_klanten_andere_BL
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Andere_BL BYTEINT,
+       Business_line VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr )
+INDEX ( Klant_nr )
+INDEX ( Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_klanten_andere_BL
 SELECT A.Klant_nr,
@@ -7295,6 +12675,47 @@ SELECT A.Klant_nr,
            AND XA.Vervallen_BC = 0
            AND XA.In_begin IS NULL
          GROUP BY 1, 2) AS A;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*--------------------------------------------------------------------------------------------*/
+/* STAP 3                                                                                     */
+/* Bepaal de In- en uitstroom gegevens per klant:                                             */
+/* - Eerst de klanten met één of meerdere uitzonderingen                                      */
+/* - Daarna de klanten zonder uitzonderingen (lees waarvan de klant(complex)samenstelling     */
+/*   ongewijzigd is)                                                                          */
+/*--------------------------------------------------------------------------------------------*/
+
+CREATE TABLE Mi_temp.Mia_migratie_totaal
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Business_line VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Periode VARCHAR(5) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Maand_nr_begin INTEGER,
+       Maand_nr_eind INTEGER,
+       In_begin BYTEINT,
+       In_eind BYTEINT,
+       Bediening_begin VARCHAR(25) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bediening_eind VARCHAR(25) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Klant_nr_nieuw INTEGER,
+       In_uitstroom VARCHAR(50) CHARACTER SET UNICODE NOT CASESPECIFIC,
+       Van_kop VARCHAR(20) CHARACTER SET UNICODE NOT CASESPECIFIC,
+       Van_sub VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Naar_kop VARCHAR(20) CHARACTER SET UNICODE NOT CASESPECIFIC,
+       Naar_sub VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Categorie1 VARCHAR(20) CHARACTER SET UNICODE NOT CASESPECIFIC,
+       Categorie2 VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Samen BYTEINT,
+       Uiteen BYTEINT,
+       FRenR_begin BYTEINT,
+       FRenR_eind BYTEINT
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr, Business_line, Periode )
+INDEX ( Maand_nr_begin )
+INDEX ( Maand_nr_eind );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO Mi_temp.Mia_migratie_totaal
 SELECT A.Klant_nr,
@@ -7530,9 +12951,386 @@ SELECT A.Klant_nr,
 
  WHERE A.Klant_nr NOT IN (SELECT Klant_nr_nieuw FROM Mi_temp.Mia_klanten_klantnr_anders);
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*--------------------------------------------------------------------------------------------*/
+/* STAP 4                                                                                     */
+/* Basis set tabel Mia_migratie_hist                                                          */
+/* - Kopie maken                                                                              */
+/* - Weekcijfers verwijderen indien maand reeds aanwezig van vorige week                      */
+/* - Weekcijfers toevoegen                                                                    */
+/*--------------------------------------------------------------------------------------------*/
+
+CREATE TABLE Mi_sas_aa_mb_c_mb.Mia_migratie_hist_NEW AS Mi_sas_aa_mb_c_mb.Mia_migratie_hist WITH DATA
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr, Business_line, Periode )
+INDEX ( Maand_nr_begin )
+INDEX ( Maand_nr_eind );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_sas_aa_mb_c_mb.Mia_migratie_hist_NEW COLUMN ( PARTITION );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+DELETE
+  FROM Mi_sas_aa_mb_c_mb.Mia_migratie_hist_NEW
+ WHERE Mi_sas_aa_mb_c_mb.Mia_migratie_hist_NEW.Maand_nr_begin = MI_SAS_AA_MB_C_MB.Mia_periode_NEW.Maand_nr_vm1
+   AND Mi_sas_aa_mb_c_mb.Mia_migratie_hist_NEW.Maand_nr_eind  = MI_SAS_AA_MB_C_MB.Mia_periode_NEW.Maand_nr;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_sas_aa_mb_c_mb.Mia_migratie_hist_NEW COLUMN ( PARTITION );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO Mi_sas_aa_mb_c_mb.Mia_migratie_hist_NEW
 SELECT A.*
   FROM Mi_temp.Mia_migratie_totaal A;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_sas_aa_mb_c_mb.Mia_migratie_hist_NEW COLUMN ( PARTITION );
+COLLECT STATISTICS Mi_sas_aa_mb_c_mb.Mia_migratie_hist_NEW COLUMN ( Maand_nr );
+COLLECT STATISTICS Mi_sas_aa_mb_c_mb.Mia_migratie_hist_NEW COLUMN ( Maand_nr_begin );
+COLLECT STATISTICS Mi_sas_aa_mb_c_mb.Mia_migratie_hist_NEW COLUMN ( Maand_nr_eind );
+COLLECT STATISTICS Mi_sas_aa_mb_c_mb.Mia_migratie_hist_NEW COLUMN ( Maand_nr_begin, Maand_nr );
+COLLECT STATISTICS Mi_sas_aa_mb_c_mb.Mia_migratie_hist_NEW COLUMN ( Maand_nr_eind, Maand_nr );
+COLLECT STATISTICS Mi_sas_aa_mb_c_mb.Mia_migratie_hist_NEW COLUMN ( Maand_nr_begin, Maand_nr, Klant_nr );
+COLLECT STATISTICS Mi_sas_aa_mb_c_mb.Mia_migratie_hist_NEW COLUMN ( Maand_nr_eind, Maand_nr, Klant_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+/***************************************************************/
+/* 12.  SCRIPT AANLEVERING SIEBEL FINANCIAL PROFILE            */
+/***************************************************************/
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+/*-------------------------------------------------------------*/
+/*                 FINANCIAL PROFILE                           */
+/*                                                             */
+/*  - Wekelijks alle FINANCIAL PROFILES opnieuw aanleveren     */
+/*  - Schonen van FINANCIAL PROFILES van BCnrs welke niet meer */
+/*    actueel zijn (bv. vervallen of nier meer Leidend BCnr)   */
+/*-------------------------------------------------------------*/
+
+    -- creatie actuele tabel
+CREATE SET TABLE MI_SAS_AA_MB_C_MB.CUBe_Siebel_fin_prof_geleverd_NEW ,NO FALLBACK ,
+     NO BEFORE JOURNAL,
+     NO AFTER JOURNAL,
+     CHECKSUM = DEFAULT,
+     DEFAULT MERGEBLOCKRATIO
+     (
+      Business_contact_nr DECIMAL(12,0),
+      Datum_gegevens DATE FORMAT 'yyyy-mm-dd',
+      Sw_geleverd BYTEINT,
+      Datum_baten DATE FORMAT 'yyyy-mm-dd',
+      Bedrijfstak_oms VARCHAR(55) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Baten DECIMAL(18,0),
+      Baten_potentieel DECIMAL(18,0),
+      Creditvolume DECIMAL(18,0),
+      Debetvolume DECIMAL(18,0),
+      Omzet_inkomend DECIMAL(15,0),
+      Signaal VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod01 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod02 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod03 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod04 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod05 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod06 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod07 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod08 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod09 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod10 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod11 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod12 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod13 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod14 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod15 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod16 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod17 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod18 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod19 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod20 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod21 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod22 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod23 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod24 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod25 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod26 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod27 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Compl_prod28 CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Cp1_text VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Cp2_text VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Cp3_text VARCHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC,
+      N_complex DECIMAL(10,0),
+      Potentieel_theoretisch DECIMAL(18,0),
+      Clientgroep_theoretisch CHAR(100) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Oordeel_RM VARCHAR(3) CHARACTER SET LATIN NOT CASESPECIFIC,
+      Beoordeeld VARCHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+      NPS VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC)
+UNIQUE PRIMARY INDEX ( Business_contact_nr ,Datum_gegevens );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_Siebel_fin_prof_geleverd_NEW INDEX ( Business_contact_nr ,Datum_gegevens );
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_Siebel_fin_prof_geleverd_NEW COLUMN (Sw_geleverd);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-- vullen met alle actuele CUBe FINACIAL PROFILES
+INSERT INTO MI_SAS_AA_MB_C_MB.CUBe_Siebel_fin_prof_geleverd_NEW
+SELECT
+        A.Business_contact_nr                                 AS Business_contact_nr
+       ,A.Datum_gegevens                                      AS Datum_gegevens
+       ,0                                                     AS Sw_geleverd /* tbv CTAPE (verplaatsen van Mi_export naar AV3) */
+       ,B.Datum_baten                                         AS Datum_baten
+       ,A.subsector_oms                                       AS Bedrijfstak_oms
+       ,B.Baten                                               AS Baten
+       ,B.Baten_potentieel                                    AS Baten_potentieel
+       ,A.Creditvolume                                        AS Creditvolume
+       ,A.Debetvolume                                         AS Debetvolume
+       ,A.Omzet_inkomend                                      AS Omzet_inkomend
+       ,A.Signaal                                             AS Signaal
+       ,CASE WHEN E.Code_A IS NULL THEN 'N' ELSE E.Code_A END AS Compl_prod01
+       ,CASE WHEN E.Code_B IS NULL THEN 'N' ELSE E.Code_B END AS Compl_prod02
+       ,CASE WHEN E.Code_C IS NULL THEN 'N' ELSE E.Code_C END AS Compl_prod03
+       ,CASE WHEN E.Code_D IS NULL THEN 'N' ELSE E.Code_D END AS Compl_prod04
+       ,CASE WHEN E.Code_E IS NULL THEN 'N' ELSE E.Code_E END AS Compl_prod05
+       ,CASE WHEN E.Code_F IS NULL THEN 'N' ELSE E.Code_F END AS Compl_prod06
+       ,CASE WHEN E.Code_G IS NULL THEN 'N' ELSE E.Code_G END AS Compl_prod07
+       ,CASE WHEN E.Code_H IS NULL THEN 'N' ELSE E.Code_H END AS Compl_prod08
+       ,CASE WHEN E.Code_I IS NULL THEN 'N' ELSE E.Code_I END AS Compl_prod09
+       ,CASE WHEN E.Code_J IS NULL THEN 'N' ELSE E.Code_J END AS Compl_prod10
+       ,CASE WHEN E.Code_K IS NULL THEN 'N' ELSE E.Code_K END AS Compl_prod11    --binnen Siebel is dit 'Corporate Payments Services'
+       ,CASE WHEN E.Code_L IS NULL THEN 'N' ELSE E.Code_L END AS Compl_prod12
+       ,CASE WHEN E.Code_U IS NULL THEN 'N' ELSE E.Code_U END AS Compl_prod13
+       ,CASE WHEN E.Code_V IS NULL THEN 'N' ELSE E.Code_V END AS Compl_prod14
+       ,CASE WHEN E.Code_W IS NULL THEN 'N' ELSE E.Code_W END AS Compl_prod15
+       ,CASE WHEN E.Code_X IS NULL THEN 'N' ELSE E.Code_X END AS Compl_prod16
+       ,CASE WHEN E.Code_Y IS NULL THEN 'N' ELSE E.Code_Y END AS Compl_prod17
+       ,CASE WHEN E.Code_Z IS NULL THEN 'N' ELSE E.Code_Z END AS Compl_prod18
+       ,CASE WHEN E.Code_0 IS NULL THEN 'N' ELSE E.Code_0 END AS Compl_prod19
+       ,CASE WHEN E.Code_1 IS NULL THEN 'N' ELSE E.Code_1 END AS Compl_prod20
+       ,CASE WHEN E.Code_2 IS NULL THEN 'N' ELSE E.Code_2 END AS Compl_prod21
+       ,CASE WHEN E.Code_3 IS NULL THEN 'N' ELSE E.Code_3 END AS Compl_prod22
+       ,CASE WHEN E.Code_4 IS NULL THEN 'N' ELSE E.Code_4 END AS Compl_prod23
+       ,CASE WHEN E.Code_5 IS NULL THEN 'N' ELSE E.Code_5 END AS Compl_prod24
+       ,CASE WHEN E.Code_6 IS NULL THEN 'N' ELSE E.Code_6 END AS Compl_prod25
+       ,CASE WHEN E.Code_7 IS NULL THEN 'N' ELSE E.Code_7 END AS Compl_prod26
+       ,CASE WHEN E.Code_8 IS NULL THEN 'N' ELSE E.Code_8 END AS Compl_prod27
+       ,CASE WHEN E.Code_9 IS NULL THEN 'N' ELSE E.Code_9 END AS Compl_prod28
+       ,D.Complex_product_1                                   AS Cp1_text
+       ,D.Complex_product_2                                   AS Cp2_text
+       ,D.Complex_product_3                                   AS Cp3_text
+       ,A.Aantal_complexe_producten                           AS N_complex
+       ,0.5*B.Baten_potentieel                          AS Potentieel_theoretisch
+       /*,CASE
+             WHEN SUBSTR(A.Clientgroep_theoretisch, 4, 1) = '0' THEN A.Clientgroep_theoretisch||' Houden'
+             WHEN SUBSTR(A.Clientgroep_theoretisch, 4, 1) = '1' THEN A.Clientgroep_theoretisch||' Neerwaarts'
+             WHEN SUBSTR(A.Clientgroep_theoretisch, 4, 1) = '2' THEN A.Clientgroep_theoretisch||' Intermediair'
+             WHEN SUBSTR(A.Clientgroep_theoretisch, 4, 1) = '3' THEN A.Clientgroep_theoretisch||' Potentie'
+             WHEN SUBSTR(A.Clientgroep_theoretisch, 4, 1) = '4' THEN A.Clientgroep_theoretisch||' Complex(KZ) / nvt(MB/GB)'
+             WHEN SUBSTR(A.Clientgroep_theoretisch, 4, 1) = '5' THEN A.Clientgroep_theoretisch||' Afwikkelen'
+             WHEN SUBSTR(A.Clientgroep_theoretisch, 4, 1) = '6' THEN A.Clientgroep_theoretisch||' Vaste kern'
+             WHEN SUBSTR(A.Clientgroep_theoretisch, 4, 1) = '7' THEN A.Clientgroep_theoretisch||' Third Party Banking'
+             WHEN SUBSTR(A.Clientgroep_theoretisch, 4, 1) = '9' THEN A.Clientgroep_theoretisch||' Opwaarts'
+        END*/
+       ,NULL AS Clientgroep_theoretisch /* INCL OMSCHRIJVING */
+       ,SUBSTR(A.Clientgroep_theoretisch, 1, 3)               AS Oordeel_RM
+       ,'N' AS Beoordeeld
+       ,F.NPS                                                 AS NPS
+
+  FROM Mi_temp.Mia_week A
+  LEFT OUTER JOIN Mi_temp.CUBe_baten B
+    ON A.Klant_nr = B.Klant_nr AND A.Maand_nr = B.Maand_nr
+  LEFT OUTER JOIN (SELECT X.Klant_nr,
+                          MAX(CASE WHEN X.Volgorde = 1 THEN X.Product_naam ELSE NULL END) AS Complex_product_1,
+                          MAX(CASE WHEN X.Volgorde = 2 THEN X.Product_naam ELSE NULL END) AS Complex_product_2,
+                          MAX(CASE WHEN X.Volgorde = 3 THEN X.Product_naam ELSE NULL END) AS Complex_product_3
+                     FROM (SELECT XA.*,
+                                  RANK() OVER (PARTITION BY XA.Klant_nr ORDER BY XA.Code_complex_product ASC) AS Volgorde
+                             FROM (SELECT XXA.Klant_nr,
+                                          XXA.Code_complex_product,
+                                          CASE WHEN XXA.Code_complex_product = 'J' THEN 'GRV 010, 020 en 030' ELSE XXA.Product_naam END AS Product_naam
+                                     FROM Mi_temp.Complex_product XXA
+                                    GROUP BY 1, 2, 3) AS XA) AS X
+                    GROUP BY 1) AS D
+    ON A.Klant_nr = D.Klant_nr
+  LEFT OUTER JOIN (SELECT A.Klant_nr,
+                          A.Maand_nr,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'A' THEN 'Y' ELSE 'N' END) AS Code_A,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'B' THEN 'Y' ELSE 'N' END) AS Code_B,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'C' THEN 'Y' ELSE 'N' END) AS Code_C,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'D' THEN 'Y' ELSE 'N' END) AS Code_D,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'E' THEN 'Y' ELSE 'N' END) AS Code_E,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'F' THEN 'Y' ELSE 'N' END) AS Code_F,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'G' THEN 'Y' ELSE 'N' END) AS Code_G,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'H' THEN 'Y' ELSE 'N' END) AS Code_H,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'I' THEN 'Y' ELSE 'N' END) AS Code_I,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'J' THEN 'Y' ELSE 'N' END) AS Code_J,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'K' THEN 'Y' ELSE 'N' END) AS Code_K,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'L' THEN 'Y' ELSE 'N' END) AS Code_L,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'M' THEN 'Y' ELSE 'N' END) AS Code_M,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'N' THEN 'Y' ELSE 'N' END) AS Code_N,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'O' THEN 'Y' ELSE 'N' END) AS Code_O,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'P' THEN 'Y' ELSE 'N' END) AS Code_P,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'Q' THEN 'Y' ELSE 'N' END) AS Code_Q,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'R' THEN 'Y' ELSE 'N' END) AS Code_R,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'S' THEN 'Y' ELSE 'N' END) AS Code_S,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'T' THEN 'Y' ELSE 'N' END) AS Code_T,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'U' THEN 'Y' ELSE 'N' END) AS Code_U,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'V' THEN 'Y' ELSE 'N' END) AS Code_V,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'W' THEN 'Y' ELSE 'N' END) AS Code_W,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'X' THEN 'Y' ELSE 'N' END) AS Code_X,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'Y' THEN 'Y' ELSE 'N' END) AS Code_Y,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = 'Z' THEN 'Y' ELSE 'N' END) AS Code_Z,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = '0' THEN 'Y' ELSE 'N' END) AS Code_0,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = '1' THEN 'Y' ELSE 'N' END) AS Code_1,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = '2' THEN 'Y' ELSE 'N' END) AS Code_2,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = '3' THEN 'Y' ELSE 'N' END) AS Code_3,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = '4' THEN 'Y' ELSE 'N' END) AS Code_4,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = '5' THEN 'Y' ELSE 'N' END) AS Code_5,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = '6' THEN 'Y' ELSE 'N' END) AS Code_6,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = '7' THEN 'Y' ELSE 'N' END) AS Code_7,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = '8' THEN 'Y' ELSE 'N' END) AS Code_8,
+                          MAX(CASE WHEN TRIM(A.Code_complex_product) = '9' THEN 'Y' ELSE 'N' END) AS Code_9
+                     FROM Mi_temp.Complex_product A
+                    GROUP BY 1, 2) AS E
+    ON A.Klant_nr = E.Klant_nr
+
+     -- NPS(R), niet anoniem en score tussen 1 en 10; bij meerdere scores per klant nemen we de laagste score binnen het meest recente onderzoek
+  LEFT OUTER JOIN (SELECT A.Klant_nr,
+                          CASE
+                          WHEN B.NPS_aanbeveling_ABN_AMRO BETWEEN 9 AND 10 THEN CAST(B.NPS_aanbeveling_ABN_AMRO AS VARCHAR(2))||' (Promotor,'||SUBSTR(B.Kto_id, 9, 6)||')'
+                          WHEN B.NPS_aanbeveling_ABN_AMRO BETWEEN 7 AND  8 THEN CAST(B.NPS_aanbeveling_ABN_AMRO AS VARCHAR(2))||' (Passive,'||SUBSTR(B.Kto_id, 9, 6)||')'
+                          WHEN B.NPS_aanbeveling_ABN_AMRO BETWEEN 0 AND  6 THEN CAST(B.NPS_aanbeveling_ABN_AMRO AS VARCHAR(2))||' (Detractor,'||SUBSTR(B.Kto_id, 9, 6)||')'
+                          ELSE NULL
+                          END AS NPS
+                   FROM (SELECT *
+                         FROM MI_SAS_AA_MB_C_MB.Mia_klantkoppelingen_hist_NEW
+                         WHERE Maand_nr IN (SELECT MAX(Maand_nr) FROM MI_SAS_AA_MB_C_MB.Mia_klantkoppelingen_hist_NEW )
+                        ) A
+
+                   JOIN (SELECT XA.Business_contact_nr,
+                                XA.Kto_id,
+                                XA.NPS_aanbeveling_ABN_AMRO
+                         FROM Mi_cmb.vMia_kto_resultaten XA
+                         WHERE ZEROIFNULL(XA.Anoniem_ind) = 0
+                           AND ZEROIFNULL(XA.NPS_aanbeveling_ABN_AMRO) BETWEEN 0 AND 10
+                        ) B
+                       ON A.Business_contact_nr = B.Business_contact_nr
+                   QUALIFY ROW_NUMBER() OVER (PARTITION BY A.Klant_nr ORDER BY CASE WHEN NPS IS NULL THEN 0 ELSE 1 END DESC, B.Kto_id DESC, B.NPS_aanbeveling_ABN_AMRO ASC) = 1
+                  ) AS F
+    ON A.Klant_nr = F.Klant_nr
+
+WHERE (A.Klant_ind = 1 OR A.Klantstatus = 'S')  -- clients & suspects
+       -- OUDE SEGEMENTATIE: CC & IC; uitgesloten is Retail inclusief KleinBedrijf
+       -- NIEUW SEGEMENTATIE: CBC & CIB & SME; uitgesloten KleinBedrijf !!
+  AND (A.Business_line IN ('CBC', 'CIB','SME') AND A.Segment <> 'SME')
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_Siebel_fin_prof_geleverd_NEW;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-- Schonen indien niet meer actueel (bv. vervallen, migreert of niet meer Leidend BCnr
+
+INSERT INTO MI_SAS_AA_MB_C_MB.CUBe_Siebel_fin_prof_geleverd_NEW
+SEL
+    oud.Business_contact_nr
+   ,DATE AS Datum_gegevens
+   ,0 AS Sw_geleverd
+   ,'9999-12-31' AS Datum_baten
+   ,'' AS Bedrijfstak_oms
+   ,0 AS Baten
+   ,0 AS Baten_potentieel
+   ,0 AS Creditvolume
+   ,0 AS Debetvolume
+   ,0 AS Omzet_inkomend
+   ,'' AS Signaal
+   ,'N' AS Compl_prod01
+   ,'N' AS Compl_prod02
+   ,'N' AS Compl_prod03
+   ,'N' AS Compl_prod04
+   ,'N' AS Compl_prod05
+   ,'N' AS Compl_prod06
+   ,'N' AS Compl_prod07
+   ,'N' AS Compl_prod08
+   ,'N' AS Compl_prod09
+   ,'N' AS Compl_prod10
+   ,'N' AS Compl_prod11
+   ,'N' AS Compl_prod12
+   ,'N' AS Compl_prod13
+   ,'N' AS Compl_prod14
+   ,'N' AS Compl_prod15
+   ,'N' AS Compl_prod16
+   ,'N' AS Compl_prod17
+   ,'N' AS Compl_prod18
+   ,'N' AS Compl_prod19
+   ,'N' AS Compl_prod20
+   ,'N' AS Compl_prod21
+   ,'N' AS Compl_prod22
+   ,'N' AS Compl_prod23
+   ,'N' AS Compl_prod24
+   ,'N' AS Compl_prod25
+   ,'N' AS Compl_prod26
+   ,'N' AS Compl_prod27
+   ,'N' AS Compl_prod28
+   ,'' AS Cp1_text
+   ,'' AS Cp2_text
+   ,'' AS Cp3_text
+   ,0 AS N_complex
+   ,0 AS Potentieel_theoretisch
+   ,'' Clientgroep_theoretisch
+   ,'' AS Oordeel_RM
+   ,'' AS Beoordeeld
+   ,'' AS NPS
+FROM MI_SAS_AA_MB_C_MB.CUBe_Siebel_fin_prof_geleverd  oud
+
+LEFT OUTER JOIN MI_SAS_AA_MB_C_MB.CUBe_Siebel_fin_prof_geleverd_NEW   act
+   ON oud.Business_contact_nr = act.Business_contact_nr
+
+WHERE act.Business_contact_nr IS NULL
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATS MI_SAS_AA_MB_C_MB.CUBe_Siebel_fin_prof_geleverd_NEW;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+/***************************************************************/
+/*   Aanmaken autorisatie tabel voor MSTR                      */
+/***************************************************************/
+
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.Medewerker_Security_NEW
+      (Datum_gegevens DATE
+       ,SBT_id VARCHAR(256)
+       ,Naam_mdw VARCHAR(256)
+       ,Soort_mdw  VARCHAR(10)
+       ,BO_nr_mdw INTEGER
+       ,BO_naam_mdw VARCHAR(256)
+       ,GM_ind INTEGER
+       ,Mdw_sdat DATE
+       ,Org_niveau3 VARCHAR(100)
+       ,Org_niveau3_bo_nr INTEGER
+       ,Org_niveau2 VARCHAR(100)
+       ,Org_niveau2_bo_nr INTEGER
+       ,Org_niveau1 VARCHAR(100)
+       ,Org_niveau1_bo_nr INTEGER
+       ,Org_niveau0 VARCHAR(100)
+       ,Org_niveau0_bo_nr INTEGER)
+UNIQUE PRIMARY INDEX ( Datum_gegevens, SBT_id,  Soort_mdw, Mdw_sdat)
+ ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO MI_SAS_AA_MB_C_MB.Medewerker_Security_NEW
 SELECT
@@ -7584,6 +13382,9 @@ FROM ( SELECT
 			                AND TRIM(FUNCTIE) NOT IN ('Zelst. Verm. Beh.', 'zelfst.Verm.Beh') --uitsluiten zelfstandig vermogensbeheerders (externe partijen)
 			                AND LENGTH(TRIM(sbt_id)) > 0
 			group by 1,2,3,4,5,6,7	) a
+
+-- Ophalen naam medewerker
+
 INNER JOIN (SEL party_id,
                 party_sleutel_type,
                 CASE WHEN party_sleutel_type = 'MW' THEN UPPER(TRIM(Naam)) ELSE UPPER(TRIM(Naamregel_1)) END AS Naam
@@ -7591,6 +13392,9 @@ INNER JOIN (SEL party_id,
             WHERE party_sleutel_type IN ('MW')) b
 ON a.party_id = b.party_id
 AND a.party_sleutel_type = b.party_sleutel_type
+
+-- Ophalen BO nummer medewerker
+
 INNER JOIN (SEL party_id,
              party_sleutel_type,
              gerelateerd_party_id AS bo_nr
@@ -7628,6 +13432,64 @@ ON 1=1 ) XA
 
 join Mi_sas_aa_mb_c_mb.Mia_organisatie_workaround p on p.bo_nr = xa.bo_nr_mdw
 ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*-----------------------------------------------------*/
+/*                 AGRC - Operational Risk Management  */
+/*                                                     */
+/*  - Aanmaken MCT: Managed Control and Testing        */
+/*  - Aanmaken REM: Risk Event Management              */
+/*  - aanmaken IMAT: Issue management & Tracking       */
+/*-----------------------------------------------------*/
+
+
+/***********************************************************************************/
+-- MCT: Managed Control and Testing
+/***********************************************************************************/
+
+CREATE MULTISET TABLE MI_SAS_AA_MB_C_MB.AGRC_MCT_NEW ,NO FALLBACK ,
+     NO BEFORE JOURNAL,
+     NO AFTER JOURNAL,
+     CHECKSUM = DEFAULT,
+     DEFAULT MERGEBLOCKRATIO
+             (
+              Draaidatum DATE FORMAT 'YY/MM/DD',
+              Maand_nr  INTEGER,
+              Volgnummer INTEGER,
+              Value_Chain VARCHAR(500) CHARACTER SET LATIN CASESPECIFIC,
+              Control_Responsible_2nd_LoD VARCHAR(130) CHARACTER SET LATIN CASESPECIFIC,
+              Business_Structures VARCHAR(80) CHARACTER SET LATIN CASESPECIFIC,
+              Business_Structure_Category VARCHAR(60) CHARACTER SET LATIN CASESPECIFIC,
+              Business_Structure_Cat_II VARCHAR(60) CHARACTER SET LATIN CASESPECIFIC,
+              Country_Code VARCHAR(80) CHARACTER SET LATIN CASESPECIFIC,
+              Control_Name VARCHAR(130) CHARACTER SET LATIN CASESPECIFIC,
+              Control_ID VARCHAR(20) CHARACTER SET LATIN CASESPECIFIC,
+              Monitor_Status VARCHAR(40) CHARACTER SET LATIN CASESPECIFIC,
+              Monitor_Status_Max INTEGER,
+              Monitor_Status_Max_II INTEGER,
+              Monitor_Status_Due  VARCHAR(40) CHARACTER SET LATIN CASESPECIFIC,
+              Monitor_Status_EndofRep  VARCHAR(40) CHARACTER SET LATIN CASESPECIFIC,
+              RAG_Monitor VARCHAR(30) CHARACTER SET LATIN CASESPECIFIC,
+              Tester_Status VARCHAR(30) CHARACTER SET LATIN CASESPECIFIC,
+              RAG_Tester VARCHAR(30) CHARACTER SET LATIN CASESPECIFIC,
+              Monitoring_End_of_Reporting DATE FORMAT 'YY/MM/DD',
+              Monitoring_End_of_Reporting_Q INTEGER,
+              MCT_Filter_Qmin2 INTEGER,
+              Monitor_Due_Date DATE FORMAT 'YY/MM/DD',
+              Monitor_Answer_Date DATE FORMAT 'YY/MM/DD',
+              Monitored_by VARCHAR(120) CHARACTER SET LATIN CASESPECIFIC,
+              Tester_Due_Date DATE FORMAT 'YY/MM/DD',
+              Tester_Answer_Date DATE FORMAT 'YY/MM/DD',
+              Tested_by VARCHAR(120) CHARACTER SET LATIN CASESPECIFIC,
+              CM_Conduct_driver_applicable_ VARCHAR(3) CHARACTER SET LATIN CASESPECIFIC,
+              vMaxCTMDueDate DATE FORMAT 'YY/MM/DD',
+              vTestStatusNew VARCHAR(30) CHARACTER SET LATIN CASESPECIFIC,
+              vMonitorStatus VARCHAR(30) CHARACTER SET LATIN CASESPECIFIC,
+              vMonitorStatusNew VARCHAR(30) CHARACTER SET LATIN CASESPECIFIC)
+PRIMARY INDEX (Draaidatum , Volgnummer );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO MI_SAS_AA_MB_C_MB.AGRC_MCT_NEW
                 SELECT
@@ -7690,6 +13552,66 @@ INSERT INTO MI_SAS_AA_MB_C_MB.AGRC_MCT_NEW
                         on e.Business_Structures||e.Control_ID||e.max_mon_II = a.Business_Structures||a.Control_ID||a.Monitor_Due_Date__calculated_
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_MCT_NEW COLUMN (Maand_nr, Business_Structure_Category, Monitoring_End_of_Reporting, Monitoring_End_of_Reporting_Q);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_MCT_NEW COLUMN (Maand_nr);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_MCT_NEW COLUMN (Business_Structure_Category);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_MCT_NEW COLUMN (Monitoring_End_of_Reporting);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_MCT_NEW COLUMN (Monitoring_End_of_Reporting_Q);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/************************************/
+/* REM Risk Event Management        */
+/************************************/
+
+CREATE MULTISET TABLE MI_SAS_AA_MB_C_MB.AGRC_REM_NEW ,NO FALLBACK ,
+     NO BEFORE JOURNAL,
+     NO AFTER JOURNAL,
+     CHECKSUM = DEFAULT,
+     DEFAULT MERGEBLOCKRATIO
+             (
+              Draaidatum DATE FORMAT 'YY/MM/DD',
+              Maand_nr  INTEGER,
+              Volgnummer INTEGER,
+              Event_Type VARCHAR(40) CHARACTER SET LATIN CASESPECIFIC,
+              Event_Type_Cat_1 VARCHAR(30) CHARACTER SET LATIN CASESPECIFIC,
+              Event_Type_Cat_2 VARCHAR(30) CHARACTER SET LATIN CASESPECIFIC,
+              Event_ID VARCHAR(30) CHARACTER SET LATIN CASESPECIFIC,
+              Input_Date DATE FORMAT 'YY/MM/DD',
+              Total_Gross_Loss_Plus_EUR FLOAT,
+              Total_Net_Loss_Plus_bef_Insur FLOAT,
+              Exposure_Amount_EUR FLOAT,
+              Business_Structure_Name VARCHAR(80) CHARACTER SET LATIN CASESPECIFIC,
+              Business_Structure_Category VARCHAR(60) CHARACTER SET LATIN CASESPECIFIC,
+              Business_Structure_Cat_II VARCHAR(60) CHARACTER SET LATIN CASESPECIFIC,
+              Geography VARCHAR(30) CHARACTER SET LATIN CASESPECIFIC,
+              Event_Category VARCHAR(180) CHARACTER SET LATIN CASESPECIFIC,
+              Cause_category_1 VARCHAR(80) CHARACTER SET LATIN CASESPECIFIC,
+              Workflow_status VARCHAR(20) CHARACTER SET LATIN CASESPECIFIC,
+              Number_of_incidents VARCHAR(3) CHARACTER SET LATIN CASESPECIFIC,
+              Short_description VARCHAR(200) CHARACTER SET LATIN CASESPECIFIC,
+              Long_description VARCHAR(4000) CHARACTER SET LATIN CASESPECIFIC,
+              Steps_Taken VARCHAR(4000) CHARACTER SET LATIN CASESPECIFIC,
+              Event_Creator VARCHAR(80) CHARACTER SET LATIN CASESPECIFIC,
+              Process VARCHAR(160) CHARACTER SET LATIN CASESPECIFIC,
+              Product VARCHAR(100) CHARACTER SET LATIN CASESPECIFIC,
+              Date_of_rec DATE FORMAT 'YY/MM/DD',
+              Date_of_rec_Year INTEGER,
+              Date_of_rec_Month  INTEGER,
+              Date_of_rec_Quarte_  INTEGER,
+              Accounting_Date DATE FORMAT 'YY/MM/DD',
+              Acc_date_Year INTEGER,
+              Acc_date_Month INTEGER,
+              Acc_date_Quarter INTEGER,
+              Provision_Date DATE FORMAT 'YY/MM/DD',
+              Financial_Status VARCHAR(40) CHARACTER SET LATIN CASESPECIFIC,
+              Date_of_Discovery DATE FORMAT 'YY/MM/DD')
+              PRIMARY INDEX ( Draaidatum, Volgnummer);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO MI_SAS_AA_MB_C_MB.AGRC_REM_NEW
             select
             a.Draaidatum
@@ -7739,6 +13661,59 @@ INSERT INTO MI_SAS_AA_MB_C_MB.AGRC_REM_NEW
             , a.Date_of_Discovery
             FROM MI_CMB.AGRC_REM_bron a;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_REM_NEW COLUMN (Maand_nr, Event_Type, Input_Date, Business_Structure_Category, Workflow_status);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_REM_NEW COLUMN (Maand_nr);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_REM_NEW COLUMN (Event_Type);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_REM_NEW COLUMN (Input_Date);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_REM_NEW COLUMN (Business_Structure_Category);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_REM_NEW COLUMN (Workflow_status);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*************************************/
+/* IMAT: Issue management & Tracking */
+/*************************************/
+
+CREATE MULTISET TABLE MI_SAS_AA_MB_C_MB.AGRC_IMAT_NEW ,NO FALLBACK ,
+     NO BEFORE JOURNAL,
+     NO AFTER JOURNAL,
+     CHECKSUM = DEFAULT,
+     DEFAULT MERGEBLOCKRATIO
+             (
+              Draaidatum DATE FORMAT 'YY/MM/DD',
+              Maand_nr  INTEGER,
+              Volgnummer INTEGER,
+              Business_Structure VARCHAR(60) CHARACTER SET LATIN CASESPECIFIC,
+              Business_Structure_Category VARCHAR(80) CHARACTER SET LATIN CASESPECIFIC,
+              Business_Structure_Cat_II VARCHAR(80) CHARACTER SET LATIN CASESPECIFIC,
+              Level2 VARCHAR(36) CHARACTER SET LATIN CASESPECIFIC,
+              Level3 VARCHAR(36) CHARACTER SET LATIN CASESPECIFIC,
+              Country_Code VARCHAR(30) CHARACTER SET LATIN CASESPECIFIC,
+              Issue_ID VARCHAR(30) CHARACTER SET LATIN CASESPECIFIC,
+              Due_in_days INTEGER,
+              Issue_due INTEGER,
+              Due_category VARCHAR(80) CHARACTER SET LATIN CASESPECIFIC,
+              Level_of_Concern VARCHAR(20) CHARACTER SET LATIN CASESPECIFIC,
+              Current_Workflow_Step VARCHAR(30) CHARACTER SET LATIN CASESPECIFIC,
+              Issue_Title VARCHAR(120) CHARACTER SET LATIN CASESPECIFIC,
+              Issue_Description VARCHAR(1200) CHARACTER SET LATIN CASESPECIFIC,
+              Issue_business_owner VARCHAR(40) CHARACTER SET LATIN CASESPECIFIC,
+              Risk_Area VARCHAR(30) CHARACTER SET LATIN CASESPECIFIC,
+              Issue_created_date DATE FORMAT 'YY/MM/DD',
+              Issue_reg_date_AGRC DATE FORMAT 'YY/MM/DD',
+              Issue_Revised_Compl_Date DATE FORMAT 'YY/MM/DD',
+              Action_Plan_ID VARCHAR(30) CHARACTER SET LATIN CASESPECIFIC,
+              Action_Plan_Name VARCHAR(120) CHARACTER SET LATIN CASESPECIFIC,
+              Action_plan_desc VARCHAR(1200) CHARACTER SET LATIN CASESPECIFIC,
+              Action_plan_creation_date DATE FORMAT 'YY/MM/DD',
+              Issue_target_Compl_Review DATE FORMAT 'YY/MM/DD',
+              Issue_Source VARCHAR(80) CHARACTER SET LATIN CASESPECIFIC)
+              PRIMARY INDEX (Draaidatum, Volgnummer);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO MI_SAS_AA_MB_C_MB.AGRC_IMAT_NEW
             SELECT
             a.Draaidatum
@@ -7778,6 +13753,18 @@ INSERT INTO MI_SAS_AA_MB_C_MB.AGRC_IMAT_NEW
             , trim(a.Issue_source)
             FROM MI_CMB.AGRC_IMAT_bron a;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_IMAT_NEW COLUMN (Maand_nr, Business_Structure_Category, Due_category, Level_of_Concern, Current_Workflow_Step, Issue_Source);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_IMAT_NEW COLUMN (Maand_nr);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_IMAT_NEW COLUMN (Business_Structure_Category);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_IMAT_NEW COLUMN (Due_category);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_IMAT_NEW COLUMN (Level_of_Concern);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_IMAT_NEW COLUMN (Current_Workflow_Step);
+COLLECT STATISTICS  MI_SAS_AA_MB_C_MB.AGRC_IMAT_NEW COLUMN (Issue_Source);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 create table mi_cmb.medewerkers as(
 SELECT
 a.party_id
@@ -7805,6 +13792,48 @@ on c.party_id = d.party_id
 and c.party_sleutel_type = d.party_sleutel_type
 join mi_cmb.vcrm_employee_week e
 on a.sbt_userid=e.sbt_id) with data and stats primary index (party_id);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS  mi_cmb.medewerkers  COLUMN (party_id);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+/*-----------------------------------------------------*/
+/*             Ctrack - Risk Management op kredieten   */
+/*-----------------------------------------------------*/
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.CTrack_Portfolio_Hist_NEW AS MI_SAS_AA_MB_C_MB.CTrack_Portfolio_Hist WITH DATA
+UNIQUE PRIMARY INDEX ( Portfolio_Id, Maand_nr)
+PARTITION BY (
+               RANGE_N(maand_nr  BETWEEN
+                      201801  AND 201812  EACH 1,
+                      201901  AND 201912  EACH 1,
+                      202001  AND 202012  EACH 1,
+                      202101  AND 202112  EACH 1,
+                      202201  AND 202212  EACH 1,
+                      202301  AND 202312  EACH 1,
+                      202401  AND 202412  EACH 1,
+                      202501  AND 202512  EACH 1,
+                      NO RANGE,
+                      UNKNOWN))
+;
+-- verwijder oude data uit Historie en als nieuwe maand dan blijft historie bestaan
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+DELETE
+FROM MI_SAS_AA_MB_C_MB.CTrack_Portfolio_Hist_NEW
+WHERE Maand_nr = (SELECT Maand_nr FROM MI_SAS_AA_MB_C_MB.Mia_periode_NEW)
+;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS COLUMN (BORROWER_ID) ON MI_NEMO.CTrack_Portfolio;
+COLLECT STATISTICS COLUMN (RELATION_ID) ON MI_NEMO.CTrack_OpenActions;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 INSERT INTO  MI_SAS_AA_MB_C_MB.CTrack_Portfolio_Hist_NEW
 SELECT Portfolio_Id
@@ -7899,6 +13928,26 @@ LEFT JOIN (SELECT DISTINCT
                                 ON A.borrower_id = G.relation_id
 ;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.medewerker_email_NEW
+(naam_mdw 					VARCHAR(255),
+account_management_sdat		DATE,
+sbt_id          			VARCHAR(255),
+Account_Management_Functie  VARCHAR(25),
+sbl_functie                 VARCHAR(1000),
+BO_nr_mdw                   INTEGER,
+BO_naam_mdw                 VARCHAR(256),
+emailadres                  VARCHAR(255),
+party_adres_status_code     CHAR(3),
+party_id                    DECIMAL(13,0),
+party_sleutel_type          CHAR(2),
+sbt_id_mgr                  VARCHAR(6),
+emailadres_mgr              VARCHAR(255))
+UNIQUE PRIMARY INDEX (naam_mdw, emailadres, party_id);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 INSERT INTO MI_SAS_AA_MB_C_MB.medewerker_email_NEW
 SELECT
 e.naam as naam_mdw
@@ -7926,27 +13975,106 @@ and c.party_sleutel_type = d.party_sleutel_type
 join MI_SAS_AA_MB_C_MB.Siebel_Employee_NEW e
 on a.sbt_userid = e.sbt_id;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*************************************************************************************
+
+    CIB klantbeeld
+
+*************************************************************************************/
+
+COLLECT STATISTICS COLUMN (MAAND_NR) ON mi_cmb.producten;
+COLLECT STATISTICS COLUMN (MAAND_NR ,JAAR ,MAAND)	ON mi_cmb.producten_YM;
+COLLECT STATISTICS COLUMN (MAAND_NR) ON mi_cmb.producten_YM;
+COLLECT STATISTICS COLUMN (JAAR) ON mi_cmb.producten_YM;
+COLLECT STATISTICS COLUMN (MAAND) ON mi_cmb.producten_YM;
+COLLECT STATISTICS COLUMN (ORG_NIVEAU0) ON MI_SAS_AA_MB_C_MB.CIAA_Mia_hist;
+COLLECT STATISTICS COLUMN (BO_NAAM) ON MI_SAS_AA_MB_C_MB.CIAA_Mia_hist;
+COLLECT STATISTICS COLUMN (BUSINESS_LINE ,KLANT_NR ,MAAND_NR) ON MI_SAS_AA_MB_C_MB.CIAA_Mia_hist;
+COLLECT STATISTICS COLUMN (BUSINESS_LINE ,KLANT_NR) ON MI_SAS_AA_MB_C_MB.CIAA_Mia_hist;
+
+COLLECT STATISTICS COLUMN (CIB_CROSS_SELL, CS_GROEP) ON MI_SAS_AA_MB_C_MB.cib_cross_sell;
+COLLECT STATISTICS COLUMN (PRODUCTLEVEL2CODE) ON MI_SAS_AA_MB_C_MB.cib_cross_sell;
+COLLECT STATISTICS COLUMN (MAAND_NR, PRODUCTLEVEL2CODE, CIB_CROSS_SELL, CS_GROEP)	ON MI_SAS_AA_MB_C_MB.cib_cross_sell;
+COLLECT STATISTICS COLUMN (CS_GROEP) ON MI_SAS_AA_MB_C_MB.cib_cross_sell;
+COLLECT STATISTICS COLUMN (MAAND_NR) ON MI_SAS_AA_MB_C_MB.cib_cross_sell;
+COLLECT STATISTICS COLUMN (BC_NR ,PRODUCT_GROUP_CODE ,MAAND_NR)	ON mi_cmb.smr_transaction;
+COLLECT STATISTICS COLUMN (BC_NR) ON mi_cmb.smr_transaction;
+COLLECT STATISTICS COLUMN (MARGIN) ON mi_cmb.smr_transaction;
+COLLECT STATISTICS COLUMN (PRODUCT_GROUP_CODE) ON mi_cmb.smr_transaction;
+COLLECT STATISTICS COLUMN (TRANSACTION_SOURCE) ON mi_cmb.smr_transaction;
+COLLECT STATISTICS COLUMN (MAAND_NR) ON mi_cmb.smr_transaction;
+COLLECT STATISTICS COLUMN (KLANT_NR) ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_fondscode;
+COLLECT STATISTICS COLUMN (TI) ON mi_tb.stf_gt;
+COLLECT STATISTICS COLUMN (CREDITTRX) ON mi_tb.stf_gt;
+COLLECT STATISTICS COLUMN (DEBETTRX) ON mi_tb.stf_gt;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* RAPPORTAGE PERIODE TABELLEN */
 CREATE TABLE MI_SAS_AA_MB_C_MB.cib_klantbeeld_rep_cock_NEW AS
 (SELECT MAX(maand_nr) AS max_maand_nr FROM mi_cmb.producten) WITH DATA;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 CREATE TABLE mi_sas_aa_mb_c_mb.cib_klantbeeld_rep_tb_NEW   AS
 (SELECT MAX(billing_period) AS max_billing_period FROM mi_tb.wrk_ce) WITH DATA;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE mi_sas_aa_mb_c_mb.cib_klantbeeld_rep_lnd_NEW  AS
+(SELECT MAX(maand_nr) AS max_maand_nr FROM mi_cmb.vcif_complex) WITH DATA;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 CREATE TABLE mi_sas_aa_mb_c_mb.cib_klantbeeld_rep_gm_NEW   AS
 (SELECT MAX(maand_nr) AS max_maand_nr FROM mi_cmb.smr_transaction) WITH DATA;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 CREATE TABLE mi_sas_aa_mb_c_mb.cib_klantbeeld_rep_dp_NEW   AS
 (SELECT MAX(maand_nr) AS max_maand_nr FROM mi_cmb.vcrm_verkoopkans_product_week) WITH DATA;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 CREATE TABLE mi_sas_aa_mb_c_mb.cib_klantbeeld_rep_rvb_NEW  AS
 (SELECT MAX(datum) AS max_datum FROM mi_cmb.rvdv_scrm_bron4) WITH DATA;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 CREATE TABLE mi_sas_aa_mb_c_mb.cib_klantbeeld_rep_cr_NEW   AS
 (SELECT klant_nr, CAST(1*MAX("Period") AS INTEGER) AS max_period FROM mi_cmb.cib_keymetrics GROUP BY 1) WITH DATA;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
 CREATE TABLE mi_sas_aa_mb_c_mb.cib_klantbeeld_rep_si_NEW   AS
 (SELECT EXTRACT(YEAR FROM X)*100 + EXTRACT(MONTH FROM X) AS max_maand_nr
 	 FROM ( SELECT MAX(fonds_waarde_sdat) AS X FROM mi_vm_ldm.aFONDS_WAARDE ) X) WITH DATA;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_rep_cock_NEW INDEX (max_maand_nr);
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_rep_cr_NEW INDEX (Klant_nr);
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_rep_dp_NEW INDEX (max_maand_nr);
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_rep_gm_NEW INDEX (max_maand_nr);
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_rep_lnd_NEW INDEX (max_maand_nr);
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_rep_rvb_NEW INDEX (max_datum);
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_rep_si_NEW INDEX (max_maand_nr);
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_rep_tb_NEW INDEX (max_billing_period);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ------------------------------------------------------------------------------------------------------------------- */
+/* KLANTEN TABEL                                                                                                       */
+/* ------------------------------------------------------------------------------------------------------------------- */
+
+COLLECT STATISTICS COLUMN (PRIMAIR_CONTACT_PERSOON_IND, EMAIL_BRUIKBAAR, ACTIEF_IND) ON MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW;
+COLLECT STATISTICS COLUMN (CONTACTPERSOON_ONDERDEEL) ON MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW;
+COLLECT STATISTICS COLUMN (ACTIEF_IND) ON MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW;
+COLLECT STATISTICS COLUMN (PRIMAIR_CONTACT_PERSOON_IND) ON MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW;
+COLLECT STATISTICS COLUMN (EMAIL_BRUIKBAAR) ON MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
 CREATE TABLE MI_SAS_AA_MB_C_MB.cib_klantbeeld_klanten_NEW AS (
 SELECT
@@ -8009,6 +14137,7 @@ ON MIA.Klant_nr = CP.Klant_nr
 
 LEFT JOIN MI_SAS_AA_MB_C_MB.cib_klantbeeld_rep_cock_NEW REP_COCK ON 1=1
 LEFT JOIN MI_SAS_AA_MB_C_MB.cib_klantbeeld_rep_tb_NEW   REP_TB   ON 1=1
+LEFT JOIN MI_SAS_AA_MB_C_MB.cib_klantbeeld_rep_lnd_NEW  REP_LND  ON 1=1
 LEFT JOIN MI_SAS_AA_MB_C_MB.cib_klantbeeld_rep_gm_NEW   REP_GMB   ON 1=1
 LEFT JOIN MI_SAS_AA_MB_C_MB.cib_klantbeeld_rep_gm_NEW   REP_GMO   ON 1=1
 LEFT JOIN MI_SAS_AA_MB_C_MB.cib_klantbeeld_rep_dp_NEW  REP_DPO  ON 1=1
@@ -8021,6 +14150,18 @@ WHERE 1=1
 AND MIA.org_niveau2 = 'CC Consumer Services & Manufacturing'
 AND MIA.relatiemanager ne 'Geen naam'
 ) WITH DATA PRIMARY INDEX(Klant_nr , business_contact_nr) ;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_klanten_NEW INDEX (Klant_nr, Business_contact_nr);
+COLLECT STATISTICS COLUMN (FONDS_CODE) ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_klanten_NEW;
+COLLECT STATISTICS COLUMN (KLANT_NR) ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_klanten_NEW;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ------------------------------------------------------------------------------------------------------------------- */
+/* COCKPIT TABEL                                                                                                       */
+/* ------------------------------------------------------------------------------------------------------------------- */
 
 CREATE TABLE MI_SAS_AA_MB_C_MB.cib_klantbeeld_cockpit_NEW AS (
 SELECT
@@ -8045,6 +14186,16 @@ ON B.klant_nr = C.klant_nr
 
 GROUP BY 1,2,3,4
 ) WITH DATA UNIQUE PRIMARY INDEX( klant_nr , cs_groep , maand_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_cockpit_NEW INDEX (Klant_nr, cs_groep, maand_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ------------------------------------------------------------------------------------------------------------------- */
+/* TRANSACTION BANKING                                                                                                 */
+/* ------------------------------------------------------------------------------------------------------------------- */
 
 CREATE TABLE MI_SAS_AA_MB_C_MB.cib_klantbeeld_tb_NEW AS (
 SELECT
@@ -8090,6 +14241,16 @@ GROUP BY 1,2,3
 
 ) WITH DATA PRIMARY INDEX(klant_nr , maand_nr , trx_soort);
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_tb_NEW INDEX (klant_nr , maand_nr , trx_soort);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ------------------------------------------------------------------------------------------------------------------- */
+/* LENDING                                                                                                             */
+/* ------------------------------------------------------------------------------------------------------------------- */
+
 CREATE TABLE MI_SAS_AA_MB_C_MB.cib_klantbeeld_lnd_NEW AS (
 	SELECT
 		  K.Klant_nr
@@ -8099,21 +14260,45 @@ CREATE TABLE MI_SAS_AA_MB_C_MB.cib_klantbeeld_lnd_NEW AS (
 		, RANK() OVER(PARTITION BY Klant_nr ORDER BY Limiet_type,Fac_product_oms DESC,oorspronk_verval_datum DESC,contract_nr) AS volgorde
 		, A.Limiet_type
 		, A.datum_ingang
-		, A.oorspronk_verval_datum
-		, A.Fac_Product_adm_oms
+		, CASE
+			WHEN (upper(Limiet_type) = 'NON LOAN LIMIT') AND /*(upper(Fac_Product_adm_oms) = 'REKENING-COURANT KREDIET/ZAKELIJK') AND*/ (A.oorspronk_verval_datum = DATE '2066-06-06') THEN NULL
+			ELSE A.oorspronk_verval_datum
+		  END as oorspronk_verval_datum
+
+		, CASE WHEN upper(MUNTCODE) = 'EUR' THEN A.Fac_Product_adm_oms ELSE trim(A.Fac_Product_adm_oms) || ' (' || trim(MUNTCODE) || ' Loan)' END as Fac_Product_adm_oms
+
 		, NULL AS Tot_Ticket
 		, A.CLOSING_CR_LIMIT (DECIMAL(18,0)) AS AAB_Ticket
-		, A.CLOSING_UTILIZATION_AMT (DECIMAL(18,0)) AS AAB_Drawn
+		, CASE
+			WHEN A.aflopend_krediet_ind   = 1 THEN A.AFLOPEND_OPGENOMEN
+			WHEN A.doorlopend_krediet_ind = 1 THEN A.DOORLOPEND_OPGENOMEN
+			ELSE NULL
+		  END as AAB_Drawn
 
 		, A.datum_herziening_condities
 		, A.syndicate_owned_perc (INTEGER) AS AAB_share
 
-		, A.CLOSING_AVAILABLE_AMT
-		, A.TOT_PRINCIPAL_AMT_OUTSTANDING
+		, NULL as CLOSING_AVAILABLE_AMT			/* niet gebruiken */
+		, NULL as TOT_PRINCIPAL_AMT_OUTSTANDING /* niet gebruiken */
 
 	FROM MI_SAS_AA_MB_C_MB.cib_klantbeeld_klanten_NEW K
 
+	LEFT JOIN (SELECT CIF.* FROM mi_cmb.vcif_complex CIF JOIN MI_SAS_AA_MB_C_MB.cib_klantbeeld_rep_lnd REP ON CIF.maand_nr = REP.max_maand_nr) A
+	ON K.klant_nr = A.Fac_klant_nr
+	AND A.fac_actief_ind = 1
+	AND a.Complex_level_laagste_niv_ind = 1
+
 ) WITH DATA PRIMARY INDEX(klant_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_lnd_NEW INDEX (Klant_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ------------------------------------------------------------------------------------------------------------------- */
+/* BEURSKOERS                                                                                                          */
+/* ------------------------------------------------------------------------------------------------------------------- */
 
 CREATE TABLE MI_SAS_AA_MB_C_MB.cib_klantbeeld_beurs_NEW AS (
 SELECT
@@ -8166,6 +14351,16 @@ ON YY.fonds_waarde_sdat = CAL.calendar_date
 
 ) WITH DATA PRIMARY INDEX(klant_nr , fonds_waarde_sdat);
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_beurs_NEW INDEX (Klant_nr, Fonds_Waarde_SDAT);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ------------------------------------------------------------------------------------------------------------------- */
+/*GLOBAL MARKETS - DONE BUSINESS                                                                                       */
+/* ------------------------------------------------------------------------------------------------------------------- */
+
 CREATE TABLE MI_SAS_AA_MB_C_MB.cib_klantbeeld_gmb_NEW AS
 (
 SEL
@@ -8206,15 +14401,41 @@ GROUP BY 1,2,3,4
 ) WITH DATA
 PRIMARY INDEX (klant_nr, bc_nr, maand_nr, product_group);
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_gmb_NEW INDEX (Klant_nr, bc_nr, maand_nr, Product_Group);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ------------------------------------------------------------------------------------------------------------------- */
+/* GLOBAL MARKETS - OPEN BUSINESS                                                                                      */
+/* ------------------------------------------------------------------------------------------------------------------- */
+
 CREATE TABLE mi_temp.cib_klantbeeld_rep_gmo  AS (SELECT MAX(maand_nr) AS max_maand_nr FROM mi_sas_aa_mb_c_mb.cib_klantbeeld_gmo) WITH DATA;
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS COLUMN (MAX_MAAND_NR) ON Mi_temp.cib_klantbeeld_rep_gmo;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* Maken kopie */
 CREATE TABLE mi_sas_aa_mb_c_mb.cib_klantbeeld_gmo_NEW AS mi_sas_aa_mb_c_mb.cib_klantbeeld_gmo WITH DATA
 PRIMARY INDEX ( maand_nr ,Klant_nr ,bc_nr ,Product_Group );
 
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* Verwijderen lopende maand */
+DELETE FROM mi_sas_aa_mb_c_mb.cib_klantbeeld_gmo_NEW
+WHERE maand_nr = (SEL Max_maand_nr FROM mi_temp.cib_klantbeeld_rep_gmo GROUP BY 1);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* Toevoegen nieuwe cijfers */
 INSERT INTO mi_sas_aa_mb_c_mb.cib_klantbeeld_gmo_NEW
 SEL
-A.maand_nr
-, B.klant_nr
+D.max_maand as maand_nr
+, C.klant_nr
 , A.bc_nr
 , CASE
         WHEN A.product_group_code = 'FXO' THEN 'FX'
@@ -8226,90 +14447,1277 @@ A.maand_nr
         WHEN A.product_group_code = 'Credit Bonds Debt Issues' THEN 'Fixed Income'
         WHEN A.product_group_code = 'Government Bonds' THEN 'Fixed Income'
         ELSE A.product_group_code
-        END AS Product_Group
+        END AS product_group
 , SUM(A.amount_EUR) AS Volume_EUR
 , COUNT(*) AS Aantal_Trx
 
-FROM mi_cmb.smr_transaction A
+from mi_cmb.smr_transaction A
 
-JOIN Mi_temp.Mia_klantkoppelingen B
-ON A.bc_nr = B.business_contact_nr
+left join
+(
+sel distinct BB.maand_nr, AA.maand_einddatum as max_date
+from mi_vm_nzdb.vlu_maand AA
 
-LEFT JOIN mi_temp.cib_klantbeeld_rep_gmo C
-ON 1=1
+inner join mi_cmb.smr_transaction BB
+on AA.maand = (SELECT MAX(AA.maand_nr) AS max_maand FROM mi_cmb.smr_transaction AA)
+) B
+on A.maand_nr = B.maand_nr
+
+left join
+(
+sel max(maand_nr) as max_maand
+from mi_cmb.smr_transaction
+) D
+on 1=1
+
+left join mi_sas_aa_mb_c_mb.MIA_businesscontacts_NEW C
+on A.bc_nr = C.business_contact_nr
 
 WHERE A.margin NE 0
 AND A.bc_nr IS NOT NULL
 AND A.product_group_code IN ('FX', 'FXO', 'IRD', 'MM Taken', 'MM Given', 'DCM', 'ECM', 'Credit Bonds', 'Credit Bonds Debt Issues', 'Government Bonds' , 'Securities Finance', 'Equity Brokerage' )
+AND C.klant_nr IS NOT NULL
 AND A.transaction_source NOT LIKE '%FXPM%'
-AND A.start_date < (((ROUND(A.maand_nr, -2)/100)*10000 + (A.maand_nr - (ROUND(A.maand_nr, -2)/100)*100)*100 + 1) -19000000)
-AND A.end_date > ((ROUND(A.maand_nr, -2)/100)*10000 + (A.maand_nr - (ROUND(A.maand_nr, -2)/100)*100)*100 + 31 -19000000)
-AND A.maand_nr > C.max_maand_nr
+AND A.end_date > B.max_date
 
-GROUP BY 1,2,3,4;
+GROUP BY 1, 2, 3, 4;
 
-CREATE TABLE mi_sas_aa_mb_c_mb.cib_klantbeeld_dpo_NEW AS
- (
-SEL
-A.maand_nr
-, A.klant_nr
-, A.productnaam
-, B.naam_verkoopkans
-, A.status
-, CAST (A.slagingskans AS DECIMAL(3,0)) AS slagingskans
-, A.baten_totaal_looptijd
-, CAST( A.baten_totaal_Looptijd * slagingskans / 100 AS DECIMAL(22,0)) AS Revenues_Weighted
-, datum_laatst_gewijzigd
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS ON mi_sas_aa_mb_c_mb.cib_klantbeeld_gmo_NEW INDEX ( maand_nr ,Klant_nr ,bc_nr ,Product_Group );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ------------------------------------------------------------------------------------------------------------------- */
+/* DEAL PIPELINE - OPEN                                                                                                */
+/* ------------------------------------------------------------------------------------------------------------------- */
+
+COLLECT STATISTICS COLUMN (MAAND_NR) ON MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW;
+COLLECT STATISTICS COLUMN (OMZET) ON MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW;
+COLLECT STATISTICS COLUMN (STATUS) ON MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW;
+COLLECT STATISTICS COLUMN (MAAND_NR) ON MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE MULTISET TABLE mi_sas_aa_mb_c_mb.cib_klantbeeld_dpo_NEW AS
+      (
+	SELECT
+		  A.maand_nr
+		, A.klant_nr
+		, A.productnaam
+		, A.productgroep
+		, B.naam_verkoopkans
+		, A.status
+		, A.substatus
+
+		, CAST (A.slagingskans AS DECIMAL(3,0)) AS slagingskans
+		, A.baten_totaal_looptijd
+		, CAST( A.baten_totaal_Looptijd * slagingskans / 100 AS DECIMAL(22,0)) AS Revenues_Weighted
+		, A.datum_laatst_gewijzigd
+		, extract(year from A.datum_laatst_gewijzigd)*100 + extract(month from A.datum_laatst_gewijzigd) as maand_nr_laatste_wijziging
+
+		, D.max_maand_nr
+
+	FROM MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW A
+
+	JOIN MI_SAS_AA_MB_C_MB.cib_klantbeeld_klanten_NEW XA
+	ON A.klant_nr = XA.klant_nr
+
+	JOIN MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW B
+	ON A.maand_nr = B.maand_nr
+	AND A.Siebel_verkoopkans_id = B.Siebel_verkoopkans_id
+	AND B.naam_verkoopkans not like 'MIGRATED%'
+
+	LEFT JOIN  mi_sas_aa_mb_c_mb.cib_klantbeeld_rep_dp_NEW D
+	ON 1=1
+
+	WHERE NOT (A.status LIKE 'Closed %')
+	--AND maand_nr_laatste_wijziging > D.max_maand_nr-100
+
+) WITH DATA PRIMARY INDEX (Klant_nr, Maand_nr, productnaam, naam_verkoopkans, status);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_SAS_AA_MB_C_MB.cib_klantbeeld_dpo_NEW SET productnaam = 'Confidential';
+UPDATE MI_SAS_AA_MB_C_MB.cib_klantbeeld_dpo_NEW SET productgroep = 'Confidential';
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_dpo_NEW INDEX (Maand_nr, Klant_nr, Productnaam, Naam_verkoopkans, Status);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ------------------------------------------------------------------------------------------------------------------- */
+/* DEAL PIPELINE - CLOSED                                                                                              */
+/* ------------------------------------------------------------------------------------------------------------------- */
+
+CREATE MULTISET TABLE mi_sas_aa_mb_c_mb.cib_klantbeeld_dpc_NEW AS
+      (
+	SELECT
+		  A.maand_nr
+		, A.klant_nr
+		, A.productnaam
+		, A.productgroep
+		, B.naam_verkoopkans
+		, A.status
+		, A.substatus
+
+		, CAST (A.slagingskans AS DECIMAL(3,0)) AS slagingskans
+		, A.baten_totaal_looptijd
+		, CAST( A.baten_totaal_Looptijd * slagingskans / 100 AS DECIMAL(22,0)) AS Revenues_Weighted
+		, A.datum_laatst_gewijzigd
+		, extract(year from A.datum_laatst_gewijzigd)*100 + extract(month from A.datum_laatst_gewijzigd) as maand_nr_laatste_wijziging
+
+		, D.max_maand_nr
+
+	FROM MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW A
+
+	JOIN MI_SAS_AA_MB_C_MB.cib_klantbeeld_klanten_NEW XA
+	ON A.klant_nr = XA.klant_nr
+
+	JOIN MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW B
+	ON A.maand_nr = B.maand_nr
+	AND A.Siebel_verkoopkans_id = B.Siebel_verkoopkans_id
+	AND B.naam_verkoopkans not like 'MIGRATED%'
+
+	LEFT JOIN  mi_sas_aa_mb_c_mb.cib_klantbeeld_rep_dp_NEW D
+	ON 1=1
+
+	WHERE A.status LIKE 'Closed %'
+	  AND maand_nr_laatste_wijziging > D.max_maand_nr-100
+) WITH DATA
+PRIMARY INDEX (maand_nr, klant_nr, productnaam, naam_verkoopkans, status);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_SAS_AA_MB_C_MB.cib_klantbeeld_dpc_NEW SET productnaam = 'Confidential';
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+UPDATE MI_SAS_AA_MB_C_MB.cib_klantbeeld_dpc_NEW SET productgroep = 'Confidential';
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_dpc_NEW INDEX (Maand_nr, Klant_nr, Productnaam, Naam_verkoopkans, Status);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ------------------------------------------------------------------------------------------------------------------- */
+/* NPS                                                                                                                 */
+/* ------------------------------------------------------------------------------------------------------------------- */
+
+CREATE TABLE mi_sas_aa_mb_c_mb.cib_klantbeeld_NPS_NEW
+AS
+(
+SELECT A.klant_nr
+    , A.business_contact_nr
+    , NPS.kto_id
+    , NPS.interview_nr
+    , NPS.selectie_id
+--    , NPS.business_contact_nr
+    , NPS.maand_nr
+    , NPS.datum
+    , NPS.NPS_ABNAMRO
+
+FROM  mi_sas_aa_mb_c_mb.cib_klantbeeld_klanten_NEW A
+
+LEFT JOIN  (
+    SELECT
+          AA.kto_id
+        , AA.interview_nr
+        , AA.selectie_id
+        , AA.business_contact_nr
+        , AA.maand_nr
+        , AA.datum
+        , AA.klant_nr
+        , CC.vraag_optie_ID as NPS_ABNAMRO
+
+    FROM  MI_CMB.mia_kto_klant_nw21 AA
+
+    LEFT JOIN  mi_cmb.mia_kto_antwoord_nw21 CC
+    ON  AA.interview_nr = CC.interview_nr
+    AND  CC.vraag_ID = 'AA_NPS'
+
+    WHERE AA.kto_id = 'rNPS'
+    AND AA.klant_nr IS NOT NULL
+
+    /* sommige klanten hebben meerdere interviews op een datum. Om die uniek te maken onderstaande rank() uitvoeren         */
+    /* Een andere klant maakt het helemaal bont ... daar maakt alleen periode/oms het record uniek AA.klant_nr = 1100635161 */
+    QUALIFY RANK() OVER (PARTITION BY AA.klant_nr ORDER BY AA.datum DESC, NPS_ABNAMRO DESC, AA.interview_nr , AA.selectie_id , AA.periode) = 1
+
+) NPS
+ON A.klant_nr = NPS.klant_nr
+AND ZEROIFNULL(NPS.NPS_ABNAMRO) le 10
+
+) WITH DATA
+PRIMARY INDEX (klant_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_NPS_NEW INDEX (klant_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ------------------------------------------------------------------------------------------------------------------- */
+/* ADRES                                                                                                               */
+/* ------------------------------------------------------------------------------------------------------------------- */
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.cib_klantbeeld_ADRES_NEW AS
+(
+
+SELECT
+A.klant_nr
+, A.business_contact_nr
+, B.straatnaam as straatnaam
+, B.huis_nr
+, B.postcode
+, B.stadnaam
+, B.land_geogr_id
+
+FROM MI_SAS_AA_MB_C_MB.cib_klantbeeld_klanten_NEW A
+
+LEFT JOIN mi_vm_ldm.aparty_officieel_adres B
+ON A.business_contact_nr = B.party_id
+AND B.party_sleutel_type = 'BC'
+
+
+) WITH DATA
+PRIMARY INDEX (klant_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_ADRES_NEW INDEX (klant_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ------------------------------------------------------------------------------------------------------------------- */
+/* RVB                                                                                                                 */
+/* ------------------------------------------------------------------------------------------------------------------- */
+
+CREATE TABLE mi_sas_aa_mb_c_mb.cib_klantbeeld_RVB_NEW AS
+(
+SELECT A.klant_nr
+, CEO.voornaam || ' ' || CEO.tussenvoegsel || ' ' || CEO.achternaam AS CEO_Naam
+, CFO.voornaam || ' ' || CFO.tussenvoegsel || ' ' || CFO.achternaam AS CFO_Naam
+, RVC1.voornaam || ' ' || RVC1.tussenvoegsel || ' ' || RVC1.achternaam AS RVC1_Naam
+, NULL AS RVC2_Naam
+
+FROM mi_sas_aa_mb_c_mb.cib_klantbeeld_klanten_NEW A
+
+LEFT JOIN
+(
+SELECT
+AA.klant_nr
+, CASE WHEN AA.contactpersoon_onderdeel = '' THEN 10
+	WHEN AA.contactpersoon_onderdeel = 'Niet opgegeven' THEN 20
+	WHEN AA.contactpersoon_onderdeel = 'CBI contact' THEN 30
+	WHEN AA.contactpersoon_onderdeel = 'Management Algemeen' THEN 40
+	WHEN AA.contactpersoon_onderdeel ='General Management' THEN 50
+	WHEN AA.contactpersoon_onderdeel ='Raad van Bestuur' THEN 60
+	WHEN AA.contactpersoon_onderdeel ='Board of Directors' THEN 70
+ELSE 0 END AS Onderdeel_Score
+, CASE WHEN AA.contactpersoon_functietitel IN ('CEO', 'C.E.O.', 'CEO%') THEN 2
+	WHEN AA.contactpersoon_functietitel IN ( 'Algemeen directeur', 'RvB voorzitter' ) THEN 1
+ELSE 0 END AS functie_score
+, onderdeel_score + functie_score AS job_score
+, AA.voornaam
+, AA.tussenvoegsel
+, AA.achternaam
+
+FROM  MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW AA
+
+WHERE functie_score  > 0
+
+QUALIFY ROW_NUMBER() OVER(PARTITION BY klant_nr ORDER BY job_score DESC) = 1
+
+) CEO
+ON A.klant_nr = CEO.klant_nr
+
+LEFT JOIN
+(
+SELECT
+AA.klant_nr
+, CASE WHEN AA.contactpersoon_onderdeel = '' THEN 10
+	WHEN AA.contactpersoon_onderdeel = 'Financiële Management' THEN 20
+	WHEN AA.contactpersoon_onderdeel = 'Financial Management' THEN 30
+	WHEN AA.contactpersoon_onderdeel = 'Financieel Management' THEN 40
+	WHEN AA.contactpersoon_onderdeel ='Finance' THEN 50
+	WHEN AA.contactpersoon_onderdeel ='Raad van Bestuur' THEN 60
+	WHEN AA.contactpersoon_onderdeel ='Board of Directors' THEN 70
+ELSE 0 END AS Onderdeel_Score
+, CASE WHEN AA.contactpersoon_functietitel IN ('CFO', 'C.F.O.', 'Financieel directeur', 'CFO%', 'Financial Manager', 'Directeur Financien', 'Financieel Directeur', 'Financial Director', 'Chief Financial Officer', 'Hoofd Financien', 'Finance Director'
+) THEN 1 ELSE 0 END AS functie_score
+, onderdeel_score + functie_score AS job_score
+, AA.voornaam
+, AA.tussenvoegsel
+, AA.achternaam
+
+FROM  MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW AA
+
+QUALIFY ROW_NUMBER() OVER(PARTITION BY klant_nr ORDER BY job_score DESC) = 1
+
+WHERE functie_score  > 0
+
+) CFO
+ON A.klant_nr = CFO.klant_nr
+
+LEFT JOIN
+(
+SELECT
+AA.klant_nr
+, CASE WHEN AA.contactpersoon_onderdeel = 'Raad van Commissarissen' THEN 10
+	WHEN AA.contactpersoon_onderdeel = 'Supervisory Board' THEN 20
+ELSE 0 END AS Onderdeel_Score
+, CASE WHEN AA.contactpersoon_functietitel IN ( 'RvC voorzitter', 'Supervisory Board President' ) THEN 1 ELSE 0 END AS functie_score
+, onderdeel_score + functie_score AS job_score
+, AA.voornaam
+, AA.tussenvoegsel
+, AA.achternaam
+
+FROM MI_SAS_AA_MB_C_MB.Siebel_Contactpersoon_NEW AA
+
+QUALIFY ROW_NUMBER() OVER(PARTITION BY klant_nr ORDER BY job_score DESC) = 1
+
+WHERE functie_score  > 0
+
+) RVC1
+ON A.klant_nr = RVC1.klant_nr
+
+) WITH DATA
+PRIMARY INDEX (klant_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_RVB_NEW INDEX (klant_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ------------------------------------------------------------------------------------------------------------------- */
+/* UCR                                                                                                                 */
+/* ------------------------------------------------------------------------------------------------------------------- */
+
+CREATE TABLE mi_sas_aa_mb_c_mb.cib_klantbeeld_UCR_NEW AS
+(
+SELECT
+A.klant_nr
+, CASE WHEN B.fac_bc_ucr IS NULL THEN '-' ELSE B.fac_bc_ucr  END AS UCR
+
+FROM mi_sas_aa_mb_c_mb.cib_klantbeeld_klanten_NEW A
+
+LEFT JOIN
+(
+SELECT
+aa.fac_klant_nr
+, aa.fac_bc_ucr
+
+FROM mi_cmb.cif_complex AA
+
+QUALIFY ROW_NUMBER() OVER(PARTITION BY fac_klant_nr ORDER BY OOE DESC) = 1
+
+WHERE AA.maand_nr = (SELECT MAX(maand_nr) FROM mi_cmb.cif_complex)
+AND AA.fac_actief_ind =1
+AND AA.fac_klant_nr IS NOT NULL
+AND AA.fac_bc_ucr IS NOT NULL
+) b
+ON A.klant_nr = B.fac_klant_nr
+
+) WITH DATA
+PRIMARY INDEX (klant_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_UCR_NEW INDEX (klant_nr);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* ------------------------------------------------------------------------------------------------------------------- */
+/* DPX                                                                                                                 */
+/* ------------------------------------------------------------------------------------------------------------------- */
+
+CREATE MULTISET TABLE mi_sas_aa_mb_c_mb.cib_klantbeeld_DPX_NEW AS (
+
+	SELECT
+		  A.maand_nr
+		, A.klant_nr
+		, A.productgroep
+		, A.productnaam
+		, B.naam_verkoopkans
+		, A.status
+		, A.substatus
+
+		, CAST (A.slagingskans AS DECIMAL(3,0)) AS slagingskans
+		, A.baten_totaal_looptijd
+		, CAST( A.baten_totaal_Looptijd * slagingskans / 100 AS DECIMAL(22,0)) AS Revenues_Weighted
+		, A.datum_laatst_gewijzigd
+		, extract(year from A.datum_laatst_gewijzigd)*100 + extract(month from A.datum_laatst_gewijzigd) as maand_nr_laatste_wijziging
+
+		, D.max_maand_nr
+
+		, A.sbt_id_mdw_eigenaar
+		, A.sbt_id_mdw_aangemaakt_door as sbt_id_mdw_aangemaakt_door_vkp
+		, B.deal_captain_mdw_sbt_id
+		, B.sbt_id_mdw_aangemaakt_door as sbt_id_mdw_aangemaakt_door_vk
+		, B.sbt_id_mdw_bijgewerkt_door
+
+		, XA.relatiemanager
+		, XA.sbt_id
+
+		, case
+			when ( (A.status LIKE 'Closed %'    ) ) then 'closed'
+			when ( NOT (A.status LIKE 'Closed %') ) then 'open'
+			else 'tbd'
+		end as dp_status
+
+		, case
+			when A.sbt_id_mdw_aangemaakt_door like '%@SSP%' then 0
+			when B.sbt_id_mdw_bijgewerkt_door like '%@SSP%' then 0
+			when trim(XA.sbt_id) = trim(A.sbt_id_mdw_aangemaakt_door) then 1
+			when trim(XA.sbt_id) = trim(B.sbt_id_mdw_aangemaakt_door) then 1
+			when trim(XA.sbt_id) = trim(B.sbt_id_mdw_bijgewerkt_door) then 1
+			else 0
+		end dp_select
 
 FROM MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW A
 
-LEFT JOIN MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW B
-ON A.maand_nr = B.maand_nr
-AND A.Siebel_verkoopkans_id = B.Siebel_verkoopkans_id
+	JOIN (
+		-- de gebruikelijke klanten 'ophalen' maar voorzien van sbt-id van de coverage banker
+		select K.klant_nr , K.cca , K.relatiemanager , M.sbt_id
+		from MI_SAS_AA_MB_C_MB.cib_klantbeeld_klanten_NEW K
 
-LEFT JOIN	Mi_temp.Mia_week C
-ON A.klant_nr = C.klant_nr
+		left join mi_vm_nzdb.vmedewerker M
+		on K.cca = M.adviseur
+		and K.maand_nr = M.maand
+	) XA
+	ON A.klant_nr = XA.klant_nr
 
-LEFT JOIN  mi_sas_aa_mb_c_mb.cib_klantbeeld_rep_dp_NEW D
-ON 1=1
+	JOIN MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW B
 
-WHERE C.business_line = 'CIB'
-AND A.omzet > 0
-AND A.status  NOT LIKE 'Closed %'
-AND A.maand_nr > D.max_maand_nr - 100
+	ON A.maand_nr = B.maand_nr
+	AND A.Siebel_verkoopkans_id = B.Siebel_verkoopkans_id
+	AND B.naam_verkoopkans not like 'MIGRATED%'
+
+	LEFT JOIN  mi_sas_aa_mb_c_mb.cib_klantbeeld_rep_dp_NEW D
+	ON 1=1
+
+--	WHERE ( Closed deals mochten niet ouder dan 12 maanden zijn                              ) OR ( Alle open deals                )
+	WHERE ( (A.status LIKE 'Closed %') AND (maand_nr_laatste_wijziging > D.max_maand_nr-100) ) OR ( NOT (A.status LIKE 'Closed %') )
 
 ) WITH DATA
 PRIMARY INDEX (maand_nr, klant_nr, productnaam, naam_verkoopkans, status);
 
-CREATE TABLE mi_sas_aa_mb_c_mb.cib_klantbeeld_dpc_NEW AS
- (
-SEL
-A.maand_nr
-, A.klant_nr
-,  A.productnaam
-, B.naam_verkoopkans
-, A.status
-, CAST (A.slagingskans AS DECIMAL(3,0)) AS slagingskans
-, A.baten_totaal_looptijd
-, CAST( A.baten_totaal_Looptijd * slagingskans / 100 AS DECIMAL(22,0)) AS Revenues_Weighted
-, datum_laatst_gewijzigd
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
-FROM MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_Product_NEW A
+UPDATE MI_SAS_AA_MB_C_MB.cib_klantbeeld_DPX_NEW SET productnaam = 'Confidential';
 
-LEFT JOIN MI_SAS_AA_MB_C_MB.Siebel_Verkoopkans_NEW B
-ON A.maand_nr = B.maand_nr
-AND A.Siebel_verkoopkans_id = B.Siebel_verkoopkans_id
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
-LEFT JOIN	Mi_temp.Mia_week C
-ON A.klant_nr = C.klant_nr
+UPDATE MI_SAS_AA_MB_C_MB.cib_klantbeeld_DPX_NEW SET productgroep = 'Confidential';
 
-LEFT JOIN  mi_sas_aa_mb_c_mb.cib_klantbeeld_rep_dp_NEW D
-ON 1=1
+.IF ERRORCODE <> 0 THEN .GOTO EOP
 
-WHERE C.business_line = 'CIB'
-AND A.omzet > 0
-AND A.status  LIKE 'Closed %'
-AND A.maand_nr > D.max_maand_nr - 100
+COLLECT STATISTICS ON MI_SAS_AA_MB_C_MB.cib_klantbeeld_DPX_NEW INDEX (Maand_nr, Klant_nr, Productnaam, Naam_verkoopkans, Status);
 
-) WITH DATA
-PRIMARY INDEX (maand_nr, klant_nr, productnaam, naam_verkoopkans, status);
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*************************************************************************************
+
+        Productboom_rationalisatie
+
+*************************************************************************************/
+
+CREATE TABLE MI_SAS_AA_MB_C_MB.Productboom_rationalisatie_NEW
+      (
+       Prod_lvl_6_id VARCHAR(10) CHARACTER SET LATIN NOT CASESPECIFIC NOT NULL,
+       Prod_lvl_6_desc VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Prod_lvl_5_id INTEGER NOT NULL,
+       Prod_lvl_5_desc VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Prod_lvl_4_id INTEGER NOT NULL,
+       Prod_lvl_4_desc VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Prod_lvl_3_id INTEGER NOT NULL,
+       Prod_lvl_3_desc VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Prod_lvl_2_id INTEGER NOT NULL,
+       Prod_lvl_2_desc VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Prod_lvl_1_id INTEGER NOT NULL,
+       Prod_lvl_1_desc VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       CA_id INTEGER NOT NULL,
+       CA_desc VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Tech_key VARCHAR(60) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bron VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC,
+       MSTR_view VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Teradata_tabel_boom VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Teradata_databron_1 VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Teradata_databron_2 VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Prod_status_id INTEGER NOT NULL DEFAULT 9999 ,
+       Prod_status_desc VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC DEFAULT 'TBD',
+       Hash_row BYTE(4),
+       Prod_status_3_id INTEGER,
+       Prod_status_3_desc VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC DEFAULT 'TBD',
+       Prod_status_4_id INTEGER,
+       Prod_status_4_desc VARCHAR(30) CHARACTER SET LATIN NOT CASESPECIFIC DEFAULT 'TBD'
+      )
+PRIMARY INDEX ( Prod_lvl_6_id, Prod_lvl_5_id, Prod_lvl_4_id, Prod_lvl_3_id, Prod_lvl_2_id, Prod_lvl_1_id );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+INSERT INTO MI_SAS_AA_MB_C_MB.Productboom_rationalisatie_NEW
+SELECT A.*
+  FROM Mi_cmb.Productboom_rationalisatie A;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*************************************************************************************
+
+        Mia_gekoppelde_personen_hist
+
+*************************************************************************************/
+
+CREATE TABLE Mi_temp.Mia_businesscontacts_KvK
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Business_contact_nr DECIMAL(12,0),
+       Bc_KvK_nr CHAR(12) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Geldige_KvK_inschrijving BYTEINT,
+       KvK_nr CHAR(12) CHARACTER SET LATIN NOT CASESPECIFIC,
+       N_werkzame_personen_tot INTEGER,
+       N_werkzame_personen_full INTEGER,
+       Economisch_actief BYTEINT,
+       KvK_Onderneming_ind BYTEINT,
+       KvK_Vereniging_ind BYTEINT,
+       KvK_Stichting_ind BYTEINT,
+       KvK_Kerkgenoot_ind BYTEINT,
+       KvK_rechtsvorm CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr, Business_contact_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+INSERT INTO Mi_temp.Mia_businesscontacts_KvK
+SELECT A.Klant_nr,
+       A.Maand_nr,
+       A.Business_contact_nr,
+       A.Bc_kvk_nr,
+       CASE WHEN B.KvK_nummer IS NOT NULL THEN 1 ELSE 0 END AS Geldige_KvK_inschrijving,
+       B.KvK_nummer AS KvK_nr,
+       B.N_werkzame_personen_tot,
+       B.N_werkzame_personen_full,
+       B.Economisch_actief,
+       CASE WHEN B.Soort_onderneming = 'O' THEN 1 ELSE 0 END AS KvK_Onderneming_ind,
+       CASE WHEN B.Soort_onderneming = 'V' THEN 1 ELSE 0 END AS KvK_Vereniging_ind,
+       CASE WHEN B.Soort_onderneming = 'S' THEN 1 ELSE 0 END AS KvK_Stichting_ind,
+       CASE WHEN B.Soort_onderneming = 'K' THEN 1 ELSE 0 END AS KvK_Kerkgenoot_ind,
+       B.KvK_rechtsvorm
+  FROM Mi_sas_aa_mb_c_mb.Mia_businesscontacts_NEW A
+  LEFT OUTER JOIN (SELECT A.KvK_nummer AS KvK_nummer,
+                          1*(CASE WHEN A.Aant_werkzame_pers_tot BETWEEN '0000000' AND '9999999' THEN A.Aant_werkzame_pers_tot ELSE 0 END) AS N_werkzame_personen_tot,
+                          1*(CASE WHEN A.Aant_werkzame_pers_full BETWEEN '0000000' AND '9999999' THEN A.Aant_werkzame_pers_full ELSE 0 END) AS N_werkzame_personen_full,
+                          A.Economisch_acteif AS Economisch_actief,
+                          A.Soort_onderneming,
+                          A.Rechtsvorm_fijn AS KvK_rechtsvorm
+                     FROM (SELECT *
+                            FROM Mi_vm.vKvk XA
+                         QUALIFY ROW_NUMBER() OVER(PARTITION BY Kvk_nummer
+                                                      ORDER BY CASE WHEN XA.datum_opheffing <> '00.00.0000' THEN 0 ELSE 1 END DESC,
+                                                               CASE XA.hoofd_fil_ind WHEN 'H' THEN 1 ELSE 0 END DESC,
+                                                               CASE WHEN XA.branche_number <> '' THEN 1 ELSE 0 END DESC,
+                                                               CASE WHEN XA.datum_inschrijving <> '00.00.0000' THEN CAST(XA.datum_inschrijving AS DATE FORMAT 'DD.MM.YYYY') END DESC,
+                                                               XA.mut_branch_num,
+                                                               XA.mut_ca_postcode,
+                                                               XA.mut_zaak_postcode,
+                                                               XA.branche_number) = 1) A
+                    WHERE A.Vestigings_indicator NOT IN ('H', 'E')) B
+    ON A.Bc_kvk_nr = B.KvK_nummer
+ WHERE A.Klant_nr IS NOT NULL;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.Mia_gekoppelden
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Business_contact_nr DECIMAL(12,0),
+       Rol_code VARCHAR(6) CHARACTER SET LATIN NOT CASESPECIFIC NOT NULL,
+       Rol_nr BYTEINT,
+       Rol_oms VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC NOT NULL,
+       Fhh_nr INTEGER,
+       Pcnl_nr INTEGER,
+       Gekoppeld_Bc_nr DECIMAL(12,0),
+       Gekoppeld_Bc_naam VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Gekoppeld_Bc_clientgroep VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Gekoppeld_Bc_businessline VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Gekoppeld_Bc_relatiecategorie SMALLINT,
+       Gekoppeld_Bc_verschijningsvorm_oms VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Gekoppeld_Bc_natuurlijke_persoon_ind BYTEINT,
+       Gekoppeld_Bc_contracten BYTEINT,
+       Gekoppeld_Bc_nationaliteit CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Gekoppeld_Bc_geboorte_datum DATE FORMAT 'YYYYMMDD',
+       Gekoppeld_Bc_leeftijd INTEGER,
+       Gekoppeld_Bc_overleden_ind BYTEINT,
+       Gekoppeld_Bc_geslacht CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Gekoppeld_Bc_postcode CHAR(6) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Onderneming_aan_huis BYTEINT,
+       Geldige_KvK_inschrijving BYTEINT
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Business_contact_nr, Maand_nr, Rol_code, Gekoppeld_Bc_nr )
+INDEX ( Fhh_nr )
+INDEX ( Pcnl_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+INSERT INTO Mi_temp.Mia_gekoppelden
+SELECT A.Klant_nr,
+       A.Maand_nr,
+       A.Business_contact_nr,
+       C.Rol_code,
+       C.Rol_nr,
+       C.Rol_oms,
+       CASE WHEN F.Business_line = 'Retail' THEN D.Fhh_nr ELSE NULL END AS Fhh_nr,
+       CASE WHEN F.Business_line = 'PB' THEN D.Pcnl_nr ELSE NULL END AS Pc_nl_nr,
+       B.Party_id AS Gekoppeld_Bc_nr,
+       D.Bc_naam AS Gekoppeld_Bc_naam,
+       D.Bc_clientgroep AS Gekoppeld_Bc_clientgroep,
+       F.Business_line AS Gekoppeld_Bc_businessline,
+       D.Bc_relatiecategorie AS Gekoppeld_Bc_relatiecategorie,
+       D.Bc_verschijningsvorm_oms AS Gekoppeld_Bc_verschijningsvorm_oms,
+       CASE WHEN D.Bc_verschijningsvorm IN (1, 2, 3) THEN 1 ELSE 0 END AS Gekoppeld_Bc_natuurlijke_persoon_ind,
+       D.Bc_contracten AS Gekoppeld_Bc_contracten,
+       E.Nationaliteit AS Gekoppeld_Bc_nationaliteit,
+       E.Geboorte_datum AS Gekoppeld_Bc_geboorte_datum,
+       (CASE
+        WHEN EXTRACT(DAY FROM A.Datum_gegevens) < EXTRACT(DAY FROM E.Geboorte_datum) THEN (((A.Datum_gegevens - E.Geboorte_datum) MONTH(4)) (INTEGER)) - 1
+        ELSE (((A.Datum_gegevens - E.Geboorte_datum) MONTH(4)) (INTEGER))
+        END) / 12 AS Gekoppeld_Bc_leeftijd,
+       E.Overleden_ind AS Gekoppeld_Bc_overleden_ind,
+       E.Geslacht AS Gekoppeld_Bc_geslacht,
+       D.Bc_postcode AS Gekoppeld_Bc_postcode,
+       CASE WHEN G.Post_adres_id = H.Post_adres_id THEN 1 ELSE 0 END Onderneming_aan_huis,
+       ZEROIFNULL(X.Geldige_KvK_inschrijving) AS Geldige_KvK_inschrijving
+  FROM Mi_sas_aa_mb_c_mb.Mia_businesscontacts_NEW A
+  JOIN Mi_vm_ldm.aParty_party_relatie B
+    ON A.Business_contact_nr = B.Gerelateerd_party_id
+  JOIN Mi_sas_aa_mb_c_mb.Mia_rollen_natuurlijke_personen C
+    ON B.Party_relatie_type_code = C.Rol_code
+  JOIN Mi_sas_aa_mb_c_mb.Mia_businesscontacts_NEW D
+    ON B.Party_id = D.Business_contact_nr
+  LEFT OUTER JOIN Mi_vm_ldm.aIndividu E
+    ON B.Party_id = E.Party_id
+   AND E.Party_sleutel_type = 'BC'
+  LEFT OUTER JOIN Mi_sas_aa_mb_c_mb.Cgc_basis F
+    ON D.Bc_clientgroep = F.Clientgroep
+  LEFT OUTER JOIN Mi_vm_ldm.aParty_post_adres G
+    ON B.Party_id = G.Party_id
+   AND G.Party_sleutel_type = 'BC'
+   AND G.Adres_gebruik_type_code = 'AV'
+  LEFT OUTER JOIN Mi_vm_ldm.aParty_post_adres H
+    ON A.Business_contact_nr = H.Party_id
+   AND H.Party_sleutel_type = 'BC'
+   AND H.Adres_gebruik_type_code = 'AV'
+  LEFT OUTER JOIN Mi_temp.Mia_businesscontacts_KvK X
+    ON A.Business_contact_nr = X.Business_contact_nr
+ WHERE A.Klant_nr IS NOT NULL;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+CREATE TABLE Mi_temp.Mia_gekoppelde_personen
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Rol_code VARCHAR(6) CHARACTER SET LATIN NOT CASESPECIFIC NOT NULL,
+       Rol_nr BYTEINT,
+       Rol_oms VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC NOT NULL,
+       Fhh_nr INTEGER,
+       Pcnl_nr INTEGER,
+       Persoon_Bc_nr DECIMAL(12,0),
+       Persoon_Bc_naam VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Persoon_Bc_clientgroep VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Persoon_Bc_businessline VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Persoon_Bc_relatiecategorie SMALLINT,
+       Persoon_Bc_verschijningsvorm_oms VARCHAR(256) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Persoon_Bc_contracten BYTEINT,
+       Persoon_Bc_nationaliteit CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Persoon_Bc_geboorte_datum DATE FORMAT 'YYYYMMDD',
+       Persoon_Bc_leeftijd INTEGER,
+       Persoon_Bc_overleden_ind BYTEINT,
+       Persoon_Bc_geslacht CHAR(1) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Persoon_Bc_postcode CHAR(6) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Onderneming_aan_huis BYTEINT
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr, Rol_code, Persoon_Bc_nr )
+INDEX ( Fhh_nr )
+INDEX ( Pcnl_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+INSERT INTO Mi_temp.Mia_gekoppelde_personen
+SELECT A.Klant_nr,
+       A.Maand_nr,
+       A.Rol_code,
+       A.Rol_nr,
+       A.Rol_oms,
+       A.Fhh_nr,
+       A.Pcnl_nr,
+       A.Gekoppeld_Bc_nr AS Persoon_Bc_nr,
+       A.Gekoppeld_Bc_naam AS Persoon_Bc_naam,
+       A.Gekoppeld_Bc_clientgroep AS Persoon_Bc_clientgroep,
+       A.Gekoppeld_Bc_businessline AS Persoon_Bc_businessline,
+       A.Gekoppeld_Bc_relatiecategorie AS Persoon_Bc_relatiecategorie,
+       A.Gekoppeld_Bc_verschijningsvorm_oms AS Persoon_Bc_verschijningsvorm_oms,
+       A.Gekoppeld_Bc_contracten AS Persoon_Bc_contacten,
+       A.Gekoppeld_Bc_nationaliteit AS Persoon_Bc_nationaliteit,
+       A.Gekoppeld_Bc_geboorte_datum AS Persoon_Bc_geboortedatum,
+       A.Gekoppeld_Bc_leeftijd AS Persoon_Bc_leeftijd,
+       A.Gekoppeld_Bc_overleden_ind AS Persoon_Bc_overleden_ind,
+       A.Gekoppeld_Bc_geslacht As Persoon_Bc_geslacht,
+       A.Gekoppeld_Bc_postcode AS Persoon_Bc_postcode,
+       A.Onderneming_aan_huis
+  FROM Mi_temp.Mia_gekoppelden A
+-- Alleen gekoppelde natuurlijke personen (bestuurders en/of bevoegden)
+ WHERE A.Gekoppeld_Bc_natuurlijke_persoon_ind = 1
+-- Alleen zakelijke klanten met geldige KvK inschrijving
+   AND A.Geldige_KvK_inschrijving = 1
+QUALIFY RANK () OVER (PARTITION BY A.Klant_nr, A.Maand_nr, A.Gekoppeld_Bc_naam, A.Gekoppeld_Bc_geboorte_datum ORDER BY A.Rol_nr, A.Gekoppeld_bc_nr, A.Business_contact_nr) = 1;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* kopie */
+CREATE TABLE Mi_sas_aa_mb_c_mb.Mia_gekoppelde_personen_hist_NEW AS Mi_sas_aa_mb_c_mb.Mia_gekoppelde_personen_hist WITH DATA
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr, Rol_code, Persoon_Bc_nr )
+INDEX ( Fhh_nr )
+INDEX ( Pcnl_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_sas_aa_mb_c_mb.Mia_gekoppelde_personen_hist_NEW COLUMN (PARTITION);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* WEEKCIJFERS VERWIJDEREN INDIEN MAAND REEDS AANWEZIG VAN VORIGE WEEK */
+DELETE FROM Mi_sas_aa_mb_c_mb.Mia_gekoppelde_personen_hist_NEW A
+ WHERE A.Maand_nr = (SELECT X.Maand_nr FROM Mi_temp.Mia_gekoppelde_personen X GROUP BY 1);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_sas_aa_mb_c_mb.Mia_gekoppelde_personen_hist_NEW COLUMN (PARTITION);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* WEEKCIJFERS TOEVOEGEN */
+
+INSERT INTO Mi_sas_aa_mb_c_mb.Mia_gekoppelde_personen_hist_NEW
+SELECT A.*
+  FROM Mi_temp.Mia_gekoppelde_personen A;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COMMENT ON Mi_sas_aa_mb_c_mb.Mia_gekoppelde_personen_hist_NEW AS 'NIET VERWIJDEREN - Afdelingstabel in schedulescript';
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/*************************************************************************************
+
+        Mia_bedrijfstype_hist
+
+*************************************************************************************/
+
+-------------------------------------------
+-- Mi_temp.Mia_personen_samenvatting
+-------------------------------------------
+
+CREATE TABLE Mi_temp.Mia_personen_samenvatting
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Aantal_verschillende_rollen INTEGER,
+       Aantal_personen INTEGER,
+       Rol_oms_MIN VARCHAR(29) CHARACTER SET UNICODE NOT CASESPECIFIC,
+       Rol_oms_MAX VARCHAR(29) CHARACTER SET UNICODE NOT CASESPECIFIC,
+       Aantal_Belanghebbenden INTEGER,
+       Aantal_Bestuurders INTEGER,
+       Aantal_Overige_bestuurders INTEGER,
+       Aantal_Ondernemers INTEGER,
+       Aantal_Eigenaren INTEGER,
+       Aantal_Commanditaire_vennoten INTEGER,
+       Aantal_Vennoten INTEGER,
+       Aantal_Stille_venoten INTEGER,
+       Aantal_Maten INTEGER,
+       Aantal_Aansprakelijke_personen_BNVio INTEGER,
+       Aantal_Aansprakelijke_personen_IV INTEGER,
+       Aantal_Particuliere_deelnemers INTEGER,
+       Aantal_particuliere_klanten INTEGER,
+       Aantal_bediening_Retail INTEGER,
+       Aantal_bediening_Private INTEGER,
+       Aantal_nationaliteit_Nederland INTEGER,
+       Aantal_nationaliteit_Buitenland INTEGER,
+       Aantal_vrouwen INTEGER,
+       Aantal_mannen INTEGER
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+INSERT INTO Mi_temp.Mia_personen_samenvatting
+SELECT A.Klant_nr,
+       A.Maand_nr,
+       COUNT(DISTINCT B.Rol_code) AS Aantal_verschillende_rollen,
+       COUNT(DISTINCT B.Persoon_Bc_naam||B.Persoon_Bc_geboorte_datum) AS Aantal_personen,
+       MIN(B.Rol_oms) AS Rol_oms_MIN,
+       MAX(B.Rol_oms) AS Rol_oms_MAX,
+       SUM(CASE WHEN B.Rol_oms = 'Uiteindelijk belanghebbende'                    THEN 1 ELSE 0 END) AS Aantal_Belanghebbenden,
+       SUM(CASE WHEN B.Rol_oms = 'Bestuurder'                                     THEN 1 ELSE 0 END) AS Aantal_Bestuurders,
+       SUM(CASE WHEN B.Rol_oms = 'Overig bestuurder'                              THEN 1 ELSE 0 END) AS Aantal_Overige_bestuurders,
+       SUM(CASE WHEN B.Rol_oms = 'Ondernemer (OenO)'                              THEN 1 ELSE 0 END) AS Aantal_Ondernemers,
+       SUM(CASE WHEN B.Rol_oms = 'Eigenaar'                                       THEN 1 ELSE 0 END) AS Aantal_Eigenaren,
+       SUM(CASE WHEN B.Rol_oms = 'Vennoot (CV)'                                   THEN 1 ELSE 0 END) AS Aantal_Commanditaire_vennoten,
+       SUM(CASE WHEN B.Rol_oms = 'Vennoot (VOF)'                                  THEN 1 ELSE 0 END) AS Aantal_Vennoten,
+       SUM(CASE WHEN B.Rol_oms = 'Stille Vennoot'                                 THEN 1 ELSE 0 END) AS Aantal_Stille_venoten,
+       SUM(CASE WHEN B.Rol_oms = 'Maat'                                           THEN 1 ELSE 0 END) AS Aantal_Maten,
+       SUM(CASE WHEN B.Rol_oms = 'Aansprakelijk persoon (BV of NV in oprichting)' THEN 1 ELSE 0 END) AS Aantal_Aansprakelijke_personen_BNVio,
+       SUM(CASE WHEN B.Rol_oms = 'Aansprakelijk persoon (Informele Vereniging)'   THEN 1 ELSE 0 END) AS Aantal_Aansprakelijke_personen_IV,
+       SUM(CASE WHEN B.Rol_oms = 'Particuliere deelnemer'                         THEN 1 ELSE 0 END) AS Aantal_Particuliere_deelnemers,
+       COUNT(DISTINCT COALESCE(B.Fhh_nr, B.Pcnl_nr)) AS Aantal_particuliere_klanten,
+       SUM(CASE WHEN B.Persoon_Bc_businessline = 'Retail'  THEN 1 ELSE 0 END) AS Aantal_bediening_Retail,
+       SUM(CASE WHEN B.Persoon_Bc_businessline = 'PB'  THEN 1 ELSE 0 END) AS Aantal_bediening_Private,
+       SUM(CASE WHEN B.Persoon_Bc_Nationaliteit =  'NL' THEN 1 ELSE 0 END) AS Aantal_nationaliteit_Nederland,
+       SUM(CASE WHEN B.Persoon_Bc_Nationaliteit NE 'NL' THEN 1 ELSE 0 END) AS Aantal_nationaliteit_Buitenland,
+       SUM(CASE WHEN B.Persoon_Bc_Geslacht = 'V' THEN 1 ELSE 0 END) AS Aantal_vrouwen,
+       SUM(CASE WHEN B.Persoon_Bc_Geslacht = 'M' THEN 1 ELSE 0 END) AS Aantal_mannen
+  FROM Mi_temp.Mia_week A
+  LEFT OUTER JOIN Mi_temp.Mia_gekoppelde_personen B
+    ON A.Klant_nr = B.Klant_nr AND A.Maand_nr = B.Maand_nr
+ GROUP BY 1, 2;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-------------------------------------------
+-- Mi_temp.Bedrijfstype_basis_001
+-------------------------------------------
+
+CREATE TABLE Mi_temp.Bedrijfstype_basis_001
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Aantal_rechtsvormen INTEGER,
+       Rechtsvorm_oms_MIN VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Rechtsvorm_oms_MAX VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Eenmanszaak_ind BYTEINT,
+       Maatschap_ind BYTEINT,
+       VOF_ind BYTEINT,
+       CV_ind BYTEINT,
+       BV_ind BYTEINT,
+       NV_ind BYTEINT,
+       NVBVio_ind BYTEINT,
+       Cooperatie_ind BYTEINT,
+       Waarborgmaatschap_ind BYTEINT,
+       Vereniging_ind BYTEINT,
+       Stichting_ind BYTEINT,
+       Kerkgenootschap_ind BYTEINT,
+       Buitenland_ind BYTEINT,
+       Anders_ind BYTEINT,
+       Onbekend_ind BYTEINT
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+INSERT INTO Mi_temp.Bedrijfstype_basis_001
+SELECT A.Klant_nr,
+       A.Maand_nr,
+       COUNT(DISTINCT C.Rechtsvorm_nr) AS Aantal_rechtsvormen,
+       MIN(C.Rechtsvorm_oms) AS Rechtsvorm_oms_MIN,
+       MAX(C.Rechtsvorm_oms) AS Rechtsvorm_oms_MAX,
+       MAX(CASE WHEN C.Rechtsvorm_oms = 'Eenmanszaak'       THEN 1 ELSE 0 END) AS Eenmanszaak_ind,
+       MAX(CASE WHEN C.Rechtsvorm_oms = 'Maatschap'         THEN 1 ELSE 0 END) AS Maatschap_ind,
+       MAX(CASE WHEN C.Rechtsvorm_oms = 'VOF'               THEN 1 ELSE 0 END) AS VOF_ind,
+       MAX(CASE WHEN C.Rechtsvorm_oms = 'CV'                THEN 1 ELSE 0 END) AS CV_ind,
+       MAX(CASE WHEN C.Rechtsvorm_oms = 'BV'                THEN 1 ELSE 0 END) AS BV_ind,
+       MAX(CASE WHEN C.Rechtsvorm_oms = 'NV'                THEN 1 ELSE 0 END) AS NV_ind,
+       MAX(CASE WHEN C.Rechtsvorm_oms = 'NV of BV io'       THEN 1 ELSE 0 END) AS NVBVio_ind,
+       MAX(CASE WHEN C.Rechtsvorm_oms = 'Cooperatie'        THEN 1 ELSE 0 END) AS Cooperatie_ind,
+       MAX(CASE WHEN C.Rechtsvorm_oms = 'Waarborgmaatschap' THEN 1 ELSE 0 END) AS Waarborgmaatschap_ind,
+       MAX(CASE WHEN C.Rechtsvorm_oms = 'Vereniging'        THEN 1 ELSE 0 END) AS Vereniging_ind,
+       MAX(CASE WHEN C.Rechtsvorm_oms = 'Stichting'         THEN 1 ELSE 0 END) AS Stichting_ind,
+       MAX(CASE WHEN C.Rechtsvorm_oms = 'Kerkgenootschap'   THEN 1 ELSE 0 END) AS Kerkgenootschap_ind,
+       MAX(CASE WHEN C.Rechtsvorm_oms = 'Buitenland'        THEN 1 ELSE 0 END) AS Buitenland_ind,
+       MAX(CASE WHEN C.Rechtsvorm_oms = 'Anders'            THEN 1 ELSE 0 END) AS Anders_ind,
+       MAX(CASE WHEN C.Rechtsvorm_oms = 'Onbekend'          THEN 1 ELSE 0 END) AS Onbekend_ind
+  FROM Mi_temp.Mia_week A
+  LEFT OUTER JOIN Mi_sas_aa_mb_c_mb.Mia_businesscontacts_NEW B
+    ON A.Klant_nr = B.Klant_nr
+  LEFT OUTER JOIN Mi_sas_aa_mb_c_mb.Bedrijfstype_rechtsvorm C
+    ON B.Bc_verschijningsvorm = C.Verschijningsvorm
+  LEFT OUTER JOIN Mi_temp.Mia_businesscontacts_KvK X
+    ON B.Business_contact_nr = X.Business_contact_nr
+-- Alleen zakelijke klanten met geldige KvK inschrijving
+ WHERE X.Geldige_KvK_inschrijving = 1
+ GROUP BY 1, 2;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-------------------------------------------
+-- Mi_temp.Bedrijfstype_BC_hulp
+-------------------------------------------
+
+CREATE TABLE Mi_temp.Bedrijfstype_BC_hulp
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Bc_KvK_nr CHAR(12) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Geldige_KvK_inschrijving BYTEINT,
+       KvK_nr CHAR(12) CHARACTER SET LATIN NOT CASESPECIFIC,
+       N_werkzame_personen_tot INTEGER,
+       N_werkzame_personen_full INTEGER,
+       Economisch_actief BYTEINT,
+       KvK_Onderneming_ind BYTEINT,
+       KvK_Vereniging_ind BYTEINT,
+       KvK_Stichting_ind BYTEINT,
+       KvK_Kerkgenoot_ind BYTEINT,
+       KvK_rechtsvorm CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr, Bc_KvK_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+INSERT INTO Mi_temp.Bedrijfstype_BC_hulp
+SELECT A.Klant_nr,
+       A.Maand_nr,
+       A.Bc_kvk_nr,
+       A.Geldige_KvK_inschrijving,
+       A.KvK_nr,
+       A.N_werkzame_personen_tot,
+       A.N_werkzame_personen_full,
+       A.Economisch_actief,
+       A.KvK_Onderneming_ind,
+       A.KvK_Vereniging_ind,
+       A.KvK_Stichting_ind,
+       A.KvK_Kerkgenoot_ind,
+       A.KvK_rechtsvorm
+  FROM Mi_temp.Mia_businesscontacts_KvK A
+ WHERE Geldige_KvK_inschrijving = 1;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-------------------------------------------
+-- Mi_temp.Bedrijfstype_hulp
+-------------------------------------------
+
+CREATE TABLE Mi_temp.Bedrijfstype_hulp
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Geldige_KvK_inschrijving BYTEINT,
+       N_geldige_KvK_inschrijvingen INTEGER,
+       N_werkzame_personen_tot INTEGER,
+       N_werkzame_personen_full INTEGER,
+       Economisch_actief BYTEINT,
+       KvK_Onderneming_ind BYTEINT,
+       KvK_Vereniging_ind BYTEINT,
+       KvK_Stichting_ind BYTEINT,
+       KvK_Kerkgenoot_ind BYTEINT,
+       Min_KvK_rechtsvorm CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Max_KvK_rechtsvorm CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC
+      )
+UNIQUE PRIMARY INDEX ( Klant_nr, Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+INSERT INTO Mi_temp.Bedrijfstype_hulp
+SELECT A.Klant_nr,
+       A.Maand_nr,
+       MAX(ZEROIFNULL(B.Geldige_KvK_inschrijving)) AS Geldige_KvK_inschrijving_ind,
+       SUM(ZEROIFNULL(B.Geldige_KvK_inschrijving)) AS N_geldige_KvK_inschrijvingen,
+       SUM(B.N_werkzame_personen_tot) AS N_werkzame_personen_tot,
+       SUM(B.N_werkzame_personen_full) AS N_werkzame_personen_full,
+       MAX(ZEROIFNULL(B.Economisch_actief)) AS Economisch_actief,
+       MAX(ZEROIFNULL(B.KvK_Onderneming_ind)) AS KvK_Onderneming_ind,
+       MAX(ZEROIFNULL(B.KvK_Vereniging_ind)) AS KvK_Vereniging_ind,
+       MAX(ZEROIFNULL(B.KvK_Stichting_ind)) AS KvK_Stichting_ind,
+       MAX(ZEROIFNULL(B.KvK_Kerkgenoot_ind)) AS KvK_Kerkgenoot_ind,
+       MIN(B.KvK_rechtsvorm),
+       MAX(B.KvK_rechtsvorm)
+  FROM Mi_temp.Mia_week A
+  LEFT OUTER JOIN Mi_temp.Bedrijfstype_BC_hulp B
+    ON A.Klant_nr = B.Klant_nr
+ GROUP BY 1, 2;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-------------------------------------------
+-- Mi_temp.Bedrijfstype_basis_002
+-------------------------------------------
+
+CREATE TABLE Mi_temp.Bedrijfstype_basis_002
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Aantal_rechtsvormen INTEGER,
+       Rechtsvorm_oms_MIN VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Rechtsvorm_oms_MAX VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Eenmanszaak_ind BYTEINT,
+       Maatschap_ind BYTEINT,
+       VOF_ind BYTEINT,
+       CV_ind BYTEINT,
+       BV_ind BYTEINT,
+       NV_ind BYTEINT,
+       NVBVio_ind BYTEINT,
+       Cooperatie_ind BYTEINT,
+       Waarborgmaatschap_ind BYTEINT,
+       Vereniging_ind BYTEINT,
+       Stichting_ind BYTEINT,
+       Kerkgenootschap_ind BYTEINT,
+       Buitenland_ind BYTEINT,
+       Anders_ind BYTEINT,
+       Onbekend_ind BYTEINT,
+
+       Geldige_KvK_inschrijving BYTEINT,
+       N_geldige_KvK_inschrijvingen INTEGER,
+       N_werkzame_personen_tot INTEGER,
+       KvK_klasse_werknemers VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+       N_werkzame_personen_full INTEGER,
+       Economisch_actief BYTEINT,
+       KvK_Onderneming_ind BYTEINT,
+       KvK_Vereniging_ind BYTEINT,
+       KvK_Stichting_ind BYTEINT,
+       KvK_Kerkgenoot_ind BYTEINT,
+       Min_KvK_rechtsvorm CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Max_KvK_rechtsvorm CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Levensfase VARCHAR(16) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Omzet_inkomend DECIMAL(18,0),
+       Aantal_verschillende_rollen INTEGER,
+       Aantal_personen INTEGER,
+       Rol_oms_MIN VARCHAR(29) CHARACTER SET UNICODE NOT CASESPECIFIC
+      )
+UNIQUE PRIMARY INDEX( Klant_nr, Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+INSERT INTO Mi_temp.Bedrijfstype_basis_002
+SELECT A.Klant_nr,
+       A.Maand_nr,
+       ZEROIFNULL(B.Aantal_rechtsvormen),
+       B.Rechtsvorm_oms_MIN,
+       B.Rechtsvorm_oms_MAX,
+       ZEROIFNULL(B.Eenmanszaak_ind),
+       ZEROIFNULL(B.Maatschap_ind),
+       ZEROIFNULL(B.VOF_ind),
+       ZEROIFNULL(B.CV_ind),
+       ZEROIFNULL(B.BV_ind),
+       ZEROIFNULL(B.NV_ind),
+       ZEROIFNULL(B.NVBVio_ind),
+       ZEROIFNULL(B.Cooperatie_ind),
+       ZEROIFNULL(B.Waarborgmaatschap_ind),
+       ZEROIFNULL(B.Vereniging_ind),
+       ZEROIFNULL(B.Stichting_ind),
+       ZEROIFNULL(B.Kerkgenootschap_ind),
+       ZEROIFNULL(B.Buitenland_ind),
+       ZEROIFNULL(B.Anders_ind),
+       ZEROIFNULL(B.Onbekend_ind),
+
+       C.Geldige_KvK_inschrijving,
+       C.N_geldige_KvK_inschrijvingen,
+       C.N_werkzame_personen_tot,
+       CASE
+       WHEN D.N_werknemers_klasse_oms IS NULL THEN 'Onbekend'
+       ELSE D.N_werknemers_klasse_oms
+       END AS KvK_klasse_werknemers,
+       C.N_werkzame_personen_full,
+       C.Economisch_actief,
+       C.KvK_Onderneming_ind,
+       C.KvK_Vereniging_ind,
+       C.KvK_Stichting_ind,
+       C.KvK_Kerkgenoot_ind,
+       C.Min_KvK_rechtsvorm,
+       C.Max_KvK_rechtsvorm,
+       CASE
+       WHEN A.Aantal_jaren_bestaan < 3             THEN 'Startup'
+       WHEN A.Aantal_jaren_bestaan BETWEEN 3 AND 4 THEN 'Jong bedrijf'
+       WHEN A.Aantal_jaren_bestaan >= 5            THEN 'Bestaand bedrijf'
+       ELSE NULL
+       END AS Levensfase,
+       A.Omzet_inkomend,
+       E.Aantal_verschillende_rollen,
+       E.Aantal_personen,
+       E.Rol_oms_MIN
+
+  FROM Mi_temp.Mia_week A
+  LEFT OUTER JOIN Mi_temp.Bedrijfstype_basis_001 B
+    ON A.Klant_nr = B.Klant_nr AND A.Maand_nr = B.Maand_nr
+  LEFT OUTER JOIN Mi_temp.Bedrijfstype_hulp C
+    ON A.Klant_nr = C.Klant_nr AND A.Maand_nr = C.Maand_nr
+	LEFT OUTER JOIN Mi_vm_nzdb.vN_werknemers_klasse D
+    ON C.Maand_nr = D.Maand_nr
+   AND C.N_werkzame_personen_tot BETWEEN D.N_werknemers_klasse_min AND D.N_werknemers_klasse_max
+  LEFT OUTER JOIN Mi_temp.Mia_personen_samenvatting E
+    ON A.Klant_nr = E.Klant_nr AND A.Maand_nr = E.Maand_nr;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-------------------------------------------
+-- Mi_temp.Bedrijfstype_basis_003
+-------------------------------------------
+
+CREATE TABLE Mi_temp.Bedrijfstype_basis_003
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Aantal_rechtsvormen INTEGER,
+       Rechtsvorm_oms_MIN VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Rechtsvorm_oms_MAX VARCHAR(255) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Eenmanszaak_ind BYTEINT,
+       Maatschap_ind BYTEINT,
+       VOF_ind BYTEINT,
+       CV_ind BYTEINT,
+       BV_ind BYTEINT,
+       NV_ind BYTEINT,
+       NVBVio_ind BYTEINT,
+       Cooperatie_ind BYTEINT,
+       Waarborgmaatschap_ind BYTEINT,
+       Vereniging_ind BYTEINT,
+       Stichting_ind BYTEINT,
+       Kerkgenootschap_ind BYTEINT,
+       Buitenland_ind BYTEINT,
+       Anders_ind BYTEINT,
+       Onbekend_ind BYTEINT,
+       Geldige_KvK_inschrijving BYTEINT,
+       N_geldige_KvK_inschrijvingen INTEGER,
+       N_werkzame_personen_tot INTEGER,
+       KvK_klasse_werknemers VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+       N_werkzame_personen_full INTEGER,
+       Economisch_actief BYTEINT,
+       KvK_Onderneming_ind BYTEINT,
+       KvK_Vereniging_ind BYTEINT,
+       KvK_Stichting_ind BYTEINT,
+       KvK_Kerkgenoot_ind BYTEINT,
+       Min_KvK_rechtsvorm CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Max_KvK_rechtsvorm CHAR(2) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Levensfase VARCHAR(16) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Omzet_inkomend DECIMAL(18,0),
+       Aantal_verschillende_rollen INTEGER,
+       Aantal_personen INTEGER,
+       Rol_oms_MIN VARCHAR(29) CHARACTER SET UNICODE NOT CASESPECIFIC,
+
+       Bedrijfstype_detail VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bedrijfstype VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC
+      )
+UNIQUE PRIMARY INDEX( Klant_nr, Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+INSERT INTO Mi_temp.Bedrijfstype_basis_003
+SELECT A.*,
+       CASE
+       WHEN A.Aantal_rechtsvormen = 0 THEN 'Niet te bepalen'
+       WHEN A.Aantal_verschillende_rollen = 0 THEN 'Niet te bepalen'
+       WHEN A.Aantal_personen = 0 THEN 'Niet te bepalen'
+       WHEN A.N_werkzame_personen_tot IS NULL THEN 'Niet te bepalen'
+
+       WHEN A.Aantal_rechtsvormen > 1 THEN 'Complex'
+       WHEN A.Rechtsvorm_oms_MIN IN ('Anders', 'Onbekend') THEN 'Overig'
+       WHEN A.Rechtsvorm_oms_MIN IN ('NV', 'NV of BV io', 'Cooperatie', 'Waarborgmaatschap', 'Vereniging', 'Stichting', 'Kerkgenootschap', 'Buitenland') THEN A.Rechtsvorm_oms_MIN
+
+       WHEN A.Rechtsvorm_oms_MIN IN ('Eenmanszaak') AND A.Aantal_verschillende_rollen = 1 AND A.Aantal_personen = 1  AND A.Rol_oms_MIN = 'Eigenaar'      AND A.Aantal_personen >= A.N_werkzame_personen_tot THEN 'ZZP-EZ'
+       WHEN A.Rechtsvorm_oms_MIN IN ('Eenmanszaak') AND A.Aantal_verschillende_rollen = 1 AND A.Aantal_personen = 1  AND A.Rol_oms_MIN = 'Eigenaar'      AND A.Aantal_personen < A.N_werkzame_personen_tot  THEN 'ZMP-EZ'
+       WHEN A.Rechtsvorm_oms_MIN IN ('Maatschap')   AND A.Aantal_verschillende_rollen = 1 AND A.Aantal_personen >= 1 AND A.Rol_oms_MIN = 'Maat'          AND A.Aantal_personen >= A.N_werkzame_personen_tot THEN 'ZZP-MTS'
+       WHEN A.Rechtsvorm_oms_MIN IN ('Maatschap')   AND A.Aantal_verschillende_rollen = 1 AND A.Aantal_personen >= 1 AND A.Rol_oms_MIN = 'Maat'          AND A.Aantal_personen < A.N_werkzame_personen_tot  THEN 'ZMP-MTS'
+       WHEN A.Rechtsvorm_oms_MIN IN ('VOF')         AND A.Aantal_verschillende_rollen = 1 AND A.Aantal_personen >= 1 AND A.Rol_oms_MIN = 'Vennoot (VOF)' AND A.Aantal_personen >= A.N_werkzame_personen_tot THEN 'ZZP-VOF'
+       WHEN A.Rechtsvorm_oms_MIN IN ('VOF')         AND A.Aantal_verschillende_rollen = 1 AND A.Aantal_personen >= 1 AND A.Rol_oms_MIN = 'Vennoot (VOF)' AND A.Aantal_personen < A.N_werkzame_personen_tot  THEN 'ZMP-VOF'
+       WHEN A.Rechtsvorm_oms_MIN IN ('CV')          AND A.Aantal_verschillende_rollen = 1 AND A.Aantal_personen >= 1 AND A.Rol_oms_MIN = 'Vennoot (CV)'  AND A.Aantal_personen >= A.N_werkzame_personen_tot THEN 'ZZP-CV'
+       WHEN A.Rechtsvorm_oms_MIN IN ('CV')          AND A.Aantal_verschillende_rollen = 1 AND A.Aantal_personen >= 1 AND A.Rol_oms_MIN = 'Vennoot (CV)'  AND A.Aantal_personen < A.N_werkzame_personen_tot  THEN 'ZMP-CV'
+       WHEN A.Rechtsvorm_oms_MIN IN ('Eenmanszaak', 'Maatschap', 'VOF', 'CV') THEN A.Rechtsvorm_oms_MIN
+
+       WHEN A.Rechtsvorm_oms_MIN IN ('BV') AND A.Aantal_verschillende_rollen >= 1 AND A.Aantal_personen = 1 AND A.Rol_oms_MIN = 'Uiteindelijk belanghebbende' AND A.N_werkzame_personen_tot = 1 AND A.Omzet_inkomend < 150000 THEN 'ZZP-BV*'
+       WHEN A.Rechtsvorm_oms_MIN IN ('BV') AND A.Aantal_verschillende_rollen >= 1 AND A.Aantal_personen = 1 AND A.Rol_oms_MIN = 'Bestuurder'                  AND A.N_werkzame_personen_tot = 1 AND A.Omzet_inkomend < 150000 THEN 'ZZP-BV*'
+       WHEN A.Rechtsvorm_oms_MIN IN ('BV') AND A.Aantal_verschillende_rollen >= 1 AND A.Aantal_personen = 1 AND A.Rol_oms_MIN = 'Uiteindelijk belanghebbende' AND A.N_werkzame_personen_tot > 1 AND A.Omzet_inkomend < 150000 THEN 'ZMP-BV*'
+       WHEN A.Rechtsvorm_oms_MIN IN ('BV') AND A.Aantal_verschillende_rollen >= 1 AND A.Aantal_personen = 1 AND A.Rol_oms_MIN = 'Bestuurder'                  AND A.N_werkzame_personen_tot > 1 AND A.Omzet_inkomend < 150000 THEN 'ZMP-BV*'
+       WHEN A.Rechtsvorm_oms_MIN IN ('BV') AND A.Aantal_verschillende_rollen >= 1 AND A.Aantal_personen = 1 AND A.Rol_oms_MIN = 'Uiteindelijk belanghebbende' AND A.N_werkzame_personen_tot = 0                               THEN 'BV0'
+       WHEN A.Rechtsvorm_oms_MIN IN ('BV') AND A.Aantal_verschillende_rollen >= 1 AND A.Aantal_personen = 1 AND A.Rol_oms_MIN = 'Bestuurder'                  AND A.N_werkzame_personen_tot = 0                               THEN 'BV0'
+
+       WHEN A.Rechtsvorm_oms_MIN IN ('BV') AND A.N_werkzame_personen_tot = 0 THEN 'BV0'
+       WHEN A.Rechtsvorm_oms_MIN IN ('BV') THEN A.Rechtsvorm_oms_MIN
+       ELSE 'Ntb'
+       END AS Bedrijfstype_detail,
+       CASE
+       WHEN Bedrijfstype_detail = 'Complex' THEN 'Overig'
+       WHEN SUBSTR(Bedrijfstype_detail, 1, 3) = 'ZZP' THEN 'ZZP'
+       WHEN SUBSTR(Bedrijfstype_detail, 1, 3) = 'ZMP' THEN 'ZMP'
+       WHEN SUBSTR(Bedrijfstype_detail, 1, 2) = 'BV' THEN 'BV'
+       ELSE Bedrijfstype_detail
+       END AS Bedrijfstype
+
+  FROM Mi_temp.Bedrijfstype_basis_002 A;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+-------------------------------------------
+-- Mi_temp.Mia_bedrijfstype
+-------------------------------------------
+
+CREATE TABLE Mi_temp.Mia_bedrijfstype
+      (
+       Klant_nr INTEGER,
+       Maand_nr INTEGER,
+       Geldige_KvK_inschrijving BYTEINT,
+       N_geldige_KvK_inschrijvingen INTEGER,
+       N_werkzame_personen_tot INTEGER,
+       KvK_klasse_werknemers VARCHAR(20) CHARACTER SET LATIN NOT CASESPECIFIC,
+       N_werkzame_personen_full INTEGER,
+       Economisch_actief BYTEINT,
+       Levensfase VARCHAR(16) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bedrijfstype_detail VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC,
+       Bedrijfstype VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC
+      )
+UNIQUE PRIMARY INDEX( Klant_nr, Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+INSERT INTO Mi_temp.Mia_bedrijfstype
+SELECT A.Klant_nr,
+       A.Maand_nr,
+       A.Geldige_KvK_inschrijving,
+       A.N_geldige_KvK_inschrijvingen,
+       A.N_werkzame_personen_tot,
+       A.KvK_klasse_werknemers,
+       A.N_werkzame_personen_full,
+       A.Economisch_actief,
+       A.Levensfase,
+       A.Bedrijfstype_detail,
+       A.Bedrijfstype
+  FROM Mi_temp.Bedrijfstype_basis_003 A;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* kopie */
+CREATE TABLE Mi_sas_aa_mb_c_mb.Mia_bedrijfstype_hist_NEW AS Mi_sas_aa_mb_c_mb.Mia_bedrijfstype_hist WITH DATA
+UNIQUE PRIMARY INDEX( Klant_nr, Maand_nr );
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_sas_aa_mb_c_mb.Mia_bedrijfstype_hist_NEW COLUMN (PARTITION);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* WEEKCIJFERS VERWIJDEREN INDIEN MAAND REEDS AANWEZIG VAN VORIGE WEEK */
+DELETE FROM Mi_sas_aa_mb_c_mb.Mia_bedrijfstype_hist_NEW A
+ WHERE A.Maand_nr = (SELECT X.Maand_nr FROM Mi_temp.Mia_bedrijfstype X GROUP BY 1);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COLLECT STATISTICS Mi_sas_aa_mb_c_mb.Mia_bedrijfstype_hist_NEW COLUMN (PARTITION);
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+/* WEEKCIJFERS TOEVOEGEN */
+
+INSERT INTO Mi_sas_aa_mb_c_mb.Mia_bedrijfstype_hist_NEW
+SELECT A.*
+  FROM Mi_temp.Mia_bedrijfstype A;
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+COMMENT ON Mi_sas_aa_mb_c_mb.Mia_bedrijfstype_hist_NEW AS 'NIET VERWIJDEREN - Afdelingstabel in schedulescript';
+
+.IF ERRORCODE <> 0 THEN .GOTO EOP
+
+
+
+/*Blockcompressie uit*/
+SET QUERY_BAND = 'BLOCKCOMPRESSION=NO;' FOR SESSION;

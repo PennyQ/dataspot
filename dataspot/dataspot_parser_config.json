@@ -1,8 +1,24 @@
-{
-  "td_parser": {
-    "sql_parser": {
-      "create": [["create table", "as"], [";"]],
-      "insert": [["insert into", "select"], [";"]]
+{ "sql": {
+    "teradata": {
+      "create": {
+        "create": [["create table"], [";"]]
+      },
+      "insert": {
+        "insert_into": [["insert into"], [";"]]
+      },
+      "view": {
+         "replace": [["replace view"], [";"]],
+        "create_view": [["create view"], [";"]],
+        "create_replace_view": [["create or replace view"], [";"]]
+      },
+      "update": {
+        "update": [["update"], [";"]]
+        },
+      "delete": {
+        "delete": [["delete from"], [";"]]
+      }
     }
   }
 }
+
+// update en view moeten op een andere manier => ook set & create/replace gebruiken
