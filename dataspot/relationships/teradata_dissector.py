@@ -1,5 +1,5 @@
 from dataspot.relationships.sql_dissector import SQLDissector
-from dataspot.parser.teradata_parser import TeradataParser
+from dataspot.parser_old.teradata_parser import TeradataParser
 
 
 class TeradataDissector(SQLDissector):

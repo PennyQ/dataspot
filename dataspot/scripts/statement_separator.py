@@ -26,12 +26,12 @@ class StatementSeparator:
         new_object = ""
         for line in lines:
             if re.search('[a-zA-Z]', line) and status == 0:
-                new_object += line
+                new_object += line.lower()
                 status = 1
             elif status == 1 and line.find(statement_end) == -1:
-                new_object += line
+                new_object += line.lower()
             elif status == 1 and line.find(statement_end) != -1:
-                new_object += line
+                new_object += line.lower()
                 status = 0
                 script_objects.append(new_object)
                 new_object = ""

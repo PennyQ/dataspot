@@ -1,4 +1,4 @@
-from dataspot.parser.sql.query_parser_old import QueryParser
+from dataspot.parser_old.sql.query_parser_old import QueryParser
 import json
 import copy
 
@@ -80,9 +80,9 @@ print(3,result_view)
 #
 
 # # print(1, lines[0], 2)
-# result = SQLParser(lines=lines).execute(parser=td_parser)
+# result = SQLParser(lines=lines).execute(parser_old=td_parser)
 # script.close()
-# # result = SQLParser.list_creates(script=script, parser=td_parser)
+# # result = SQLParser.list_creates(script=script, parser_old=td_parser)
 # # print(result)
 # for i in result:
 #     print(i)

@@ -1,5 +1,7 @@
 from dataspot.scripts.script_cleaner import ScriptCleaner
 from dataspot.scripts.statement_separator import StatementSeparator
+from dataspot.parsers.object_source_parser import ObjectSourceParser
+import sys
 
 
 class StatementGrouper:
@@ -17,7 +19,6 @@ class StatementGrouper:
         for statement in statements:
             result = StatementGrouper.find_create_as(statement=statement)
             if result:
-                print(statement)
                 creates_as.append(statement)
         return creates_as
 
@@ -34,7 +35,6 @@ class StatementGrouper:
         for statement in statements:
             result = StatementGrouper.find_create(statement=statement)
             if result:
-                print(statement)
                 creates.append(statement)
         return creates
 
@@ -115,4 +115,10 @@ new_lines = ScriptCleaner().clean(lines=lines, comment_mapping=comment_mapping, 
 statements = StatementSeparator.separate(lines=new_lines, statement_end=';')
 # for statement in statements:
 #     print(statement)
-result = StatementGrouper.group_creates(statements=statements)
+limit = 10000
+sys.setrecursionlimit(limit)
+result = StatementGrouper.group_creates_as(statements=statements)
+for i in result:
+    print(i)
+    result = ObjectSourceParser(statement=i).parse()
+    print(result)

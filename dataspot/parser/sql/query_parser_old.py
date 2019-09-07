@@ -32,12 +32,12 @@ class QueryParser:
                 # next line
                 if self.__count == 1 and self.__start_found == 1 and self.__query.find(parser[0][self.__count]) == -1:
                     # If the second item is in the next line then we know that we have the type of statement we are
-                    # after in this parser.
+                    # after in this parser_old.
                     if self.__lines[0].lower().find(parser[0][self.__count]) != -1:
                         self.__query += self.__lines[0].lower()
                         self.__count += 1
                         self.__lines.pop(0)
-                    # If the second item is not in the parser then we don't have a "create table ... as" statement.
+                    # If the second item is not in the parser_old then we don't have a "create table ... as" statement.
                     # In that case, we need to reset our configurations
                     else:
                         self.__query = ""

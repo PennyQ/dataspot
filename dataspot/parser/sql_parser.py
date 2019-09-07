@@ -1,4 +1,4 @@
-from dataspot.parser.sql.query_parser import QueryParser
+from dataspot.parser_old.sql.query_parser import QueryParser
 import json
 import copy
 
@@ -24,7 +24,7 @@ class SQLParser:
 
     def set_parser(self, dialect):
         """
-        The SQL-parser is standard loaded with a sql subset of the original parser configuration file. Since, every
+        The SQL-parser_old is standard loaded with a sql subset of the original parser_old configuration file. Since, every
         SQL-dialect follows the same interface, only a dialect specification is needed to narrow down the subset.
 
         :param dialect: Set the specific sql-dialect required for parsing the script
