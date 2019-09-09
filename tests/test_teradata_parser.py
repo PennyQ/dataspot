@@ -1,5 +1,5 @@
 import unittest
-from dataspot.parser.teradata_parser import TeradataParser
+from dataspot.parser_old.teradata_parser import TeradataParser
 
 
 class TestTeradataParser(unittest.TestCase):

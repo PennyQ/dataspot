@@ -14,6 +14,20 @@ class ScriptCleaner:
     Lastly, ScriptCleaner gets rid of unnecessary empty lines by just putting one empty line between statements.
     """
 
+    def __init__(self, comment_mapping):
+        """
+
+        :param comment_mapping: A dictionary containing the following keys and values:
+                        * single_line_comment => contains a string value identifying the start of the comment
+                        * multi_line_comment => contains a list, which holds two string values identifying the
+                                                start and end of the comment
+        :type comment_mapping: Dictionary
+        """
+        self.__comment_mapping = comment_mapping
+
+    def get_comment_mapping(self):
+        return self.__comment_mapping
+
     @staticmethod
     def clean_single_line_comments(single_line_comment, lines):
         """
@@ -69,11 +83,10 @@ class ScriptCleaner:
 
         :param multi_line_statement: A list containing the value of the start of the statement at place 0, and the value
                                      of the end of the statement at place 1
-        :type List
+        :type multi_line_statement: List
         :param lines: A list of lines, with each line being defined as a string type
-        :type List
+        :type lines: List
         :return: A list of lines, with each line being defined as a string type
-        :type List
         """
 
         status = 0
@@ -102,9 +115,8 @@ class ScriptCleaner:
         Takes away all unnecessary empty lines, with leaving just one empty line between statements.
 
         :param lines: A list of lines, with each line being defined as a string type
-        :type List
+        :type lines: List
         :return: A list of lines, with each line being defined as a string type
-        :type List
         """
         status = 0
         new_lines = list()
@@ -119,23 +131,19 @@ class ScriptCleaner:
                 status = 0
         return new_lines
 
-    def clean(self, comment_mapping, lines, statements=None):
+    def clean(self, lines, statements=None):
         """
         Cleans the script of (single & multi-line) comments and (optionally) statements, and returns the cleaned script.
 
-        :param comment_mapping: A dictionary containing the following keys and values:
-                                * single_line_comment => contains a string value identifying the start of the comment
-                                * multi_line_comment => contains a list, which holds two string values identifying the
-                                                        start and end of the comment
-        :type Dictionary
         :param lines: A list of lines, with each line being defined as a string type
-        :type List
+        :type lines: List
         :param statements: A list that holds lists with start and end identifiers of statements that needs to be
                            excluded from the script
-        :type List
+        :type statements: List
         :return: A list of lines, with each line being defined as a string type
-        :type List
         """
+
+        comment_mapping = self.get_comment_mapping()
         single_line_comment = comment_mapping['single_line_comment']
         multi_line_comment = comment_mapping['multi_line_comment']
         lines = self.clean_single_line_comments(single_line_comment=single_line_comment, lines=lines)
