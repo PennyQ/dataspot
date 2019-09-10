@@ -1,4 +1,4 @@
-
+from pprint import pprint
 
 class ScriptCleaner:
     """
@@ -91,20 +91,24 @@ class ScriptCleaner:
 
         status = 0
         new_lines = list()
+        new_line = ""
         for line in lines:
             if line.find(multi_line_statement[0]) != -1 and line.find(multi_line_statement[1]) != -1:
-                line = line[0: line.find(multi_line_statement[0])]
+                line = line[: line.find(multi_line_statement[0])]
                 new_lines.append(line)
             elif line.find(multi_line_statement[0]) != -1 and line.find(multi_line_statement[1]) == -1:
                 status = 1
-                line = line[0: line.find(multi_line_statement[0])]
-                new_lines.append(line)
+                new_line += line
+            elif status == 1 and line.find(multi_line_statement[1]) == -1:
+                new_line += line
             elif line.find(multi_line_statement[1]) != -1 and status == 1:
-                line = line[line.find(multi_line_statement[1]) + 2: len(line)]
+                new_line += line
+                new_line_start = new_line[: new_line.find(multi_line_statement[0])]
+                new_line_end = new_line[new_line.find(multi_line_statement[1]) + 2:len(new_line)]
+                line = new_line_start + new_line_end
+                new_line = ""
                 new_lines.append(line)
                 status = 0
-            elif status == 1 and line.find(multi_line_statement[1]) == -1:
-                pass
             else:
                 new_lines.append(line)
         return new_lines
@@ -136,8 +140,21 @@ class ScriptCleaner:
         new_lines = list()
         for line in lines:
             line = line.replace('\n', ' ')
+            line = line.replace('\t', ' ')
+            line = line.rstrip('\n')
             new_lines.append(line)
         return new_lines
+
+    @staticmethod
+    def clean_statements(statements):
+        new_statements = list()
+        for statement in statements:
+            if statement.find(' sel ') != -1:
+                statement = statement.replace(' sel ', ' select ')
+            if statement.find('as(') != -1:
+                statement = statement.replace('as(', ' as (')
+            new_statements.append(statement)
+        return new_statements
 
     def clean(self, lines, statements=None):
         """
@@ -154,8 +171,9 @@ class ScriptCleaner:
         comment_mapping = self.get_comment_mapping()
         single_line_comment = comment_mapping['single_line_comment']
         multi_line_comment = comment_mapping['multi_line_comment']
-        lines = self.clean_single_line_comments(single_line_comment=single_line_comment, lines=lines)
         lines = self.clean_multi_line_statements(multi_line_statement=multi_line_comment, lines=lines)
+        lines = self.clean_single_line_comments(single_line_comment=single_line_comment, lines=lines)
+
         if statements:
             for statement in statements:
                 lines = self.clean_multi_line_statements(multi_line_statement=statement, lines=lines)
@@ -193,7 +211,7 @@ class ScriptCleaner:
 # comment_mapping = dict()
 # comment_mapping['single_line_comment'] = '--'
 # comment_mapping['multi_line_comment'] = ['/*', '*/']
-# new_lines = ScriptCleaner().clean(lines=lines, comment_mapping=comment_mapping, statements=statements)
+# new_lines = ScriptCleaner(comment_mapping=comment_mapping).clean(lines=lines, statements=statements)
 # print(99, new_lines)
 
 # pprint(new_lines)

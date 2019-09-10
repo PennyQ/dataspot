@@ -1,3 +1,5 @@
+from pprint import pprint
+
 
 class StatementGrouper:
     """
@@ -13,6 +15,8 @@ class StatementGrouper:
     """
 
     def __init__(self, statements):
+        # for statement in statements:
+        #     pprint(statement)
         self.__statements = statements
         self.__creates_as = None
         self.__creates = None
@@ -28,7 +32,7 @@ class StatementGrouper:
 
     @staticmethod
     def validate_create_as(statement):
-        if statement.lower().find('create') != -1 and statement.lower().find(' as ') != -1:
+        if statement.lower().find('create table') != -1 and statement.lower().find(' as ') != -1 and statement.lower().find(' from ') != -1:
             return True
         else:
             return False
@@ -44,6 +48,7 @@ class StatementGrouper:
         creates_as = list()
         new_statements = list()
         for statement in statements:
+            # pprint(statement)
             result = StatementGrouper.validate_create_as(statement=statement)
             if result:
                 creates_as.append(statement)
@@ -55,7 +60,7 @@ class StatementGrouper:
 
     @staticmethod
     def validate_create(statement):
-        if statement.lower().find('create') != -1 and statement.lower().find(' as ') == -1:
+        if statement.lower().find('create table') != -1 and statement.lower().find(' as ') == -1:
             return True
         else:
             return False
@@ -82,7 +87,8 @@ class StatementGrouper:
 
     @staticmethod
     def validate_insert_into(statement):
-        if statement.lower().find('insert into') != -1:
+        if statement.lower().find('insert into ') != -1 and statement.lower().find('select ') != -1 and \
+                statement.lower().find('from') != -1:
             return True
         else:
             return False
@@ -98,6 +104,7 @@ class StatementGrouper:
         insert_intos = list()
         new_statements = list()
         for statement in statements:
+            # pprint(statement)
             result = StatementGrouper.validate_insert_into(statement=statement)
             if result:
                 insert_intos.append(statement)
@@ -136,7 +143,7 @@ class StatementGrouper:
 
     @staticmethod
     def validate_update(statement):
-        if statement.lower().find('update') != -1:
+        if statement.lower().find('update ') != -1:
             return True
         else:
             return False

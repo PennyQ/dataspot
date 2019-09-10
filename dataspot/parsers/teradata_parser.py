@@ -4,6 +4,7 @@ from dataspot.scripts.script_cleaner import ScriptCleaner
 from dataspot.scripts.script_separator import ScriptSeparator
 from dataspot.scripts.statement_grouper import StatementGrouper
 from dataspot.parsers.parser import Parser
+from pprint import pprint
 
 
 class TeradataParser(Parser):
@@ -98,7 +99,9 @@ class TeradataParser(Parser):
         statements = list()
         for script in scripts:
             found_statements = ScriptSeparator.separate(script=script, statement_end=statement_end)
+            found_statements = ScriptCleaner.clean_statements(statements=found_statements)
             statements = statements + found_statements
+
         self.set_statements(statements)
 
     def set_grouped_statements(self, grouped_statements):
@@ -189,11 +192,12 @@ parser_mapping['comment_mapping'] = comment_mapping
 parser_mapping['statement_end'] = ';'
 parser_mapping['source_keys'] = ['from', 'join']
 parser_mapping['name_keys'] = dict()
-parser_mapping['name_keys']['insert_into'] = ['insert into', 'select']
-parser_mapping['name_keys']['create_as'] = ['create table', ' as']
+parser_mapping['name_keys']['insert_into'] = ['insert into', ' select ']
+parser_mapping['name_keys']['create_as'] = ['create table', ' as ']
 parser_mapping['unnecessary_statements'] = statements
 
 teradata_parser = TeradataParser(parser_mapping=parser_mapping, scripts=scripts)
 teradata_parser.parse()
 result = teradata_parser.get_relationships()
-print(result)
+for i in result.keys():
+    pprint([i , ':', result[i]])

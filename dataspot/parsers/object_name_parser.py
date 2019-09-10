@@ -1,3 +1,4 @@
+from pprint import pprint
 
 
 class ObjectNameParser:
@@ -5,6 +6,7 @@ class ObjectNameParser:
     @staticmethod
     def parse_object_name(statement, start_key, end_key):
         object_name = None
+        # pprint(statement)
 
         if statement.find(start_key) != -1:
             object_name = statement[statement.find(start_key) + len(start_key):statement.find(end_key)].strip()
