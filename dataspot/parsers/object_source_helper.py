@@ -23,14 +23,14 @@ class ObjectSourceHelper:
         return source
 
     @staticmethod
-    def adjust_statement(source, source_result, find_key, statement):
+    def adjust_statement(source, source_result, source_key, statement):
         if source_result:
             statement = statement[statement.find(source) + len(source):len(statement)]
             source = ObjectSourceHelper.clean_source(source=source)
             return source, statement
         else:
             source = None
-            statement = statement[statement.find(find_key) + len(find_key):len(statement)]
+            statement = statement[statement.find(source_key) + len(source_key):len(statement)]
             return source, statement
 
     @staticmethod
