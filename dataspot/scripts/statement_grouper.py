@@ -1,8 +1,3 @@
-from dataspot.scripts.script_cleaner import ScriptCleaner
-from dataspot.scripts.script_separator import StatementSeparator
-from dataspot.parsers.object_source_parser import ObjectSourceParser
-import sys
-
 
 class StatementGrouper:
     """

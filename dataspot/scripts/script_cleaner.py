@@ -131,6 +131,14 @@ class ScriptCleaner:
                 status = 0
         return new_lines
 
+    @staticmethod
+    def replace_new_lines(lines):
+        new_lines = list()
+        for line in lines:
+            line = line.replace('\n', ' ')
+            new_lines.append(line)
+        return new_lines
+
     def clean(self, lines, statements=None):
         """
         Cleans the script of (single & multi-line) comments and (optionally) statements, and returns the cleaned script.
@@ -152,6 +160,7 @@ class ScriptCleaner:
             for statement in statements:
                 lines = self.clean_multi_line_statements(multi_line_statement=statement, lines=lines)
         lines = self.clean_empty_lines(lines=lines)
+        lines = self.replace_new_lines(lines=lines)
         return lines
 
 # new_lines = ""

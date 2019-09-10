@@ -18,8 +18,8 @@ class TeradataStatementGrouper:
     def get_creates_as(self):
         return self.get_creates_as()
 
-    def set_creates(self, statements):
-        creates = StatementGrouper.group_creates(statements=statements)
+    def set_creates(self,):
+        creates = StatementGrouper().group_creates()
         self.__creates = creates
 
     def get_creates(self):
