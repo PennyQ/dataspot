@@ -1,7 +1,7 @@
-from pprint import pprint
+import abc
 
 
-class StatementGrouper:
+class StatementGrouper(metaclass=abc.ABCMeta):
     """
     StatementGrouper groups statements belonging to the same type of DML/DDL in the same list. This is done via two
     steps:
@@ -14,21 +14,13 @@ class StatementGrouper:
     of DML/DDL.
     """
 
-    def __init__(self, statements):
-        # for statement in statements:
-        #     pprint(statement)
-        self.__statements = statements
-        self.__creates_as = None
-        self.__creates = None
-        self.__deletes = None
-        self.__updates = None
-        self.__insert_intos = None
-
+    @abc.abstractmethod
     def set_statements(self, statements):
-        self.__statements = statements
+        pass
 
+    @abc.abstractmethod
     def get_statements(self):
-        return self.__statements
+        pass
 
     @staticmethod
     def validate_create_as(statement):
@@ -37,26 +29,18 @@ class StatementGrouper:
         else:
             return False
 
-    def set_creates_as(self, creates_as):
-        self.__creates_as = creates_as
-
-    def get_creates_as(self):
-        return self.__creates_as
-
-    def group_creates_as(self):
-        statements = self.get_statements()
+    @staticmethod
+    def teradata_group_creates_as(statements):
         creates_as = list()
         new_statements = list()
         for statement in statements:
-            # pprint(statement)
             result = StatementGrouper.validate_create_as(statement=statement)
             if result:
                 creates_as.append(statement)
             else:
                 new_statements.append(statement)
 
-        self.set_statements(statements=statements)
-        self.set_creates_as(creates_as=creates_as)
+        return new_statements, creates_as
 
     @staticmethod
     def validate_create(statement):
@@ -65,14 +49,8 @@ class StatementGrouper:
         else:
             return False
 
-    def set_creates(self, creates):
-        self.__creates = creates
-
-    def get_creates(self):
-        return self.__creates
-
-    def group_creates(self):
-        statements = self.get_statements()
+    @staticmethod
+    def teradata_group_creates(statements):
         creates = list()
         new_statements = list()
         for statement in statements:
@@ -82,8 +60,7 @@ class StatementGrouper:
             else:
                 new_statements.append(statement)
 
-        self.set_statements(statements=statements)
-        self.set_creates(creates=creates)
+        return new_statements, creates
 
     @staticmethod
     def validate_insert_into(statement):
@@ -93,26 +70,18 @@ class StatementGrouper:
         else:
             return False
 
-    def set_insert_intos(self, insert_intos):
-        self.__insert_intos = insert_intos
-
-    def get_insert_intos(self):
-        return self.__insert_intos
-
-    def group_insert_intos(self):
-        statements = self.get_statements()
+    @staticmethod
+    def teradata_group_insert_intos(statements):
         insert_intos = list()
         new_statements = list()
         for statement in statements:
-            # pprint(statement)
             result = StatementGrouper.validate_insert_into(statement=statement)
             if result:
                 insert_intos.append(statement)
             else:
                 new_statements.append(statement)
 
-        self.set_statements(statements=statements)
-        self.set_insert_intos(insert_intos=insert_intos)
+        return new_statements, insert_intos
 
     @staticmethod
     def validate_delete(statement):
@@ -121,14 +90,8 @@ class StatementGrouper:
         else:
             return False
 
-    def set_deletes(self, deletes):
-        self.__deletes = deletes
-
-    def get_deletes(self):
-        return self.__deletes
-
-    def group_deletes(self):
-        statements = self.get_statements()
+    @staticmethod
+    def teradata_group_deletes(statements):
         deletes = list()
         new_statements = list()
         for statement in statements:
@@ -138,8 +101,7 @@ class StatementGrouper:
             else:
                 new_statements.append(statement)
 
-        self.set_statements(statements=statements)
-        self.set_deletes(deletes=deletes)
+        return new_statements, deletes
 
     @staticmethod
     def validate_update(statement):
@@ -148,14 +110,8 @@ class StatementGrouper:
         else:
             return False
 
-    def set_updates(self, updates):
-        self.__updates = updates
-
-    def get_updates(self):
-        return self.__updates
-
-    def group_updates(self):
-        statements = self.get_statements()
+    @staticmethod
+    def teradata_group_updates(statements):
         updates = list()
         new_statements = list()
         for statement in statements:
@@ -165,17 +121,13 @@ class StatementGrouper:
             else:
                 new_statements.append(statement)
 
-        self.set_statements(statements=statements)
-        self.set_updates(updates=updates)
+        return new_statements, updates
 
+    @abc.abstractmethod
     def group(self):
-        self.group_creates_as()
-        self.group_creates()
-        self.group_insert_intos()
-        self.group_deletes()
-        self.group_updates()
+        pass
 
-#
+
 # script = open('/Users/patrickdehoon/Projecten/prive/dataspot/examples/test.sql')
 # lines = script.readlines()
 # script.close()

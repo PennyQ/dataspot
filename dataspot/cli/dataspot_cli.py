@@ -3,7 +3,7 @@ import os
 import click
 import json
 import six
-import sys
+# import sys
 from pyfiglet import figlet_format
 from termcolor import colored
 from dataspot.scripts.script_grouper import ScriptGrouper
@@ -35,10 +35,10 @@ def cli(config_path, scripts_path,  manual, statistics):
                    Manually added relation should be put in a .txt file, following a dictionary format
     """
 
-    # # The recursions limit is set to 10,000. This is to ensure that there will be no RecursionError while dissecting
-    # # the scripts. Adjustments will be made to the Dissector to ensure a limit is not necessary
-    limit = 10000
-    sys.setrecursionlimit(limit)
+    # # # The recursions limit is set to 10,000. This is to ensure that there will be no RecursionError while dissecting
+    # # # the scripts. Adjustments will be made to the Dissector to ensure a limit is not necessary
+    # limit = 10000
+    # sys.setrecursionlimit(limit)
 
     # A list with the specified locations for input & output will be used by the ScriptsDissector
     scripts = ScriptGrouper.group(scripts_path=scripts_path)

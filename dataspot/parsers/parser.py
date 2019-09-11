@@ -4,7 +4,7 @@ import abc
 class Parser(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
-    def get_parser_mapping(self):
+    def get_parser_config(self):
         pass
 
     @abc.abstractmethod

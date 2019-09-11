@@ -1,0 +1,15 @@
+{
+  "teradata": {
+    "comment_mapping": {
+      "single_line_comment": "--",
+      "multi_line_comment": ["/*", "*/"]
+    },
+    "statement_end": ";",
+    "source_keys": ["from", "join"],
+    "name_keys": {
+      "insert_into": ["insert into", " select "],
+      "create_as": ["create table", " as "]
+    },
+    "unnecessary_statements": [[".IF", "EOP"], ["COMMENT ON", ";"], ["SET QUERY_BAND", ";"], ["COLLECT STAT", ";"]]
+  }
+}
