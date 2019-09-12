@@ -1,4 +1,3 @@
-# from dataspot.relationships.teradata_dissector import TeradataDissector
 from dataspot.parsers.sql.teradata.teradata_parser import TeradataParser
 import json
 
@@ -6,14 +5,13 @@ import json
 class RelationshipsDirector:
 
     @staticmethod
-    def build(scripts):
-        TERADATA_PARSER_LOC = '/Users/patrickdehoon/Projecten/prive/dataspot/dataspot/parser_config.json'
+    def build(scripts, parser_config_path):
 
         relationships = dict()
         for script_type, script_path in scripts.items():
             print(script_type, script_path)
             if script_type == 'TERADATA':
-                parser_config_path = open(TERADATA_PARSER_LOC)
+                parser_config_path = open(parser_config_path)
                 parser_config = json.load(parser_config_path)
                 parser_config_path.close()
                 teradata_parser = TeradataParser(parser_config=parser_config['teradata'], scripts=script_path)

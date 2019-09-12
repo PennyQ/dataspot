@@ -3,10 +3,24 @@ from dataspot.config.configurator import Configurator
 
 class WeightsConfigurator(Configurator):
 
-    def __init__(self):
+    def __init__(self, config, grouped_nodes):
+        self.__config = config
+        self.__grouped_nodes = grouped_nodes
         self.__grouped_weights = None
 
-    def set_config(self, config, grouped_nodes):
+    def set_config(self, config):
+        self.__config = config
+
+    def get_config(self):
+        return self.__config
+
+    def set_grouped_nodes(self, grouped_nodes):
+        self.__grouped_nodes = grouped_nodes
+
+    def get_grouped_nodes(self):
+        return self.__grouped_nodes
+
+    def set_grouped_weights_config(self, config, grouped_nodes):
         grouped_weights = dict()
         weights = list()
 
@@ -56,8 +70,10 @@ class WeightsConfigurator(Configurator):
 
         self.__grouped_weights = grouped_weights
 
-    def get_config(self):
+    def get_grouped_weights_config(self):
         return self.__grouped_weights
 
-    def build(self, config, grouped_nodes):
-        self.set_config(config=config, grouped_nodes=grouped_nodes)
+    def build(self):
+        config = self.get_config()
+        grouped_nodes = self.get_grouped_nodes()
+        self.set_grouped_weights_config(config=config, grouped_nodes=grouped_nodes)

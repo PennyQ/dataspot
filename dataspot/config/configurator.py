@@ -12,5 +12,5 @@ class Configurator(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def build(self, config):
+    def build(self):
         pass

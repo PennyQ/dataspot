@@ -176,11 +176,11 @@ class NetworkBuilder:
         self.__relationships = relationships
         self.set_graph(relationships=relationships)
 
-        nodes_configurator_builder = NodesConfiguratorBuilder()
-        nodes_configurator_builder.build(config=config, relationships=relationships)
+        nodes_configurator_builder = NodesConfiguratorBuilder(config=config, relationships=relationships)
+        nodes_configurator_builder.build()
 
-        network_configurator_builder = NetworkConfiguratorBuilder()
-        network_configurator_builder.build(config=config)
+        network_configurator_builder = NetworkConfiguratorBuilder(config=config)
+        network_configurator_builder.build()
 
         self.set_config(config=config)
         self.set_grouped_colors(nodes_configurator_builder=nodes_configurator_builder)

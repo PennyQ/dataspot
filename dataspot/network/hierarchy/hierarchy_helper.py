@@ -1,5 +1,6 @@
 from copy import deepcopy
 
+
 class HierarchyHelper:
 
     @staticmethod
@@ -40,7 +41,6 @@ class HierarchyHelper:
         for level in y_levels.values():
             if level > max_value:
                 max_value = level
-        print(100, max_value)
         return y_levels
 
     @staticmethod

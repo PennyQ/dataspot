@@ -3,7 +3,6 @@ import os
 import click
 import json
 import six
-# import sys
 from pyfiglet import figlet_format
 from termcolor import colored
 from dataspot.scripts.script_grouper import ScriptGrouper
@@ -26,7 +25,7 @@ from dataspot.relationships.writer.text_file_writer import TextFileWriter
                    'This file needs to follow the JSON convention.')
 def cli(config_path, scripts_path,  manual, statistics):
     """
-    The command line interface (cli_old) guides the user through the set-up of their SQL script analysis.
+    The command line interface guides the user through the set-up of their script analysis.
     :param config_path: The path/filename of the JSON formatted config_old file
     :param scripts_path: The path where the scripts are located
     :param output_path: The path where the results should be stored
@@ -35,50 +34,67 @@ def cli(config_path, scripts_path,  manual, statistics):
                    Manually added relation should be put in a .txt file, following a dictionary format
     """
 
-    # # # The recursions limit is set to 10,000. This is to ensure that there will be no RecursionError while dissecting
-    # # # the scripts. Adjustments will be made to the Dissector to ensure a limit is not necessary
-    # limit = 10000
-    # sys.setrecursionlimit(limit)
+    # The parser configuration must exist in the main folder of Dataspot
+    parser_config_path = os.path.abspath('parser_config.json')
 
-    # A list with the specified locations for input & output will be used by the ScriptsDissector
+    # All scripts are first grouped based on the #Dataspot tag. Error will occur when a script is not tagged or is
+    # tagged with an unsupported type
     scripts = ScriptGrouper.group(scripts_path=scripts_path)
-    relationships = RelationshipsDirector.build(scripts=scripts)
 
+    # The relationships variable is a dictionary containing the object-name as key, and the object-sources represented
+    # in a list, as the key's value
+    relationships = RelationshipsDirector.build(scripts=scripts, parser_config_path=parser_config_path)
+
+    # Dataspot offers the user the possibility to include their own relationships in the network analysis. This should
+    # be a JSON file. An example of the format can be found in the examples directory.
     if manual:
-        manual_relations_path = click.prompt('Please enter the full path to the file containing the manually determined '
+        manual_relations_path = click.prompt('Please enter the full path to the file containing the manually determined'
                                              'relationships',
-                                             default=os.path.join(os.path.abspath('../../'), 'examples/clan_relationships_20190613_092909.json'),
+                                             default=os.path.join(os.path.abspath('../../'),
+                                                                  'examples/manual_relationships_example.json'),
                                              type=click.Path(exists=True))
+        # Open the JSON file from the path entered by the user
         f = open(manual_relations_path)
         manual_relationships = json.load(f)
         f.close()
 
-        additional_relationships = dict()
-        for key,value in manual_relationships["nodes"].items():
-            additional_relationships[key] = value
+        # Dataspot requires the JSON file to start with the key 'nodes'. The values behind the 'nodes' key will be
+        # combined with the relationships found above.
+        additional_relationships = manual_relationships['nodes']
 
         relationships = {**relationships, **additional_relationships}
 
+    # Dataspot offers the user to include specific statistics on their objects. This can be results from other analysis
+    # done on these objects, user statistics, etc. Dataspot combines these statistics with the general configuration
+    # file. This information will be included in the visualization and in the report Dataspot generates. This should
+    # be put in a JSON file. An example of the format can be found in the examples directory.
     if statistics:
-        user_statistics_path = click.prompt('Please enter the full path to the file containing user statistics',
-                                             default=os.path.join(os.path.abspath('../../'), 'examples/user_statistics.json'),
-                                             type=click.Path(exists=True))
+        object_statistics_path = click.prompt('Please enter the full path to the file containing object statistics',
+                                            default=os.path.join(os.path.abspath('../../'),
+                                                                 'examples/object_statistics_example.json'),
+                                            type=click.Path(exists=True))
         f = open(config_path)
         config = json.load(f)
         f.close()
 
-        f = open(user_statistics_path)
+        f = open(object_statistics_path)
         add_config = json.load(f)
         f.close()
 
         config = {**config, **add_config}
 
         text_file_writer = TextFileWriter()
-        config_path = text_file_writer.write(scripts_path=scripts_path, data=config, title='dataspot_config', timestamp=True, extension='json')
+        config_path = text_file_writer.write(scripts_path=scripts_path, data=config, title='dataspot_config',
+                                             timestamp=True, extension='json')
 
+    # All of the relationships Dataspot could find in the scripts will be put in a .txt file. This is convenient for
+    # the user but is also necessary for the execution of the visualization part of Dataspot. This requires the
+    # relationships to be present in a separate file.
     text_file_writer = TextFileWriter()
-    relationships_path = text_file_writer.write(scripts_path=scripts_path, data=relationships, title='dataspot_', timestamp=True, extension='txt')
+    relationships_path = text_file_writer.write(scripts_path=scripts_path, data=relationships, title='dataspot_',
+                                                timestamp=True, extension='txt')
 
+    # A command line call to the Dataspot server, which launces the network analysis/visualization
     path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'server/dataspot_server.py'))
     command = "python " + path + " -c " + config_path + " -r " + relationships_path
 

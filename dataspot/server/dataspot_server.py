@@ -8,8 +8,8 @@ from bokeh.server.server import Server
 
 
 def modify_doc(doc):
-    #   Parse arguments in order to retrieve the path of the config_old file and the locations of the
-    #   relationships to be displayed
+    # Parse arguments in order to retrieve the path of the config_old file and the locations of the relationships to be
+    # displayed
     argv = sys.argv[1:]
     config_path, relationships_path = parse_args(argv=argv)
 
@@ -17,6 +17,7 @@ def modify_doc(doc):
     f = open(config_path)
     config = json.load(f)
     f.close()
+
     f = open(relationships_path)
     relationships = json.load(f)
     f.close()

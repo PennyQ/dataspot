@@ -3,10 +3,24 @@ from dataspot.config.configurator import Configurator
 
 class NodesConfigurator(Configurator):
 
-    def __init__(self):
+    def __init__(self, config, relationships):
+        self.__config = config
+        self.__relationships = relationships
         self.__grouped_nodes = None
 
-    def set_config(self, config, relationships):
+    def set_config(self, config):
+        self.__config = config
+
+    def get_config(self):
+        return self.__config
+
+    def set_relationships(self, relationships):
+        self.__relationships = relationships
+
+    def get_relationships(self):
+        return self.__relationships
+
+    def set_grouped_nodes_config(self, config, relationships):
         grouped_nodes = dict()
         to_exclude = list()
 
@@ -49,8 +63,10 @@ class NodesConfigurator(Configurator):
 
         self.__grouped_nodes = grouped_nodes
 
-    def get_config(self):
+    def get_grouped_nodes_config(self):
         return self.__grouped_nodes
 
-    def build(self, config, relationships):
-        self.set_config(config=config, relationships=relationships)
+    def build(self):
+        config = self.get_config()
+        relationships = self.get_relationships()
+        self.set_grouped_nodes_config(config=config, relationships=relationships)
