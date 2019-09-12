@@ -3,6 +3,7 @@ from dataspot.config.configurator import Configurator
 
 class GoldenSourcesConfigurator(Configurator):
     """
+    IDEA: Put the explanation for a concept here
 
     """
 

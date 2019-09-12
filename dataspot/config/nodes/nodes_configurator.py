@@ -31,8 +31,8 @@ class NodesConfigurator(Configurator):
         # 5: Every nodes is added to the 'to_exclude' list. This is to prevent the nodes to be added twice to the
         #    group dictionary. This could theoretically happen with the args key.
         # 6: When the args key is found, iterate over the values in the list
-        # 7: First, iterate over the relationships keys. Every key is a nodes. When a nodes is matched with the arg, and
-        #    it is not found in the 'to_exclude' list, it will be appended to the found_nodes list.
+        # 7: First, iterate over the relationships keys. Every key is a nodes. When a nodes is matched with the arg,
+        #    and it is not found in the 'to_exclude' list, it will be appended to the found_nodes list.
         # 8: Second, do the same thing for the nodes in the values list, as was done in step 7.
         # 9: Filter out duplicate nodes via running the set command on the found_nodes list.
         # 10: Add the table to the grouped_nodes dict for the respective key

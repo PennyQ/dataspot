@@ -8,7 +8,7 @@ class LegendConfigurator(Configurator):
 
     def __init__(self, config):
         self.__config = config
-        self.__grouped_legend_names = None
+        self.__grouped_legend = None
 
     def set_config(self, config):
         self.__config = config
@@ -16,8 +16,8 @@ class LegendConfigurator(Configurator):
     def get_config(self):
         return self.__config
 
-    def set_grouped_legend_names_config(self, config):
-        grouped_legend_names = dict()
+    def set_grouped_legend_config(self, config):
+        grouped_legend = dict()
 
         # 1: Iterate over each group key
         # 2: Per group key, iterate over the config_old keys
@@ -27,13 +27,13 @@ class LegendConfigurator(Configurator):
             for configs in config['relationships_config']['groups'][group]:
                 for config_key, config_value in configs.items():
                     if config_key == 'legend_name':
-                        grouped_legend_names[group] = config_value
+                        grouped_legend[group] = config_value
 
-        self.__grouped_legend_names = grouped_legend_names
+        self.__grouped_legend = grouped_legend
 
-    def get_grouped_legend_names_config(self):
-        return self.__grouped_legend_names
+    def get_grouped_legend_config(self):
+        return self.__grouped_legend
 
     def build(self):
         config = self.get_config()
-        self.set_grouped_legend_names_config(config=config)
+        self.set_grouped_legend_config(config=config)

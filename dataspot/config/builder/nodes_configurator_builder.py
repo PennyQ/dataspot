@@ -7,7 +7,13 @@ from dataspot.config.nodes.nodes_configurator import NodesConfigurator
 
 class NodesConfiguratorBuilder(Configurator):
     """
+    The NodesConfiguratorBuilder sets the basic characteristics of a node. The following characteristics of a node will
+    be determined in this class:
 
+    [*] To which group it belongs (grouped_nodes)
+    [*] Which color the node should take (grouped_colors)
+    [*] Which legend name is connected to it (grouped_legend)
+    [*] What the weight of the node is (grouped_weights)
     """
 
     def __init__(self, config, relationships):
@@ -33,7 +39,7 @@ class NodesConfiguratorBuilder(Configurator):
     def set_grouped_nodes(self, config, relationships):
         nodes_configurator = NodesConfigurator(config=config, relationships=relationships)
         nodes_configurator.build()
-        self.__grouped_nodes = nodes_configurator.get_config()
+        self.__grouped_nodes = nodes_configurator.get_grouped_nodes_config()
 
     def get_grouped_nodes(self):
         return self.__grouped_nodes
@@ -41,7 +47,7 @@ class NodesConfiguratorBuilder(Configurator):
     def set_grouped_colors(self, config):
         node_colors_configurator = ColorsConfigurator(config=config)
         node_colors_configurator.build()
-        self.__grouped_colors = node_colors_configurator.get_config()
+        self.__grouped_colors = node_colors_configurator.get_grouped_colors_config()
 
     def get_grouped_colors(self):
         return self.__grouped_colors
@@ -49,7 +55,7 @@ class NodesConfiguratorBuilder(Configurator):
     def set_grouped_legend(self, config):
         node_legend_configurator = LegendConfigurator(config=config)
         node_legend_configurator.build()
-        self.__grouped_legend = node_legend_configurator.get_config()
+        self.__grouped_legend = node_legend_configurator.get_grouped_legend_config()
 
     def get_grouped_legend(self):
         return self.__grouped_legend
@@ -57,7 +63,7 @@ class NodesConfiguratorBuilder(Configurator):
     def set_grouped_weights(self, config, grouped_nodes):
         node_weights_configurator = WeightsConfigurator(config=config, grouped_nodes=grouped_nodes)
         node_weights_configurator.build()
-        self.__grouped_weights = node_weights_configurator.get_config()
+        self.__grouped_weights = node_weights_configurator.get_grouped_weights_config()
 
     def get_grouped_weights(self):
         return self.__grouped_weights

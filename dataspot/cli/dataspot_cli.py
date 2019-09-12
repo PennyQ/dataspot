@@ -26,12 +26,21 @@ from dataspot.relationships.writer.text_file_writer import TextFileWriter
 def cli(config_path, scripts_path,  manual, statistics):
     """
     The command line interface guides the user through the set-up of their script analysis.
+
     :param config_path: The path/filename of the JSON formatted config_old file
+    :type config_path: str
     :param scripts_path: The path where the scripts are located
-    :param output_path: The path where the results should be stored
-    :param visualization: A boolean operator indicating if the user wants to have the output visualized
-    :param manual: A boolean operator indicating if the user wants to add relation which were defined manually.
-                   Manually added relation should be put in a .txt file, following a dictionary format
+    :type scripts_path: str
+    :param manual: A boolean operator indicating if the user wants to add relationships which were defined manually.
+                   Manually added relationships should be put in a .txt file, following a dictionary format
+    :type manual: bool
+    :param statistics: A boolean operator indicating if the user wants to add object statistics from a JSON file.
+    :type statistics: bool
+
+    If statistics are chosen, the following parameter needs to be filled in:
+        :param object_statistics_path: The path where the statistics are located
+        :type object_statistics_path: str
+
     """
 
     # The parser configuration must exist in the main folder of Dataspot
@@ -53,6 +62,7 @@ def cli(config_path, scripts_path,  manual, statistics):
                                              default=os.path.join(os.path.abspath('../../'),
                                                                   'examples/manual_relationships_example.json'),
                                              type=click.Path(exists=True))
+
         # Open the JSON file from the path entered by the user
         f = open(manual_relations_path)
         manual_relationships = json.load(f)
@@ -73,6 +83,7 @@ def cli(config_path, scripts_path,  manual, statistics):
                                             default=os.path.join(os.path.abspath('../../'),
                                                                  'examples/object_statistics_example.json'),
                                             type=click.Path(exists=True))
+
         f = open(config_path)
         config = json.load(f)
         f.close()
