@@ -4,11 +4,29 @@ import time
 
 
 class TextFileWriter:
+    """
+
+    """
 
     def __init__(self):
         pass
 
     def write(self, scripts_path, data, title, timestamp, extension):
+        """
+
+        :param scripts_path:
+        :type scripts_path:
+        :param data:
+        :type data:
+        :param title:
+        :type title:
+        :param timestamp:
+        :type timestamp:
+        :param extension:
+        :type extension:
+        :return:
+        :rtype:
+        """
         if timestamp:
             timestr = time.strftime("%Y%m%d_%H%M%S")
             relationships_file = title + timestr + '.' + extension

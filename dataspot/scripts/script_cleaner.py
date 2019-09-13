@@ -138,6 +138,10 @@ class ScriptCleaner(metaclass=abc.ABCMeta):
 
     @staticmethod
     def teradata_clean_statements(statements):
+        """
+        :param statements:
+        :return:
+        """
         new_statements = list()
         for statement in statements:
             if statement.find(' sel ') != -1:

@@ -24,6 +24,11 @@ class StatementGrouper(metaclass=abc.ABCMeta):
 
     @staticmethod
     def validate_create_as(statement):
+        """
+
+        :param statement:
+        :return:
+        """
         if statement.lower().find('create table') != -1 and statement.lower().find(' as ') != -1 and statement.lower().find(' from ') != -1:
             return True
         else:
@@ -31,6 +36,11 @@ class StatementGrouper(metaclass=abc.ABCMeta):
 
     @staticmethod
     def teradata_group_creates_as(statements):
+        """
+        EXPLANATION
+        :param statements:
+        :return:
+        """
         creates_as = list()
         new_statements = list()
         for statement in statements:
@@ -44,6 +54,12 @@ class StatementGrouper(metaclass=abc.ABCMeta):
 
     @staticmethod
     def validate_create(statement):
+        """
+        EXPLANATION
+
+        :param statement:
+        :return:
+        """
         if statement.lower().find('create table') != -1 and statement.lower().find(' as ') == -1:
             return True
         else:
@@ -51,6 +67,12 @@ class StatementGrouper(metaclass=abc.ABCMeta):
 
     @staticmethod
     def teradata_group_creates(statements):
+        """
+        EXPLANATION
+
+        :param statements:
+        :return:
+        """
         creates = list()
         new_statements = list()
         for statement in statements:
@@ -64,6 +86,12 @@ class StatementGrouper(metaclass=abc.ABCMeta):
 
     @staticmethod
     def validate_insert_into(statement):
+        """
+        EXPLANATION
+
+        :param statement:
+        :return:
+        """
         if statement.lower().find('insert into ') != -1 and statement.lower().find('select ') != -1 and \
                 statement.lower().find('from') != -1:
             return True
@@ -72,6 +100,12 @@ class StatementGrouper(metaclass=abc.ABCMeta):
 
     @staticmethod
     def teradata_group_insert_intos(statements):
+        """
+        EXPLANATION
+
+        :param statements:
+        :return:
+        """
         insert_intos = list()
         new_statements = list()
         for statement in statements:
@@ -85,6 +119,12 @@ class StatementGrouper(metaclass=abc.ABCMeta):
 
     @staticmethod
     def validate_delete(statement):
+        """
+        EXPLANATION
+
+        :param statement:
+        :return:
+        """
         if statement.lower().find('delete') != -1:
             return True
         else:
@@ -92,6 +132,12 @@ class StatementGrouper(metaclass=abc.ABCMeta):
 
     @staticmethod
     def teradata_group_deletes(statements):
+        """
+        EXPLANATION
+
+        :param statements:
+        :return:
+        """
         deletes = list()
         new_statements = list()
         for statement in statements:
@@ -105,6 +151,12 @@ class StatementGrouper(metaclass=abc.ABCMeta):
 
     @staticmethod
     def validate_update(statement):
+        """
+        EXPLANATION
+
+        :param statement:
+        :return:
+        """
         if statement.lower().find('update ') != -1:
             return True
         else:
@@ -112,6 +164,12 @@ class StatementGrouper(metaclass=abc.ABCMeta):
 
     @staticmethod
     def teradata_group_updates(statements):
+        """
+        EXPLANATION
+
+        :param statements:
+        :return:
+        """
         updates = list()
         new_statements = list()
         for statement in statements:
@@ -126,40 +184,3 @@ class StatementGrouper(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def group(self):
         pass
-
-
-# script = open('/Users/patrickdehoon/Projecten/prive/dataspot/examples/test.sql')
-# lines = script.readlines()
-# script.close()
-# statements = list()
-# statement_1 = list()
-# statement_1.append('.IF')
-# statement_1.append('EOP')
-# statements.append(statement_1)
-# statement_2 = list()
-# statement_2.append('COMMENT ON')
-# statement_2.append(';')
-# statements.append(statement_2)
-# statement_3 = list()
-# statement_3.append('SET QUERY_BAND')
-# statement_3.append(';')
-# statements.append(statement_3)
-# statement_3 = list()
-# statement_3.append('COLLECT STAT')
-# statement_3.append(';')
-# statements.append(statement_3)
-#
-# comment_mapping = dict()
-# comment_mapping['single_line_comment'] = '--'
-# comment_mapping['multi_line_comment'] = ['/*', '*/']
-# new_lines = ScriptCleaner().clean(lines=lines, comment_mapping=comment_mapping, statements=statements)
-# statements = StatementSeparator.separate(lines=new_lines, statement_end=';')
-# # for statement in statements:
-# #     print(statement)
-# limit = 10000
-# sys.setrecursionlimit(limit)
-# result = StatementGrouper.group_creates_as(statements=statements)
-# for i in result:
-#     # print(i)
-#     result = ObjectSourceParser(statement=i).parse()
-#     # print(result)

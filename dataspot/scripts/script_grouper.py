@@ -3,11 +3,13 @@ import os
 
 class ScriptGrouper:
 
-    def __init__(self):
-        pass
-
     @staticmethod
     def validate(script):
+        """
+        EXPLANATION
+        :param script:
+        :return:
+        """
         SUPPORTED_TYPES = ["TERADATA"]
 
         f = open(script)
@@ -25,6 +27,12 @@ class ScriptGrouper:
 
     @staticmethod
     def group(scripts_path):
+        """
+        EXPLANATION
+
+        :param scripts_path:
+        :return:
+        """
         scripts = list()
         grouped_scripts = dict()
 

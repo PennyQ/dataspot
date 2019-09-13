@@ -17,6 +17,10 @@ class TeradataScriptCleaner(ScriptCleaner):
         self.__comment_mapping = comment_mapping
 
     def get_comment_mapping(self):
+        """
+        :return:
+        :rtype:
+        """
         return self.__comment_mapping
 
     def clean(self, lines, statements=None):

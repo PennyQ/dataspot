@@ -206,7 +206,8 @@ class NetworkBuilder:
         self.set_x_range(network_configurator_builder=network_configurator_builder)
         self.set_y_range(network_configurator_builder=network_configurator_builder)
         self.set_golden_sources(network_configurator_builder=network_configurator_builder)
-        self.set_axis(x_range=self.__x_range, y_range=self.__y_range, relationships=relationships, nodes=self.__nodes, force=force)
+        self.set_axis(x_range=self.__x_range, y_range=self.__y_range, relationships=relationships, nodes=self.__nodes,
+                      force=force)
         self.set_lay_out(graph_renderer=self.__graph_renderer, axis=self.__axis)
 
         self.set_plot_width(network_configurator_builder=network_configurator_builder)

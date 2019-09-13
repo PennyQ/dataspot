@@ -18,7 +18,7 @@ class NetworkConfiguratorBuilder(Configurator):
     [*] Y-range
     [*] Node-size-config (Interval based configuration setting the possible sizes a node can take, score-based)
     [*] Golden Sources (Golden Sources are the absolute root of your network analysis. These objects are often the main
-        starting points of your analysis.)
+        starting points of conducting your analysis.)
     """
 
     def __init__(self, config):

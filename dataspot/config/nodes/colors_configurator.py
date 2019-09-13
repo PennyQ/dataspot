@@ -47,14 +47,8 @@ class ColorsConfigurator(Configurator):
         grouped_colors = dict()
 
         for group in config['relationships_config']['groups'].keys():
-            if 'color' in config['relationships_config']['groups'][group].keys():
+            if 'color' in config['relationships_config']['groups'][group]:
                 grouped_colors[group] = config['relationships_config']['groups'][group]['color']
-
-        # for group in config['relationships_config']['groups'].keys():
-        #     for configs in config['relationships_config']['groups'][group]:
-        #         for config_key, config_value in configs.items():
-        #             if config_key == 'color':
-        #                 grouped_colors[group] = config_value
 
         self.__grouped_colors = grouped_colors
 
@@ -70,3 +64,9 @@ class ColorsConfigurator(Configurator):
         """
         config = self.get_config()
         self.set_grouped_colors_config(config=config)
+
+# for group in config['relationships_config']['groups'].keys():
+#     for configs in config['relationships_config']['groups'][group]:
+#         for config_key, config_value in configs.items():
+#             if config_key == 'color':
+#                 grouped_colors[group] = config_value

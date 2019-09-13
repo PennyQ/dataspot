@@ -56,7 +56,7 @@ class YRangeConfigurator(Configurator):
         #     if not isinstance(config['network_config'][3]['y_range'][value], int):
         #         raise TypeError("The value of the y-range extreme with should be of an integer type")
 
-        y_range = config['network_config'][2]['y_range']
+        y_range = config['network_config'][3]['y_range']
         self.__y_range = y_range
 
     def get_y_range_config(self):

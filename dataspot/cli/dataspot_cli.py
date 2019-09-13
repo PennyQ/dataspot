@@ -44,7 +44,7 @@ def cli(config_path, scripts_path,  manual, statistics):
     """
 
     # The parser configuration must exist in the main folder of Dataspot
-    parser_config_path = os.path.abspath('parser_config.json')
+    parser_config_path = os.path.abspath('../parser_config.json')
 
     # All scripts are first grouped based on the #Dataspot tag. Error will occur when a script is not tagged or is
     # tagged with an unsupported type
