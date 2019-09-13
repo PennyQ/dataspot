@@ -2,6 +2,9 @@ import abc
 
 
 class Configurator(metaclass=abc.ABCMeta):
+    """
+
+    """
 
     @abc.abstractmethod
     def set_config(self, config):

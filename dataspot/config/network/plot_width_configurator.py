@@ -50,16 +50,22 @@ class PlotWidthConfigurator(Configurator):
         if 'plot_width' not in config['network_config'][0].keys():
             raise KeyError("The plot width configuration is not present in the correct location")
         
-        if not isinstance(config['network_config'][0]['plot_width'], int):
-            raise TypeError("The value of the plot with should be of an integer type")
+        # if not isinstance(config['network_config'][0]['plot_width'], int):
+        #     raise TypeError("The value of the plot with should be of an integer type")
 
         plot_width = config['network_config'][0]['plot_width']
 
         self.__plot_width = plot_width
 
     def get_plot_width_config(self):
+        """
+        :return:
+        :rtype: int
+        """
         return self.__plot_width
 
     def build(self):
+        """
+        """
         config = self.get_config()
         self.set_plot_width_config(config=config)

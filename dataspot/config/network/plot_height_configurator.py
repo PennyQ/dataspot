@@ -47,8 +47,8 @@ class PlotHeightConfigurator(Configurator):
         if 'plot_height' not in config['network_config'][1].keys():
             raise KeyError("The plot height configuration is not present in the correct location")
 
-        if not isinstance(config['network_config'][1]['plot_height'], int):
-            raise TypeError("The value of the plot with should be of an integer type")
+        # if not isinstance(config['network_config'][1]['plot_height'], int):
+        #     raise TypeError("The value of the plot with should be of an integer type")
 
         plot_height = config['network_config'][1]['plot_height']
 

@@ -37,7 +37,7 @@ def cli(config_path, scripts_path,  manual, statistics):
     :param statistics: A boolean operator indicating if the user wants to add object statistics from a JSON file.
     :type statistics: bool
 
-    If statistics are chosen, the following parameter needs to be filled in:
+    If statistics are chosen to be included, the following parameter needs to be filled in:
         :param object_statistics_path: The path where the statistics are located
         :type object_statistics_path: str
 
@@ -135,3 +135,10 @@ if __name__ == "__main__":
     main()
     cli()
 
+# TODO: Build in a config check. This should be a function that is called when using the cli. This function check the
+#  Dataspot config file. When checked and approved, the check value should be passed (a simple 0/1 should do). Every
+#  config component has a default check param of 0. When the check param is passed and this is 1, the checks in the
+#  functions do not need to be completed anymore, which saves building time.
+
+# TODO: Rebuild Dataspot config file so that all of it is based on dicts, with only values can be a list,
+#  integer, string or dict (except for the groups).

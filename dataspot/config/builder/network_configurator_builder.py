@@ -51,7 +51,7 @@ class NetworkConfiguratorBuilder(Configurator):
 
     def get_config(self):
         """
-        :return: The config parameter is a dictionary containing all of the Dataspot basic configurations. An
+        :return: The Dataspot config is a dictionary containing all of the Dataspot basic configurations. An
                  example of the basic structure can be found in examples/dataspot_config_example.json
         :rtype: dict
         """
@@ -180,7 +180,7 @@ class NetworkConfiguratorBuilder(Configurator):
 
     def get_golden_sources(self):
         """
-        :return: A list containing all of the golden sources of the network graph
+        :return: A list containing all of the golden sources of the network graph.
         :rtype: list
         """
         return self.__golden_sources

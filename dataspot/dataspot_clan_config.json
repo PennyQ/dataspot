@@ -441,8 +441,8 @@
       }
     },
     {
-      "golden_sources": [
-      "bcdb", "kvk", "bo", "mcp", "ah","t0328_party_contract","a0102_rechtsvorm","t0400_party_bo","a0302_tir_herkomst","commercial_business_contact","grover", "loyalty_contr_admin", "debetcard", "contract_interface", "stand_by_service", "combi_contract", "sbt", "voice_response", "creditcard_ics", "ib_contract", "siebel", "eb_contract", "ft", "twk", "crc", "bsk", "acbs", "hypotheek", "aav", "verzekering_polis", "tovf_life",  "tovf_indemnity", "spaza", "vermogenscontract", "effecten_contract", "tefca", "krediet", "spama", "spabs_werkgever", "deposito", "mbb_ref", "mind data layer", "teradatakalender", "packages", "geo", "client (airmiles en beleggen)", "fair", "p&c", "frs", "efco", "ai_constants"      ]
+      "golden_sources":
+      ["bcdb", "kvk", "bo", "mcp", "ah","t0328_party_contract","a0102_rechtsvorm","t0400_party_bo","a0302_tir_herkomst","commercial_business_contact","grover", "loyalty_contr_admin", "debetcard", "contract_interface", "stand_by_service", "combi_contract", "sbt", "voice_response", "creditcard_ics", "ib_contract", "siebel", "eb_contract", "ft", "twk", "crc", "bsk", "acbs", "hypotheek", "aav", "verzekering_polis", "tovf_life",  "tovf_indemnity", "spaza", "vermogenscontract", "effecten_contract", "tefca", "krediet", "spama", "spabs_werkgever", "deposito", "mbb_ref", "mind data layer", "teradatakalender", "packages", "geo", "client (airmiles en beleggen)", "fair", "p&c", "frs", "efco", "ai_constants"]
     }
   ],
   "button_config": {
