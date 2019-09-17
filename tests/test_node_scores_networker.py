@@ -29,9 +29,8 @@ class TestNodeScoresNetworker(unittest.TestCase):
         self.__golden_sources = ["golden_source.example_table_a", "golden_source.example_table_b"]
 
     def test_root_score(self):
-        test = NodeCalculator.calculate_levels(golden_sources=self.__golden_sources,
-                                                                             nodes=self.__nodes,
-                                                                             relationships=self.__relationships)
+        test = NodeCalculator.new_calculate_root_scores(golden_sources=self.__golden_sources, nodes=self.__nodes,
+                                                        relationships=self.__relationships, grouped_weights=self.__grouped_weights)
 
     def test_usage_score(self):
         pass

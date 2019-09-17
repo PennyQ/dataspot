@@ -124,60 +124,86 @@ class NodeCalculator:
 
     @staticmethod
     def calculate_root_score_remaining_levels(nodes, root_scores, relationships, grouped_weights):
-        to_do_weights = dict()
+        print(99, nodes)
         for node in nodes:
-            extra_weights = list()
             node_weight = 0
             for weight in grouped_weights.keys():
                 if node in grouped_weights[weight]:
                     node_weight = weight
+            print(1, node, node_weight)
 
+            all_present = 1
             for source in relationships[node]:
-                if source in nodes:
-                    extra_weights.append(source)
-            for extra_weight in extra_weights:
-                # check_level += 1
-                for source in relationships[extra_weight]:
-                    if source in nodes and source not in extra_weights:
-                        extra_weights.append(source)
+                if source not in root_scores:
+                    all_present = 0
 
-            if check_level in to_do_levels:
-                to_do_levels[check_level].append(node)
+            if all_present == 1:
+                for source in relationships[node]:
+                    node_weight += root_scores[source]
             else:
-                to_do_levels[check_level] = [node]
+                nodes.append(node)
+
+
+            #
+            # for source in relationships[node]:
+            #     extra_weights.append(source)
+            #
+            # for extra_weight in extra_weights:
+            #     for weight in grouped_weights.keys():
+            #         if node in grouped_weights[weight]:
+            #             node_weight += weight
+            #
+            #     if extra_weight in relationships:
+            #         for source in relationships[extra_weight]:
+            #             if source in nodes and source not in extra_weights:
+            #                 extra_weights.append(source)
+
+            root_scores[node] = node_weight
+
+        """
+        EXAMPLE:
+        
+        Scores:
+        Root Score:
+        
+        test_db_1.example_table_a: 31
+        test_db_1.example_table_b: 18
+        test_db_2.example_table_a: 11
+        test_db_2.example_table_b: 16
+        test_db_2.example_table_c: 2
+        test_db_3.example_table_a: 3
+        test_db_3.example_table_b: 3
+        test_db_3.example_table_c: 3 
+        test_db_4.example_table_b: 12
+        test_db_4.example_table_c: 4
+        test_db_4.example_table_d: 4
+
+        
+        """
+
         return root_scores
 
     @staticmethod
     def new_calculate_root_scores(nodes, golden_sources, relationships, grouped_weights):
-        # Levels are needed to calculate the right root score. This is the case because you need to determine,
-        # which direction you need to go. Golden sources have the level 0 indicator, thus only having their own
-        # value as its root score.
         root_scores = dict()
+        root_scores, nodes = NodeCalculator.calculate_root_score_level_0(golden_sources=golden_sources, nodes=nodes,
+                                                                         root_scores=root_scores,
+                                                                         grouped_weights=grouped_weights)
 
-        calculated_nodes = dict()
-        # A golden source only has it's own weight as root score
-        for source in golden_sources:
-            for weight in grouped_weights.keys():
-                if source in grouped_weights[weight]:
-                    score = weight
-                    calculated_nodes[source] = score
+        root_scores, nodes = NodeCalculator.calculate_root_score_level_1(golden_sources=golden_sources, nodes=nodes,
+                                                                         root_scores=root_scores,
+                                                                         grouped_weights=grouped_weights,
+                                                                         relationships=relationships)
 
-        to_do_nodes = nodes
+        root_scores, nodes = NodeCalculator.calculate_root_score_level_2(nodes=nodes, root_scores=root_scores,
+                                                                         grouped_weights=grouped_weights,
+                                                                         relationships=relationships)
 
-        for node in calculated_nodes.keys():
-            to_do_nodes.remove(node)
-
-        for node in to_do_nodes:
-            # When a node is not present as a key in relationships, it means that it is not based on another object,
-            # and thus only has its own value
-            if node not in relationships.keys():
-                for weight in grouped_weights.keys():
-                    if node in grouped_weights[weight]:
-                        score = weight
-                        calculated_nodes[node] = score
-                        to_do_nodes.remove(node)
-
-        return calculated_nodes
+        root_scores = NodeCalculator.calculate_root_score_remaining_levels(nodes=nodes, root_scores=root_scores,
+                                                                                  grouped_weights=grouped_weights,
+                                                                                  relationships=relationships)
+        pprint(root_scores)
+        return root_scores
 
     @staticmethod
     def undouble_list(list_objects):
