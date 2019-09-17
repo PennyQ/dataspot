@@ -11,19 +11,23 @@ from dataspot.relationships.writer.text_file_writer import TextFileWriter
 
 
 @click.command()
-@click.option('--scripts_path', default=os.path.join(os.path.abspath('../../'), 'examples/clan/scripts'),
+@click.option('--scripts_path', default=os.path.join(os.path.abspath('../../'), 'examples/scripts'),
               prompt='Please enter the location of the directory that contains the scripts',
               type=click.Path(exists=True), help='Enter the full path of the directory where the scripts are stored')
-@click.option('--config_path', default=os.path.join(os.path.abspath('../'),'dataspot_clan_config.json'),
+@click.option('--config_path', default=os.path.join(os.path.abspath('../'),'dataspot_config.json'),
               prompt='Please enter the path to the configuration file (JSON)', type=click.Path(exists=True),
+              help='Enter the full path of the configuration file, which is in a JSON format.')
+@click.option('--results_path', default=os.path.join(os.path.abspath('../../'),'examples/results'),
+              prompt='Please enter the path of the location where the results can be placed',
+              type=click.Path(exists=True),
               help='Enter the full path of the configuration file, which is in a JSON format.')
 @click.option('--manual/--no_manual', default=True, prompt='Do you want to add a prepared dictionary?',
               help='Dataspot offers the possibility to include manually prepared relations. '
                    'This file needs to follow the JSON convention.')
-@click.option('--statistics/--no_statistics', default=False, prompt='Do you want to add user statistics?',
+@click.option('--statistics/--no_statistics', default=True, prompt='Do you want to add user statistics?',
               help='Dataspot offers the possibility to include user statistics. '
                    'This file needs to follow the JSON convention.')
-def cli(config_path, scripts_path,  manual, statistics):
+def cli(scripts_path,  config_path, results_path, manual, statistics):
     """
     The command line interface guides the user through the set-up of their script analysis.
 
@@ -79,7 +83,7 @@ def cli(config_path, scripts_path,  manual, statistics):
     # file. This information will be included in the visualization and in the report Dataspot generates. This should
     # be put in a JSON file. An example of the format can be found in the examples directory.
     if statistics:
-        object_statistics_path = click.prompt('Please enter the full path to the file containing object statistics',
+        object_statistics_path = click.prompt('Please enter the full path to the file containing the object statistics',
                                             default=os.path.join(os.path.abspath('../../'),
                                                                  'examples/object_statistics_example.json'),
                                             type=click.Path(exists=True))
@@ -105,6 +109,7 @@ def cli(config_path, scripts_path,  manual, statistics):
     relationships_path = text_file_writer.write(scripts_path=scripts_path, data=relationships, title='dataspot_',
                                                 timestamp=True, extension='txt')
 
+    # TODO: Results path should be used
     # A command line call to the Dataspot server, which launces the network analysis/visualization
     path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'server/dataspot_server.py'))
     command = "python " + path + " -c " + config_path + " -r " + relationships_path

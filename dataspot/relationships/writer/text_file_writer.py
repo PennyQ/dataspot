@@ -8,10 +8,8 @@ class TextFileWriter:
 
     """
 
-    def __init__(self):
-        pass
-
-    def write(self, scripts_path, data, title, timestamp, extension):
+    @staticmethod
+    def write(scripts_path, data, title, timestamp, extension):
         """
 
         :param scripts_path:

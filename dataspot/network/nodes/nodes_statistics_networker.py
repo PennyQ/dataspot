@@ -7,7 +7,7 @@ class NodeStatisticsNetworker(NodeNetworker):
     def __init__(self):
         self.__node_statistics = None
 
-    def set_node(self, nodes,config, statistic):
+    def set_node(self, nodes, config, statistic):
         node_statistics = list()
 
         for node in nodes:

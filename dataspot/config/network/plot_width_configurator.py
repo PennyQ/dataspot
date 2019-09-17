@@ -41,19 +41,16 @@ class PlotWidthConfigurator(Configurator):
         if not isinstance(config, dict):
             raise TypeError("The configuration that has been provided is not of a dictionary type")
 
-        if not isinstance(config['network_config'], list):
-            raise TypeError("The network configuration should be provided in a list")
+        if not isinstance(config['network_config'], dict):
+            raise TypeError("The network configuration should be provided in a dict")
 
-        if not isinstance(config['network_config'][0], dict):
-            raise TypeError("The plot width configuration is not of a dictionary type")
-        
-        if 'plot_width' not in config['network_config'][0].keys():
-            raise KeyError("The plot width configuration is not present in the correct location")
-        
-        # if not isinstance(config['network_config'][0]['plot_width'], int):
-        #     raise TypeError("The value of the plot with should be of an integer type")
+        if 'plot_width' not in config['network_config'].keys():
+            raise KeyError("The plot width configuration has not been set.")
 
-        plot_width = config['network_config'][0]['plot_width']
+        if not isinstance(config['network_config']['plot_width'], int):
+            raise TypeError("The plot width configuration is not of an integer type")
+
+        plot_width = config['network_config']['plot_width']
 
         self.__plot_width = plot_width
 

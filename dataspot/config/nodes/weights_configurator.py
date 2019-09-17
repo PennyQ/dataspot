@@ -67,26 +67,26 @@ class WeightsConfigurator(Configurator):
         if not isinstance(grouped_nodes, dict):
             raise TypeError("The configuration that has been provided is not of a dictionary type")
 
-        for group, config in config['relationships_config']['groups'].items():
-            if 'weights' in config.keys():
+        for group, config_key in config['relationships_config']['groups'].items():
+            if 'weights' in config_key.keys():
                 for i in config['weights'].keys():
                     weights.append(int(i))
-            elif 'weights_all' in config.keys():
-                weight = config['weights_all']
+            elif 'weights_all' in config_key.keys():
+                weight = config_key['weights_all']
                 weights.append(weight)
 
         for weight in set(weights):
             grouped_weights[weight] = list()
 
-        for group, config in config['relationships_config']['groups'].items():
-            if 'weights' in config.keys():
-                for weight_key, nodes in config['weights'].items():
+        for group, config_key in config['relationships_config']['groups'].items():
+            if 'weights' in config_key.keys():
+                for weight_key, nodes in config_key['weights'].items():
                     for node in nodes:
                         grouped_weights[weight_key].append(node)
-            elif 'weights_all' in config.keys():
+            elif 'weights_all' in config_key.keys():
                 for groups, nodes in grouped_nodes.items():
                     if groups == group:
-                        weight = config['weights_all']
+                        weight = config_key['weights_all']
                         for node in nodes:
                             grouped_weights[weight].append(node)
 
@@ -105,6 +105,7 @@ class WeightsConfigurator(Configurator):
         config = self.get_config()
         grouped_nodes = self.get_grouped_nodes()
         self.set_grouped_weights_config(config=config, grouped_nodes=grouped_nodes)
+        print(self.get_grouped_weights_config())
 
 # # # 1: Iterate over each group key
 # # # 2: Per group key, iterate over the config_old keys

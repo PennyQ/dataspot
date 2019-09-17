@@ -1,0 +1,5 @@
+{
+  "nodes": {
+    "test_db_4.example_table_a": ["golden_source.example_table_a", "golden_source.example_table_b"]
+  }
+}

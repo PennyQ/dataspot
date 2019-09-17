@@ -31,17 +31,14 @@ class VisualHelper:
 
     @staticmethod
     def list_network_nodes(callback_type,relationships, input_node):
-        print(98, input_node, callback_type)
+        nodes = list()
         if callback_type == 'root':
-            print(98, input_node, callback_type)
             nodes = VisualHelper.list_network_nodes_root(relationships=relationships, input_node=input_node)
         elif callback_type == 'usage':
             nodes = VisualHelper.list_network_nodes_usage(relationships=relationships, input_node=input_node)
         else:
             pass
             # TODO: gebruik error
-
-        print(99, nodes)
 
         return nodes
 
@@ -58,8 +55,6 @@ class VisualHelper:
                             for node in root_node_source:
                                 if node not in nodes:
                                     nodes.append(node)
-                             # print(nodes)
-        print(100, nodes)
         return nodes
 
     @staticmethod
@@ -106,6 +101,7 @@ class VisualHelper:
 
     @staticmethod
     def list_network_edges(callback_type, relationships, input_node, nodes, callback_nodes):
+        edges = list()
         if callback_type == 'root':
             edges = VisualHelper.list_edges_root(relationships=relationships, input_node=input_node, root_nodes=nodes,
                                                  callback_nodes=callback_nodes)

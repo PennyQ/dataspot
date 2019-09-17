@@ -38,19 +38,16 @@ class PlotHeightConfigurator(Configurator):
         if not isinstance(config, dict):
             raise TypeError("The configuration that has been provided is not of a dictionary type")
 
-        if not isinstance(config['network_config'], list):
-            raise TypeError("The network configuration should be provided in a list")
+        if not isinstance(config['network_config'], dict):
+            raise TypeError("The network configuration should be provided in a dict")
 
-        if not isinstance(config['network_config'][1], dict):
-            raise TypeError("The plot width configuration is not of a dictionary type")
+        if 'plot_height' not in config['network_config'].keys():
+            raise KeyError("The plot height configuration has not been set.")
 
-        if 'plot_height' not in config['network_config'][1].keys():
-            raise KeyError("The plot height configuration is not present in the correct location")
+        if not isinstance(config['network_config']['plot_height'], int):
+            raise TypeError("The plot height configuration is not of an integer type")
 
-        # if not isinstance(config['network_config'][1]['plot_height'], int):
-        #     raise TypeError("The value of the plot with should be of an integer type")
-
-        plot_height = config['network_config'][1]['plot_height']
+        plot_height = config['network_config']['plot_height']
 
         self.__plot_height = plot_height
 

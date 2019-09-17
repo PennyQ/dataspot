@@ -42,19 +42,16 @@ class GoldenSourcesConfigurator(Configurator):
         if not isinstance(config, dict):
             raise TypeError("The configuration that has been provided is not of a dictionary type")
 
-        if not isinstance(config['network_config'], list):
-            raise TypeError("The network configuration should be provided in a list")
+        if not isinstance(config['network_config'], dict):
+            raise TypeError("The network configuration should be provided in a dict")
 
-        if not isinstance(config['network_config'][0], dict):
-            raise TypeError("The plot width configuration is not of a dictionary type")
+        if 'golden_sources' not in config['network_config'].keys():
+            raise KeyError("The golden_sources configuration has not been set.")
 
-        if 'golden_sources' not in config['network_config'][5].keys():
-            raise KeyError("The plot width configuration is not present in the correct location")
+        if not isinstance(config['network_config']['golden_sources'], list):
+            raise TypeError("The golden sources configuration is not of a list type")
 
-        # if not isinstance(config['network_config'][5]['golden_sources'], int):
-        #     raise TypeError("The value of the plot with should be of an integer type")
-
-        golden_sources_config = config['network_config'][5]['golden_sources']
+        golden_sources_config = config['network_config']['golden_sources']
         self.__golden_sources_config = golden_sources_config
 
     def get_golden_sources_config(self):

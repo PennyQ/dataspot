@@ -17,7 +17,6 @@ class ImportDirector:
             importer.build(path=file_path)
             imported_relationships = importer.get_relationships()
             relationships = {**relationships, **imported_relationships}
-            print(relationships)
 
         TextFileWriter().write(scripts_path='/Users/patrickdehoon/PycharmProjects/Dataspot/examples',
                                data=relationships, timestamp=True, extension='json', title='clan_statistics_')

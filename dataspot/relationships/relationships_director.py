@@ -9,7 +9,6 @@ class RelationshipsDirector:
 
         relationships = dict()
         for script_type, script_path in scripts.items():
-            print(script_type, script_path)
             if script_type == 'TERADATA':
                 parser_config_path = open(parser_config_path)
                 parser_config = json.load(parser_config_path)

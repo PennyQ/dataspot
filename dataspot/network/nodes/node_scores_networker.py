@@ -8,6 +8,7 @@ class NodeScoresNetworker():
         self.__node_usage_scores = None
 
     def set_node_root_scores(self, nodes, relationships, grouped_weights):
+        print(99, nodes)
         node_root_scores = list()
         for node in nodes:
 

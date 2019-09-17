@@ -41,19 +41,16 @@ class NodeSizeConfigurator(Configurator):
         if not isinstance(config, dict):
             raise TypeError("The configuration that has been provided is not of a dictionary type")
 
-        if not isinstance(config['network_config'], list):
-            raise TypeError("The network configuration should be provided in a list")
+        if not isinstance(config['network_config'], dict):
+            raise TypeError("The network configuration should be provided in a dict")
 
-        if not isinstance(config['network_config'][0], dict):
-            raise TypeError("The plot width configuration is not of a dictionary type")
+        if 'node_size_config' not in config['network_config'].keys():
+            raise KeyError("The node-size configuration has not been set.")
 
-        if 'node_size_config' not in config['network_config'][4].keys():
-            raise KeyError("The plot width configuration is not present in the correct location")
+        if not isinstance(config['network_config']['node_size_config'], dict):
+            raise TypeError("The node-size configuration is not of a dict type")
 
-        # if not isinstance(config['network_config'][4]['node_size_config'], dict):
-        #     raise TypeError("The value of the node size config with should be of a dictionary type")
-
-        node_size_config = config['network_config'][4]['node_size_config']
+        node_size_config = config['network_config']['node_size_config']
         self.__node_size_config = node_size_config
 
     def get_node_size_config(self):
