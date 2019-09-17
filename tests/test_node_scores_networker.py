@@ -1,6 +1,7 @@
 import unittest
 from dataspot.network.nodes.node_scores_networker import NodeScoresNetworker
 from dataspot.network.node_calculator import NodeCalculator
+from pprint import pprint
 
 
 class TestNodeScoresNetworker(unittest.TestCase):
@@ -27,10 +28,24 @@ class TestNodeScoresNetworker(unittest.TestCase):
                         'test_db_2.example_table_c', 'test_db_3.example_table_a', 'test_db_3.example_table_c',
                         'test_db_3.example_table_b', 'golden_source.example_table_b']
         self.__golden_sources = ["golden_source.example_table_a", "golden_source.example_table_b"]
+        self.__levels = {0: ['golden_source.example_table_b', 'golden_source.example_table_a'],
+                         1: ['test_db_3.example_table_b',
+                             'test_db_2.example_table_c',
+                             'test_db_3.example_table_c',
+                             'test_db_3.example_table_a'],
+                         2: ['test_db_4.example_table_a', 'test_db_2.example_table_a'],
+                         3: ['test_db_2.example_table_b'],
+                         4: ['test_db_1.example_table_b'],
+                         5: ['test_db_1.example_table_a']}
 
     def test_root_score(self):
-        test = NodeCalculator.new_calculate_root_scores(golden_sources=self.__golden_sources, nodes=self.__nodes,
-                                                        relationships=self.__relationships, grouped_weights=self.__grouped_weights)
+        test = NodeCalculator.new_calculate_root_scores(relationships=self.__relationships,
+                                                        grouped_weights=self.__grouped_weights,
+                                                        levels=self.__levels)
+
+        # test = NodeCalculator.calculate_levels(golden_sources=self.__golden_sources, nodes=self.__nodes,
+        #                                                 relationships=self.__relationships)
+        # pprint(test)
 
     def test_usage_score(self):
         pass

@@ -80,92 +80,55 @@ class NodeCalculator:
         return score
 
     @staticmethod
-    def calculate_root_score_level_0(nodes, root_scores, golden_sources, grouped_weights):
-        to_do_nodes = list()
-        for node in nodes:
-            if node in golden_sources:
-                for weight in grouped_weights.keys():
-                    if node in grouped_weights[weight]:
-                        root_scores[node] = weight
-            else:
-                to_do_nodes.append(node)
-
-        return root_scores, to_do_nodes
-
-    @staticmethod
-    def calculate_root_score_level_1(nodes, root_scores, relationships, golden_sources, grouped_weights):
-        to_do_nodes = list()
-        for node in nodes:
-            if node not in relationships and node not in golden_sources:
-                for weight in grouped_weights.keys():
-                    if node in grouped_weights[weight]:
-                        root_scores[node] = weight
-            else:
-                to_do_nodes.append(node)
-        return root_scores, to_do_nodes
-
-    @staticmethod
-    def calculate_root_score_level_2(nodes, root_scores, relationships, grouped_weights):
-        to_do_nodes = list()
-        for node in nodes:
-            present = 0
-            for key in relationships.keys():
-                for source in relationships[key]:
-                    if source in nodes:
-                        present = 1
-            if present == 0:
-                for weight in grouped_weights.keys():
-                    if node in grouped_weights[weight]:
-                        root_scores[node] = weight
-            else:
-                to_do_nodes.append(node)
-
-        return root_scores, to_do_nodes
-
-    @staticmethod
-    def calculate_root_score_remaining_levels(nodes, root_scores, relationships, grouped_weights):
-        print(99, nodes)
-        for node in nodes:
-            node_weight = 0
+    def calculate_root_score_level_0(root_scores, levels, grouped_weights):
+        for node_level_0 in levels[0]:
             for weight in grouped_weights.keys():
-                if node in grouped_weights[weight]:
-                    node_weight = weight
-            print(1, node, node_weight)
+                if node_level_0 in grouped_weights[weight]:
+                    root_scores[node_level_0] = weight
 
-            all_present = 1
-            for source in relationships[node]:
-                if source not in root_scores:
-                    all_present = 0
+        return root_scores
 
-            if all_present == 1:
+    @staticmethod
+    def calculate_root_score_level_1(root_scores, levels, grouped_weights):
+        for node_level_1 in levels[1]:
+            for weight in grouped_weights.keys():
+                if node_level_1 in grouped_weights[weight]:
+                    root_scores[node_level_1] = weight
+
+        return root_scores
+
+    @staticmethod
+    def calculate_root_score_remaining_levels(levels, root_scores, relationships, grouped_weights):
+        level = 2
+        max_level = 5
+        while level <= max_level:
+            for node in levels[level]:
+                print(99, node)
+                node_weight = 0
+                for weight in grouped_weights.keys():
+                    if node in grouped_weights[weight]:
+                        node_weight = weight
+
+                all_present = 1
                 for source in relationships[node]:
-                    node_weight += root_scores[source]
-            else:
-                nodes.append(node)
+                    if source not in root_scores:
+                        all_present = 0
 
+                if all_present == 1:
+                    for source in relationships[node]:
+                        node_weight += root_scores[source]
 
-            #
-            # for source in relationships[node]:
-            #     extra_weights.append(source)
-            #
-            # for extra_weight in extra_weights:
-            #     for weight in grouped_weights.keys():
-            #         if node in grouped_weights[weight]:
-            #             node_weight += weight
-            #
-            #     if extra_weight in relationships:
-            #         for source in relationships[extra_weight]:
-            #             if source in nodes and source not in extra_weights:
-            #                 extra_weights.append(source)
+                root_scores[node] = node_weight
 
-            root_scores[node] = node_weight
+            level += 1
+        print(100, level)
 
         """
         EXAMPLE:
-        
+
         Scores:
         Root Score:
-        
+
         test_db_1.example_table_a: 31
         test_db_1.example_table_b: 18
         test_db_2.example_table_a: 11
@@ -178,30 +141,23 @@ class NodeCalculator:
         test_db_4.example_table_c: 4
         test_db_4.example_table_d: 4
 
-        
+
         """
 
         return root_scores
 
     @staticmethod
-    def new_calculate_root_scores(nodes, golden_sources, relationships, grouped_weights):
+    def new_calculate_root_scores(levels, relationships, grouped_weights):
         root_scores = dict()
-        root_scores, nodes = NodeCalculator.calculate_root_score_level_0(golden_sources=golden_sources, nodes=nodes,
-                                                                         root_scores=root_scores,
-                                                                         grouped_weights=grouped_weights)
+        root_scores = NodeCalculator.calculate_root_score_level_0(root_scores=root_scores,
+                                                                  grouped_weights=grouped_weights, levels=levels)
 
-        root_scores, nodes = NodeCalculator.calculate_root_score_level_1(golden_sources=golden_sources, nodes=nodes,
-                                                                         root_scores=root_scores,
-                                                                         grouped_weights=grouped_weights,
-                                                                         relationships=relationships)
+        root_scores = NodeCalculator.calculate_root_score_level_1(root_scores=root_scores,
+                                                                  grouped_weights=grouped_weights, levels=levels)
 
-        root_scores, nodes = NodeCalculator.calculate_root_score_level_2(nodes=nodes, root_scores=root_scores,
-                                                                         grouped_weights=grouped_weights,
-                                                                         relationships=relationships)
-
-        root_scores = NodeCalculator.calculate_root_score_remaining_levels(nodes=nodes, root_scores=root_scores,
-                                                                                  grouped_weights=grouped_weights,
-                                                                                  relationships=relationships)
+        root_scores = NodeCalculator.calculate_root_score_remaining_levels(root_scores=root_scores,
+                                                                           grouped_weights=grouped_weights,
+                                                                           relationships=relationships, levels=levels)
         pprint(root_scores)
         return root_scores
 
