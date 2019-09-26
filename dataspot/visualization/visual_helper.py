@@ -165,11 +165,12 @@ class VisualHelper:
         # 3: Attach the template to the working doc
         # 4: Load the styling file of the Bokeh visualization, also located in templates
         # 5: Attach the styling to the working doc
-        env = Environment(loader=FileSystemLoader(os.path.join(sys.path[1], 'templates')))
+        env = Environment(loader=FileSystemLoader("C:\\Users\\C67429\\Documents\\Code\\dataspot\\templates"))
         template = env.get_template('dataspot.html')
         doc.template = template
         doc.title = 'Dataspot'
 
-        theme_template = Theme(os.path.join(sys.path[1], 'templates/theme.yml'))
+        theme_template = Theme("C:\\Users\\C67429\\Documents\\Code\\dataspot\\templates\\theme.yml")
+        # theme_template = Theme(os.path.join(sys.path[1], 'templates/theme.yml'))
         doc.theme = theme_template
         return doc

@@ -25,3 +25,8 @@ class ExcelImporter:
         for sheet in wb.sheetnames:
             ws = wb[sheet]
             self.set_relationships(ws=ws, statistic=sheet)
+
+
+# excel = ExcelImporter()
+# excel.build(path="")
+# excel.get_relationships()

@@ -1,0 +1,1 @@
+{"mi_vm_bmd.vtrainset_wc_std": ["mi_vm_retail_1op1.vreport_response_online", "mi_vm_bmd.vcustomer_engagement_scores", "mi_vm_info.vlu_bc", "mi_vm_bmd.vtheia_basis", "mi_vm.vkalender"]}
