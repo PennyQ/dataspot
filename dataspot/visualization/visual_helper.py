@@ -74,22 +74,37 @@ class VisualHelper:
     @staticmethod
     def list_nodes(network_builder, node_network_builder, callback_nodes, relationships):
         nodes = dict()
+        print(11, 'hey')
         grouped_nodes = network_builder.get_grouped_nodes()
         grouped_colors = network_builder.get_grouped_colors()
         grouped_weights = network_builder.get_grouped_weights()
         grouped_legend = network_builder.get_grouped_legend()
         node_size_config = network_builder.get_node_size_config()
+        levels = network_builder.get_levels()
+
+        print(12, 'hey')
 
         node_network_builder.set_node_colors(nodes=callback_nodes, grouped_nodes=grouped_nodes,
                                              grouped_colors=grouped_colors)
+        print(13, 'hey')
+
         node_network_builder.set_node_sizes(nodes=callback_nodes, relationships=relationships,
-                                            node_size_config=node_size_config, grouped_weights=grouped_weights)
-        node_network_builder.set_node_scores(nodes=callback_nodes, relationships=relationships,
+                                            node_size_config=node_size_config, grouped_weights=grouped_weights,
+                                            levels=levels)
+        print(14, 'hey')
+
+        node_network_builder.set_node_scores(nodes=callback_nodes, relationships=node_network_builder.get_relationships(), levels=levels,
                                              grouped_weights=grouped_weights)
+        print(15, 'hey')
+
         node_network_builder.set_node_labels(nodes=callback_nodes, grouped_nodes=grouped_nodes,
                                              grouped_legend=grouped_legend)
 
+        print(16, 'hey')
+
         node_colors = node_network_builder.get_node_colors()
+
+        print(17, 'hey')
 
         nodes['index'] = callback_nodes
         nodes['color'] = node_colors
@@ -97,6 +112,7 @@ class VisualHelper:
         nodes['root_score'] = node_network_builder.get_node_root_scores()
         nodes['usage_score'] = node_network_builder.get_node_usage_scores()
         nodes['label'] = node_network_builder.get_node_labels()
+
         return nodes
 
     @staticmethod

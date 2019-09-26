@@ -1,21 +1,23 @@
 from dataspot.network.node_calculator import NodeCalculator
-from dataspot.network.node_networker import NodeNetworker
-import collections
 
 
-class NodeSizesNetworker(NodeNetworker):
+class NodeSizesNetworker:
 
     def __init__(self):
         self.__node_sizes = None
 
-    def set_node(self, nodes, relationships, node_size_config, grouped_weights):
+    def set_node(self, nodes, relationships, node_size_config, grouped_weights, levels):
         node_sizes = list()
-
+        print(21, 'hey')
+        root_scores = NodeCalculator.calculate_root_scores(relationships=relationships, grouped_weights=grouped_weights,
+                                                           levels=levels)
+        print(22, 'hey')
         for node in nodes:
             found = 0
             test = list()
-            size = NodeCalculator.calculate_root_score(node=node, relationships=relationships,
-                                                       grouped_weights=grouped_weights)
+            size = 0
+            if node in root_scores:
+                size = root_scores[node]
 
             for node_size, node_config in node_size_config.items():
                 test.append(node_config[0])
@@ -34,6 +36,6 @@ class NodeSizesNetworker(NodeNetworker):
     def get_node(self):
         return self.__node_sizes
 
-    def build(self, nodes, relationships, node_size_config, grouped_weights):
+    def build(self, nodes, relationships, node_size_config, grouped_weights, levels):
         self.set_node(nodes=nodes, relationships=relationships, grouped_weights=grouped_weights,
-                      node_size_config=node_size_config)
+                      node_size_config=node_size_config, levels=levels)

@@ -130,16 +130,9 @@ class GraphNetworker:
         return axis
 
     @staticmethod
-    def build_axis(x_range, y_range, relationships, nodes, force):
-        nodes_list = list()
-        keys_list = list()
-        for key, tables in relationships.items():
-            keys_list.append(key)
-            for table in tables:
-                nodes_list.append(table)
-
+    def build_axis(x_range, y_range, nodes, levels, force):
         hierarchy_builder = HierarchyBuilder()
-        hierarchy_builder.build(x_range=x_range, y_range=y_range, relationships=relationships, force=force)
+        hierarchy_builder.build(x_range=x_range, y_range=y_range, force=force, levels=levels)
         coordinates = hierarchy_builder.get_coordinates()
 
         axis = dict()

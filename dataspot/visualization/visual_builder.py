@@ -11,9 +11,10 @@ class VisualBuilder:
     def __init__(self, config, relationships):
         self.__config = config
         self.__relationships = relationships
-        self.__node_network_builder = NodeNetworkBuilder()
         self.__network_builder = NetworkBuilder()
         self.__network_builder.build(config=self.__config, relationships=self.__relationships, force=0)
+        self.__node_network_builder = NodeNetworkBuilder()
+        self.__node_network_builder.set_relationships(relationships=relationships)
         self.__network = self.__network_builder.get_network()
         self.__buttons = None
         self.__legend = None

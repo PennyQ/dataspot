@@ -116,6 +116,9 @@ class TeradataParser(Parser):
         statement_grouper.group()
         grouped_statements['insert_into'] = statement_grouper.get_insert_intos()
         grouped_statements['create_as'] = statement_grouper.get_creates_as()
+        grouped_statements['create_view'] = statement_grouper.get_create_views()
+        grouped_statements['replace_view'] = statement_grouper.get_replace_views()
+        grouped_statements['create_replace_view'] = statement_grouper.get_create_replace_views()
         self.set_grouped_statements(grouped_statements=grouped_statements)
 
     def set_relationships(self, relationships):

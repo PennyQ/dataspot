@@ -12,7 +12,7 @@ class ReportHelper:
     @staticmethod
     def get_report_source(network_builder):
         report_source = ColumnDataSource(data=dict())
-        graph_renderer = network_builder.get_graph_render()
+        graph_renderer = network_builder.get_graph_renderer()
 
         report_source.data = {
             'Object Name': graph_renderer.node_renderer.data_source.data['index'],
