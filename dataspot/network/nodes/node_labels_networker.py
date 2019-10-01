@@ -10,16 +10,11 @@ class NodeLabelsNetworker(NodeNetworker):
         node_labels = list()
 
         for node in nodes:
-            legend = False
             for group, tables in grouped_nodes.items():
                 for group_name, group_label in grouped_legend.items():
                     if group == group_name:
                         if node in tables:
-                            legend = True
                             node_labels.append(group_label)
-
-            if not legend:
-                node_labels.append('unknown')
 
         self.__node_labels = node_labels
 

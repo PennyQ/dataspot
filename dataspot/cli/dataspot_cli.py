@@ -11,20 +11,20 @@ from dataspot.relationships.writer.text_file_writer import TextFileWriter
 
 
 @click.command()
-@click.option('--scripts_path', default=os.path.join(os.path.abspath('../../'), 'examples/scripts'),
+@click.option('--scripts_path', default="/Users/patrickdehoon/Projecten/prive/dataspot/clan/scripts",
               prompt='Please enter the location of the directory that contains the scripts',
               type=click.Path(exists=True), help='Enter the full path of the directory where the scripts are stored')
-@click.option('--config_path', default=os.path.join(os.path.abspath('../'),'dataspot_config.json'),
+@click.option('--config_path', default="/Users/patrickdehoon/Projecten/prive/dataspot/clan/clan_dataspot_config.json",
               prompt='Please enter the path to the configuration file (JSON)', type=click.Path(exists=True),
               help='Enter the full path of the configuration file, which is in a JSON format.')
-@click.option('--results_path', default=os.path.join(os.path.abspath('../../'),'examples/results'),
+@click.option('--results_path', default="/Users/patrickdehoon/Projecten/prive/dataspot/clan",
               prompt='Please enter the path of the location where the results can be placed',
               type=click.Path(exists=True),
               help='Enter the full path of the configuration file, which is in a JSON format.')
-@click.option('--manual/--no_manual', default=True, prompt='Do you want to add a prepared dictionary?',
+@click.option('--manual/--no_manual', default=False, prompt='Do you want to add a prepared dictionary?',
               help='Dataspot offers the possibility to include manually prepared relations. '
                    'This file needs to follow the JSON convention.')
-@click.option('--statistics/--no_statistics', default=True, prompt='Do you want to add user statistics?',
+@click.option('--statistics/--no_statistics', default=False, prompt='Do you want to add user statistics?',
               help='Dataspot offers the possibility to include user statistics. '
                    'This file needs to follow the JSON convention.')
 def cli(scripts_path,  config_path, results_path, manual, statistics):

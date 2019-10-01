@@ -47,19 +47,16 @@
       "object_name_root": {
         "button_type": "text",
         "type": "root",
-        "force": 1,
         "title": "Find the root of an object"
       },
       "object_name_usage":  {
         "button_type": "text",
         "type": "usage",
-        "force": 0,
         "title": "Find the usage of an object"
       },
       "golden_source": {
         "button_type": "dropdown",
         "type":"usage",
-        "force": 0,
         "title": "Choose a golden source"
       }
     }

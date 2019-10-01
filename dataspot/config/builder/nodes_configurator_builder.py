@@ -33,6 +33,7 @@ class NodesConfiguratorBuilder(Configurator):
 
         self.__config = config
         self.__relationships = relationships
+        self.__available_nodes = None
         self.__grouped_nodes = None
         self.__grouped_colors = None
         self.__grouped_legend = None
@@ -77,7 +78,20 @@ class NodesConfiguratorBuilder(Configurator):
         """
         return self.__relationships
 
-    def set_grouped_nodes(self, config, relationships):
+    def set_available_nodes(self, relationships):
+        available_nodes = list()
+        for node_key in relationships:
+            available_nodes.append(node_key)
+            for node_source in relationships[node_key]:
+                available_nodes.append(node_source)
+
+        available_nodes = list(set(available_nodes))
+        self.__available_nodes = available_nodes
+
+    def get_available_nodes(self):
+        return self.__available_nodes
+
+    def set_grouped_nodes(self, config, relationships, available_nodes):
         """
         A grouped nodes object consists of nodes, which are grouped together based either on the 'nodes' arguments of
         any of the arguments provided in the 'args' key.
@@ -95,7 +109,8 @@ class NodesConfiguratorBuilder(Configurator):
         if not isinstance(relationships, dict):
             raise TypeError("The relationships that have been provided are not of a dictionary type")
 
-        nodes_configurator = NodesConfigurator(config=config, relationships=relationships)
+        nodes_configurator = NodesConfigurator(config=config, relationships=relationships,
+                                               available_nodes=available_nodes)
         nodes_configurator.build()
         grouped_nodes = nodes_configurator.get_grouped_nodes_config()
         self.__grouped_nodes = grouped_nodes
@@ -195,7 +210,9 @@ class NodesConfiguratorBuilder(Configurator):
         config = self.get_config()
         relationships = self.get_relationships()
 
-        self.set_grouped_nodes(config=config, relationships=relationships)
+        self.set_available_nodes(relationships=relationships)
+        available_nodes = self.get_available_nodes()
+        self.set_grouped_nodes(config=config, relationships=relationships, available_nodes=available_nodes)
         self.set_grouped_colors(config=config)
         self.set_grouped_legend(config=config)
 

@@ -9,9 +9,6 @@ from dataspot.network.hierarchy.hierarchy_builder import HierarchyBuilder
 
 class GraphNetworker:
 
-    def __init__(self):
-        pass
-
     @staticmethod
     def build_graph(relationships):
         graph = nx.DiGraph()
@@ -30,8 +27,15 @@ class GraphNetworker:
         return graph
 
     @staticmethod
-    def build_graph_renderer(graph, nodes, node_colors, node_sizes, node_scores, node_labels):
+    def build_graph_renderer(graph, nodes, node_colors, node_sizes, node_scores, node_labels, levels):
         graph_renderer = from_networkx(graph, nx.kamada_kawai_layout)
+
+        level_1 = list()
+        for node in nodes:
+            if node in levels[1]:
+                level_1.append(1)
+            else:
+                level_1.append(0)
 
         graph_renderer.node_renderer.data_source.data['index'] = nodes
         graph_renderer.node_renderer.data_source.data['color'] = node_colors
@@ -39,6 +43,7 @@ class GraphNetworker:
         graph_renderer.node_renderer.data_source.data['root_score'] = node_scores[0]
         graph_renderer.node_renderer.data_source.data['usage_score'] = node_scores[1]
         graph_renderer.node_renderer.data_source.data['label'] = node_labels
+        graph_renderer.node_renderer.data_source.data['level_1'] = level_1
 
         graph_renderer.node_renderer.glyph = Circle(size="size", fill_color="color")
         graph_renderer.node_renderer.selection_glyph = Circle(size="size", fill_color="color")
@@ -130,9 +135,9 @@ class GraphNetworker:
         return axis
 
     @staticmethod
-    def build_axis(x_range, y_range, nodes, levels, force):
+    def build_axis(x_range, y_range, nodes, levels):
         hierarchy_builder = HierarchyBuilder()
-        hierarchy_builder.build(x_range=x_range, y_range=y_range, force=force, levels=levels)
+        hierarchy_builder.build(x_range=x_range, y_range=y_range, levels=levels)
         coordinates = hierarchy_builder.get_coordinates()
 
         axis = dict()

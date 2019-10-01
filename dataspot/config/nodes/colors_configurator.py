@@ -50,6 +50,8 @@ class ColorsConfigurator(Configurator):
             if 'color' in config['relationships_config']['groups'][group]:
                 grouped_colors[group] = config['relationships_config']['groups'][group]['color']
 
+        grouped_colors['unknown'] = 'red'
+
         self.__grouped_colors = grouped_colors
 
     def get_grouped_colors_config(self):

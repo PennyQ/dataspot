@@ -6,7 +6,7 @@ class NodesConfigurator(Configurator):
 
     """
 
-    def __init__(self, config, relationships):
+    def __init__(self, config, relationships, available_nodes):
         """
         :param config: The config parameter is a dictionary containing all of the Dataspot basic configurations. An
                        example of the basic structure can be found in examples/dataspot_config_example.json
@@ -17,6 +17,7 @@ class NodesConfigurator(Configurator):
         """
         self.__config = config
         self.__relationships = relationships
+        self.__available_nodes = available_nodes
         self.__grouped_nodes = None
 
     def set_config(self, config):
@@ -55,7 +56,10 @@ class NodesConfigurator(Configurator):
         """
         return self.__relationships
 
-    def set_grouped_nodes_config(self, config, relationships):
+    def get_available_nodes(self):
+        return self.__available_nodes
+
+    def set_grouped_nodes_config(self, config, relationships, available_nodes):
         """
         :param config: The config parameter is a dictionary containing all of the Dataspot basic configurations. An
                        example of the basic structure can be found in examples/dataspot_config_example.json
@@ -63,6 +67,7 @@ class NodesConfigurator(Configurator):
         :param relationships:
         :type relationships:
         """
+
         grouped_nodes = dict()
         to_exclude = list()
 
@@ -97,8 +102,27 @@ class NodesConfigurator(Configurator):
                                     to_exclude.append(node)
                 for found_node in set(found_nodes):
                     grouped_nodes[group].append(found_node)
+                    to_exclude.append(found_node)
 
-        # TODO: When neither 'nodes' nor 'args' are specified, nodes should be put in a group called 'ungrouped'.
+        # grouped_nodes['unknown'] = list()
+        # for node in available_nodes:
+        #     if node not in to_exclude:
+        #         grouped_nodes['unknown'].append(node)
+
+        for node in available_nodes:
+            print(1, node)
+
+        for node in to_exclude:
+            print(2, node)
+
+        ungrouped_nodes = list(set(available_nodes) - set(to_exclude))
+
+        for node in ungrouped_nodes:
+            print(3, node)
+
+        grouped_nodes['unknown'] = list()
+        for node in ungrouped_nodes:
+            grouped_nodes['unknown'].append(node)
 
         self.__grouped_nodes = grouped_nodes
 
@@ -114,41 +138,6 @@ class NodesConfigurator(Configurator):
         """
         config = self.get_config()
         relationships = self.get_relationships()
-        self.set_grouped_nodes_config(config=config, relationships=relationships)
+        available_nodes = self.get_available_nodes()
+        self.set_grouped_nodes_config(config=config, relationships=relationships, available_nodes=available_nodes)
 
-# # 1: Iterate over each group key
-# # 2: Per group key, iterate over the config_old keys
-# # 3: When the key 'nodes' is found, iterate over the values in the list
-# # 4: Every nodes is added to the group dictionary, to the respective group it belongs to
-# # 5: Every nodes is added to the 'to_exclude' list. This is to prevent the nodes to be added twice to the
-# #    group dictionary. This could theoretically happen with the args key.
-# # 6: When the args key is found, iterate over the values in the list
-# # 7: First, iterate over the relationships keys. Every key is a nodes. When a nodes is matched with the arg,
-# #    and it is not found in the 'to_exclude' list, it will be appended to the found_nodes list.
-# # 8: Second, do the same thing for the nodes in the values list, as was done in step 7.
-# # 9: Filter out duplicate nodes via running the set command on the found_nodes list.
-# # 10: Add the table to the grouped_nodes dict for the respective key
-# for group_key, group_value in config['relationships_config']['groups'].items():
-#     grouped_nodes[group_key] = list()
-#     for config in group_value:
-#         for config_key, config_value in config.items():
-#             if config_key == 'nodes':
-#                 for node in config_value:
-#                     grouped_nodes[group_key].append(node)
-#                     to_exclude.append(node)
-#             elif config_key == 'args':
-#                 found_nodes = list()
-#                 for arg in config_value:
-#                     for node in relationships.keys():
-#                         if node.find(arg) != -1:
-#                             if to_exclude.count(node) == 0:
-#                                 found_nodes.append(node)
-#                                 to_exclude.append(node)
-#                     for nodes in relationships.values():
-#                         for node in nodes:
-#                             if node.find(arg) != -1:
-#                                 if to_exclude.count(node) == 0:
-#                                     found_nodes.append(node)
-#                                     to_exclude.append(node)
-#                 for found_node in set(found_nodes):
-#                     grouped_nodes[group_key].append(found_node)

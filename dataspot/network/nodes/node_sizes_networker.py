@@ -8,10 +8,8 @@ class NodeSizesNetworker:
 
     def set_node(self, nodes, relationships, node_size_config, grouped_weights, levels):
         node_sizes = list()
-        print(21, 'hey')
         root_scores = NodeCalculator.calculate_root_scores(relationships=relationships, grouped_weights=grouped_weights,
                                                            levels=levels)
-        print(22, 'hey')
         for node in nodes:
             found = 0
             test = list()

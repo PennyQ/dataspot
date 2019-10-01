@@ -18,7 +18,8 @@ class ReportHelper:
             'Object Name': graph_renderer.node_renderer.data_source.data['index'],
             'Object Group': graph_renderer.node_renderer.data_source.data['label'],
             'Root Score': graph_renderer.node_renderer.data_source.data['root_score'],
-            'Usage Score': graph_renderer.node_renderer.data_source.data['usage_score']
+            'Usage Score': graph_renderer.node_renderer.data_source.data['usage_score'],
+            'Level_1': graph_renderer.node_renderer.data_source.data['level_1']
         }
 
         return report_source

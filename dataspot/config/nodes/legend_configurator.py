@@ -52,6 +52,8 @@ class LegendConfigurator(Configurator):
             if 'legend_name' in config['relationships_config']['groups'][group]:
                 grouped_legend[group] = config['relationships_config']['groups'][group]['legend_name']
 
+        grouped_legend['unknown'] = 'unknown'
+
         self.__grouped_legend = grouped_legend
 
     def get_grouped_legend_config(self):

@@ -8,6 +8,8 @@ AS (
   ON 1=1
   JOIN test_db_3.example_table_b
   ON 1=1
+  JOIN (select x from table_x)
+  on 1=1
 ) WITH DATA AND STATS;
 
 INSERT INTO test_db_1.example_table_b

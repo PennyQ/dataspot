@@ -139,6 +139,7 @@ class TeradataParser(Parser):
             for statement in grouped_statements[key]:
                 object_name = TeradataObjectNameParser.parse_object_name(statement=statement, start_key=start_key,
                                                                          end_key=end_key)
+                # print(1, object_name)
                 object_source_parser = TeradataObjectSourceParser(source_keys=source_keys, statement=statement)
                 object_source_parser.parse()
                 sources = object_source_parser.get_source_list()
@@ -148,6 +149,8 @@ class TeradataParser(Parser):
                     relationships[object_name] = new_sources
                 else:
                     relationships[object_name] = sources
+                # for source in relationships[object_name]:
+                #     print(1, source)
 
         self.set_relationships(relationships=relationships)
 

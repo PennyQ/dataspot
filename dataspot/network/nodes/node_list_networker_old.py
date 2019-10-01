@@ -11,6 +11,7 @@ class NodeListNetworker(NodeNetworker):
         for i in graph.nodes:
             nodes.append(i.strip())
 
+        nodes = list(set(nodes))
         self.__nodes = nodes
 
     def get_node(self):
