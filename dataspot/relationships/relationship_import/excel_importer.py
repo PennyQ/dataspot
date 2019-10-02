@@ -17,15 +17,15 @@ class ExcelImporter:
         """
         relationships = dict()
         for row in ws.iter_rows(values_only=True):
-            if row[0].lower() in relationships:
+            if row[0].lower().strip() in relationships:
                 for ind, i in enumerate(row):
                     if ind > 0 and i is not None and i.lower() not in relationships[row[0].lower()]:
-                        relationships[row[0].lower()].append(i.lower())
+                        relationships[row[0].lower().strip()].append(i.lower())
             else:
-                relationships[row[0].lower()] = list()
+                relationships[row[0].lower().strip()] = list()
                 for ind, source in enumerate(row):
                     if ind > 0 and source is not None:
-                        relationships[row[0].lower()].append(source.lower())
+                        relationships[row[0].lower().strip()].append(source.lower())
 
         self.__relationships = relationships
 
@@ -56,5 +56,6 @@ excel = ExcelImporter()
 excel.build(path='/Users/patrickdehoon/Projecten/prive/dataspot/clan/excel/mstr overzicht.xlsx')
 mstr_rel = excel.get_relationships()
 
-new_rel = {**clan_rel, **mstr_rel}
-print(new_rel)
+excel = ExcelImporter()
+excel.build(path='/Users/patrickdehoon/Projecten/prive/dataspot/clan/excel/mstr-rapportage.xlsx')
+mstr_rap_rel = excel.get_relationships()

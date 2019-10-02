@@ -7,11 +7,7 @@ class ObjectNameParser:
         object_name = None
 
         if statement.find(start_key) != -1:
-            # print(1, statement)
             object_name = statement[statement.find(start_key) + len(start_key):statement.find(end_key)].strip()
-            # print(2, object_name)
-            if object_name == "":
-                print(3, 'hey')
             return object_name
 
         return object_name

@@ -8,8 +8,8 @@ class NodeColorsNetworker(NodeNetworker):
 
     def set_node(self, nodes, grouped_nodes, grouped_colors):
         node_colors = list()
-
         nodes_done = list()
+
         for node in nodes:
             for group, group_node in grouped_nodes.items():
                 for group_name, group_color in grouped_colors.items():
@@ -18,8 +18,6 @@ class NodeColorsNetworker(NodeNetworker):
                             node_colors.append(group_color)
                             nodes_done.append(node)
 
-        # to_do = list(set(nodes)-set(nodes_done))
-        # print(100, to_do)
         self.__node_colors = node_colors
 
     def get_node(self):

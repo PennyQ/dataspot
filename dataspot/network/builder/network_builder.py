@@ -62,8 +62,7 @@ class NetworkBuilder:
         graph = self.get_graph()
         nodes = NetworkHelper.list_nodes(graph=graph)
 
-        # for node in nodes:
-        #     print(1, node)
+
         self.__nodes = nodes
 
     def get_nodes(self):

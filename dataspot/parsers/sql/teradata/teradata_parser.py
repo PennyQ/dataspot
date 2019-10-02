@@ -139,7 +139,6 @@ class TeradataParser(Parser):
             for statement in grouped_statements[key]:
                 object_name = TeradataObjectNameParser.parse_object_name(statement=statement, start_key=start_key,
                                                                          end_key=end_key)
-                # print(1, object_name)
                 object_source_parser = TeradataObjectSourceParser(source_keys=source_keys, statement=statement)
                 object_source_parser.parse()
                 sources = object_source_parser.get_source_list()
@@ -149,8 +148,6 @@ class TeradataParser(Parser):
                     relationships[object_name] = new_sources
                 else:
                     relationships[object_name] = sources
-                # for source in relationships[object_name]:
-                #     print(1, source)
 
         self.set_relationships(relationships=relationships)
 
@@ -165,44 +162,3 @@ class TeradataParser(Parser):
         self.build_statements()
         self.build_grouped_statements()
         self.build_relationships()
-
-#
-# scripts = list()
-# script = '/Users/patrickdehoon/Projecten/prive/dataspot/examples/test.sql'
-# scripts.append(script)
-# statements = list()
-# statement_1 = list()
-# statement_1.append('.IF')
-# statement_1.append('EOP')
-# statements.append(statement_1)
-# statement_2 = list()
-# statement_2.append('COMMENT ON')
-# statement_2.append(';')
-# statements.append(statement_2)
-# statement_3 = list()
-# statement_3.append('SET QUERY_BAND')
-# statement_3.append(';')
-# statements.append(statement_3)
-# statement_3 = list()
-# statement_3.append('COLLECT STAT')
-# statement_3.append(';')
-# statements.append(statement_3)
-#
-# comment_mapping = dict()
-# comment_mapping['single_line_comment'] = '--'
-# comment_mapping['multi_line_comment'] = ['/*', '*/']
-#
-# parser_mapping = dict()
-# parser_mapping['comment_mapping'] = comment_mapping
-# parser_mapping['statement_end'] = ';'
-# parser_mapping['source_keys'] = ['from', 'join']
-# parser_mapping['name_keys'] = dict()
-# parser_mapping['name_keys']['insert_into'] = ['insert into', ' select ']
-# parser_mapping['name_keys']['create_as'] = ['create table', ' as ']
-# parser_mapping['unnecessary_statements'] = statements
-#
-# teradata_parser = TeradataParser(parser_config=parser_mapping, scripts=scripts)
-# teradata_parser.parse()
-# result = teradata_parser.get_relationships()
-# for i in result.keys():
-#     pprint([i , ':', result[i]])

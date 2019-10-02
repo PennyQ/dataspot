@@ -25,13 +25,10 @@ class TeradataObjectSourceParser(ObjectSourceParser):
         source = None
         if statement.find(source_key) != -1:
             source = statement[statement.find(source_key) + len(source_key)+1: len(statement)].strip()
-            # print(1, source)
             source = source[:source.find(" ")]
-            # print(2, source)
             source_result = ObjectSourceHelper.validate_source(source=source)
             source, statement = ObjectSourceHelper.adjust_statement(source=source, source_result=source_result,
                                                                     source_key=source_key, statement=statement)
-
             return source, statement
         elif statement.find('create table') != -1 and statement.find(' as ') != -1 and statement.find('from') == -1:
             source = statement[statement.find(' as ')+4: statement.find(' with data ')]

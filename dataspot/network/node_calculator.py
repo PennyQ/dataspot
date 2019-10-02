@@ -108,7 +108,6 @@ class NodeCalculator:
         root_scores = NodeCalculator.calculate_root_score_remaining_levels(root_scores=root_scores,
                                                                            grouped_weights=grouped_weights,
                                                                            relationships=relationships, levels=levels)
-        print(1, root_scores)
         return root_scores
 
     @staticmethod

@@ -66,11 +66,3 @@ class NodeNetworkBuilder:
         self.set_node_scores(nodes=nodes, relationships=relationships, grouped_weights=grouped_weights, levels=levels)
         self.set_node_sizes(nodes=nodes, relationships=relationships, node_size_config=node_size_config,
                             grouped_weights=grouped_weights, levels=levels)
-
-        # print(99, len(nodes))
-        # print(1, len(self.get_node_colors()))
-        # print(2, len(self.get_node_labels()))
-        # print(3, len(self.get_node_usage_scores()))
-        # print(4, len(self.get_node_root_scores()))
-        # print(5, len(self.get_node_sizes()))
-

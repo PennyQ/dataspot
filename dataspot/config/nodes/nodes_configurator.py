@@ -104,21 +104,7 @@ class NodesConfigurator(Configurator):
                     grouped_nodes[group].append(found_node)
                     to_exclude.append(found_node)
 
-        # grouped_nodes['unknown'] = list()
-        # for node in available_nodes:
-        #     if node not in to_exclude:
-        #         grouped_nodes['unknown'].append(node)
-
-        for node in available_nodes:
-            print(1, node)
-
-        for node in to_exclude:
-            print(2, node)
-
         ungrouped_nodes = list(set(available_nodes) - set(to_exclude))
-
-        for node in ungrouped_nodes:
-            print(3, node)
 
         grouped_nodes['unknown'] = list()
         for node in ungrouped_nodes:
