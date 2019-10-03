@@ -17,6 +17,9 @@ class TeradataStatementGrouper(StatementGrouper):
         self.__insert_intos = None
         self.__updates = None
         self.__deletes = None
+        self.__create_views = None
+        self.__replace_views = None
+        self.__create_replace_views = None
 
     def set_statements(self, statements):
         """
@@ -149,6 +152,48 @@ class TeradataStatementGrouper(StatementGrouper):
         self.set_statements(statements=statements)
         self.set_updates(updates=updates)
 
+    def set_create_views(self, create_views):
+        self.__create_views = create_views
+
+    def get_create_views(self):
+        return self.__create_views
+
+    def group_create_views(self):
+
+        statements = self.get_statements()
+        statements, create_views = self.teradata_group_create_views(statements=statements)
+
+        self.set_statements(statements=statements)
+        self.set_create_views(create_views=create_views)
+
+    def set_replace_views(self, replace_views):
+        self.__replace_views = replace_views
+
+    def get_replace_views(self):
+        return self.__replace_views
+
+    def group_replace_views(self):
+
+        statements = self.get_statements()
+        statements, replace_views = self.teradata_group_replace_views(statements=statements)
+
+        self.set_statements(statements=statements)
+        self.set_replace_views(replace_views=replace_views)
+
+    def set_create_replace_views(self, create_replace_views):
+        self.__create_replace_views = create_replace_views
+
+    def get_create_replace_views(self):
+        return self.__create_replace_views
+
+    def group_create_replace_views(self):
+
+        statements = self.get_statements()
+        statements, create_replace_views = self.teradata_group_create_replace_views(statements=statements)
+
+        self.set_statements(statements=statements)
+        self.set_create_replace_views(create_replace_views=create_replace_views)
+
     def group(self):
         """
         """
@@ -157,3 +202,7 @@ class TeradataStatementGrouper(StatementGrouper):
         self.group_insert_intos()
         self.group_deletes()
         self.group_updates()
+        self.group_create_views()
+        self.group_replace_views()
+        self.group_create_replace_views()
+

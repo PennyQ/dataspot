@@ -154,38 +154,3 @@ class ScriptCleaner(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def clean(self, lines, statements=None):
         pass
-
-# new_lines = ""
-# for line in lines:
-#     new_lines += line
-# return new_lines
-
-
-# script = open('/Users/patrickdehoon/Projecten/prive/dataspot/examples/test.sql')
-# lines = script.readlines()
-# script.close()
-# statements = list()
-# statement_1 = list()
-# statement_1.append('.IF')
-# statement_1.append('EOP')
-# statements.append(statement_1)
-# statement_2 = list()
-# statement_2.append('COMMENT ON')
-# statement_2.append(';')
-# statements.append(statement_2)
-# statement_3 = list()
-# statement_3.append('SET QUERY_BAND')
-# statement_3.append(';')
-# statements.append(statement_3)
-# statement_3 = list()
-# statement_3.append('COLLECT STAT')
-# statement_3.append(';')
-# statements.append(statement_3)
-#
-# comment_mapping = dict()
-# comment_mapping['single_line_comment'] = '--'
-# comment_mapping['multi_line_comment'] = ['/*', '*/']
-# new_lines = ScriptCleaner(comment_mapping=comment_mapping).clean(lines=lines, statements=statements)
-# print(99, new_lines)
-
-# pprint(new_lines)

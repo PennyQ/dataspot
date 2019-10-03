@@ -181,6 +181,87 @@ class StatementGrouper(metaclass=abc.ABCMeta):
 
         return new_statements, updates
 
+    @staticmethod
+    def validate_create_view(statement):
+        """
+        EXPLANATION
+
+        :param statement:
+        :return:
+        """
+        if statement.lower().find('create view ') != -1:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def teradata_group_create_views(statements):
+
+        create_views = list()
+        new_statements = list()
+        for statement in statements:
+            result = StatementGrouper.validate_create_view(statement=statement)
+            if result:
+                create_views.append(statement)
+            else:
+                new_statements.append(statement)
+
+        return new_statements, create_views
+
+    @staticmethod
+    def validate_replace_view(statement):
+        """
+        EXPLANATION
+
+        :param statement:
+        :return:
+        """
+        if statement.lower().find('replace view ') != -1:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def teradata_group_replace_views(statements):
+
+        replace_views = list()
+        new_statements = list()
+        for statement in statements:
+            result = StatementGrouper.validate_replace_view(statement=statement)
+            if result:
+                replace_views.append(statement)
+            else:
+                new_statements.append(statement)
+
+        return new_statements, replace_views
+
+    @staticmethod
+    def validate_create_replace_view(statement):
+        """
+        EXPLANATION
+
+        :param statement:
+        :return:
+        """
+        if statement.lower().find('create or replace view ') != -1:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def teradata_group_create_replace_views(statements):
+
+        create_replace_views = list()
+        new_statements = list()
+        for statement in statements:
+            result = StatementGrouper.validate_create_replace_view(statement=statement)
+            if result:
+                create_replace_views.append(statement)
+            else:
+                new_statements.append(statement)
+
+        return new_statements, create_replace_views
+
     @abc.abstractmethod
     def group(self):
         pass

@@ -1,5 +1,4 @@
 import unittest
-from dataspot.network.nodes.node_scores_networker import NodeScoresNetworker
 from dataspot.network.node_calculator import NodeCalculator
 from pprint import pprint
 
@@ -39,13 +38,13 @@ class TestNodeScoresNetworker(unittest.TestCase):
                          5: ['test_db_1.example_table_a']}
 
     def test_root_score(self):
-        test = NodeCalculator.new_calculate_root_scores(relationships=self.__relationships,
+        test = NodeCalculator.calculate_root_scores(relationships=self.__relationships,
                                                         grouped_weights=self.__grouped_weights,
                                                         levels=self.__levels)
 
         # test = NodeCalculator.calculate_levels(golden_sources=self.__golden_sources, nodes=self.__nodes,
         #                                                 relationships=self.__relationships)
-        # pprint(test)
+        pprint(test)
 
     def test_usage_score(self):
         pass

@@ -27,7 +27,7 @@
       },
       "golden_source": {
         "nodes": ["golden_source.example_table_a", "golden_source.example_table_b"],
-        "legend_name": "test_db_4",
+        "legend_name": "golden_source",
         "color": "gold",
         "weights_all": 5
       }

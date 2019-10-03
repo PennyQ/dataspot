@@ -1,8 +1,11 @@
 from dataspot.config.builder.network_configurator_builder import NetworkConfiguratorBuilder
 from dataspot.config.builder.nodes_configurator_builder import NodesConfiguratorBuilder
 from dataspot.network.builder.node_network_builder import NodeNetworkBuilder
+from dataspot.network.nodes.node_list_networker import NodeListNetworker
 from dataspot.network.graph.graph_networker import GraphNetworker
 
+
+from dataspot.network.node_calculator import NodeCalculator
 
 class NetworkBuilder:
 
@@ -29,12 +32,16 @@ class NetworkBuilder:
         self.__graph_renderer = None
         self.__axis = None
         self.__network = None
+        self.__levels = None
 
     def set_config(self, config):
         self.__config = config
 
     def get_config(self):
         return self.__config
+
+    def set_relationships(self, relationships):
+        self.__relationships = relationships
 
     def get_relationships(self):
         return self.__relationships
@@ -45,6 +52,14 @@ class NetworkBuilder:
 
     def get_graph(self):
         return self.__graph
+
+    def set_nodes(self, graph):
+        node_list_networker = NodeListNetworker()
+        node_list_networker.build(graph=graph)
+        self.__nodes = node_list_networker.get_node()
+
+    def get_nodes(self):
+        return self.__nodes
 
     def set_grouped_colors(self, nodes_configurator_builder):
         self.__grouped_colors = nodes_configurator_builder.get_grouped_colors()
@@ -75,12 +90,6 @@ class NetworkBuilder:
 
     def get_node_size_config(self):
         return self.__node_size_config
-
-    def set_nodes(self, node_network_builder):
-        self.__nodes = node_network_builder.get_nodes()
-
-    def get_nodes(self):
-        return self.__nodes
 
     def set_node_colors(self, node_network_builder):
         self.__node_colors = node_network_builder.get_node_colors()
@@ -146,13 +155,13 @@ class NetworkBuilder:
                                                                      node_labels=node_labels, node_sizes=node_sizes,
                                                                      node_scores=node_scores)
 
-    def get_graph_render(self):
+    def get_graph_renderer(self):
         return self.__graph_renderer
 
-    def set_axis(self, x_range, y_range, relationships, nodes, force):
+    def set_axis(self, x_range, y_range, nodes, levels, force):
         graph_networker = GraphNetworker()
-        self.__axis = graph_networker.build_axis(x_range=x_range, y_range=y_range, relationships=relationships,
-                                                 nodes=nodes, force=force)
+        self.__axis = graph_networker.build_axis(x_range=x_range, y_range=y_range, nodes=nodes, levels=levels,
+                                                 force=force)
 
     def get_axis(self):
         return self.__axis
@@ -172,47 +181,57 @@ class NetworkBuilder:
     def get_network(self):
         return self.__network
 
+    def set_levels(self, relationships, nodes, golden_sources):
+        levels = NodeCalculator.calculate_levels(relationships=relationships, nodes=nodes,
+                                                 golden_sources=golden_sources)
+        self.__levels = levels
+
+    def get_levels(self):
+        return self.__levels
+
     def build(self, config, relationships, force):
-        self.__relationships = relationships
+        self.set_relationships(relationships = relationships)
+        self.set_config(config=config)
         self.set_graph(relationships=relationships)
+        self.set_nodes(graph=self.get_graph())
 
         nodes_configurator_builder = NodesConfiguratorBuilder(config=config, relationships=relationships)
         nodes_configurator_builder.build()
-
-        network_configurator_builder = NetworkConfiguratorBuilder(config=config)
-        network_configurator_builder.build()
-
-        self.set_config(config=config)
         self.set_grouped_colors(nodes_configurator_builder=nodes_configurator_builder)
         self.set_grouped_weights(nodes_configurator_builder=nodes_configurator_builder)
         self.set_grouped_legend(nodes_configurator_builder=nodes_configurator_builder)
         self.set_grouped_nodes(nodes_configurator_builder=nodes_configurator_builder)
+
+        network_configurator_builder = NetworkConfiguratorBuilder(config=config)
+        network_configurator_builder.build()
         self.set_node_size_config(network_configurator_builder=network_configurator_builder)
+        self.set_golden_sources(network_configurator_builder=network_configurator_builder)
+        self.set_levels(golden_sources=self.get_golden_sources(), nodes=self.get_nodes(), relationships=relationships)
+        self.set_x_range(network_configurator_builder=network_configurator_builder)
+        self.set_y_range(network_configurator_builder=network_configurator_builder)
 
         node_network_builder = NodeNetworkBuilder()
-        node_network_builder.build(graph=self.__graph, relationships=relationships,
-                                   grouped_colors=self.__grouped_colors, grouped_weights=self.__grouped_weights,
-                                   grouped_legend=self.__grouped_legend, grouped_nodes=self.__grouped_nodes,
-                                   node_size_config=self.__node_size_config)
-
-        self.set_nodes(node_network_builder=node_network_builder)
+        node_network_builder.build(relationships=relationships,
+                                   grouped_colors=self.get_grouped_colors(), grouped_weights=self.get_grouped_weights(),
+                                   grouped_legend=self.get_grouped_legend(), grouped_nodes=self.get_grouped_nodes(),
+                                   node_size_config=self.get_node_size_config(), nodes=self.get_nodes(),
+                                   levels=self.get_levels())
         self.set_node_colors(node_network_builder=node_network_builder)
         self.set_node_sizes(node_network_builder=node_network_builder)
         self.set_node_labels(node_network_builder=node_network_builder)
         self.set_node_scores(node_network_builder=node_network_builder)
-        self.set_graph_renderer(graph=self.__graph, nodes=self.__nodes, node_colors=self.__node_colors,
-                                node_sizes=self.__node_sizes, node_labels=self.__node_labels,
-                                node_scores=[self.__node_root_scores, self.__node_usage_scores])
-        self.set_x_range(network_configurator_builder=network_configurator_builder)
-        self.set_y_range(network_configurator_builder=network_configurator_builder)
-        self.set_golden_sources(network_configurator_builder=network_configurator_builder)
-        self.set_axis(x_range=self.__x_range, y_range=self.__y_range, relationships=relationships, nodes=self.__nodes,
-                      force=force)
-        self.set_lay_out(graph_renderer=self.__graph_renderer, axis=self.__axis)
+
+        # Graph Networker
+        self.set_graph_renderer(graph=self.get_graph(), nodes=self.get_nodes(), node_colors=self.get_node_colors(),
+                                node_sizes=self.get_node_sizes(), node_labels=self.get_node_labels(),
+                                node_scores=[self.get_node_root_scores(), self.get_node_usage_scores()])
+        self.set_axis(x_range=self.get_x_range(), y_range=self.get_y_range(), nodes=self.get_nodes(),
+                      levels=self.get_levels(), force=force)
+        self.set_lay_out(graph_renderer=self.get_graph_renderer(), axis=self.get_axis())
 
         self.set_plot_width(network_configurator_builder=network_configurator_builder)
         self.set_plot_height(network_configurator_builder=network_configurator_builder)
 
-        self.set_network(graph_renderer=self.__graph_renderer, plot_width=self.__plot_width,
-                         plot_height=self.__plot_height, x_range=self.__x_range, y_range=self.__y_range,
-                         grouped_colors=self.__grouped_colors, grouped_legend=self.__grouped_legend)
+        self.set_network(graph_renderer=self.get_graph_renderer(), plot_width=self.get_plot_width(),
+                         plot_height=self.get_plot_height(), x_range=self.get_x_range(), y_range=self.get_y_range(),
+                         grouped_colors=self.get_grouped_colors(), grouped_legend=self.get_grouped_legend())

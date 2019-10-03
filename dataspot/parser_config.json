@@ -8,7 +8,10 @@
     "source_keys": ["from", "join"],
     "name_keys": {
       "insert_into": ["insert into", " select "],
-      "create_as": ["create table", " as "]
+      "create_as": ["create table", " as "],
+      "replace_view": ["replace view", " as "],
+      "create_view": ["create view", " as "],
+      "create_replace_view": ["create or replace view", " as "]
     },
     "unnecessary_statements": [[".IF", "EOP"], ["COMMENT ON", ";"], ["SET QUERY_BAND", ";"], ["COLLECT STAT", ";"]]
   }
