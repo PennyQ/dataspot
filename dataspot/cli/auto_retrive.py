@@ -3,9 +3,13 @@
 import pyodbc
 import pandas as pd
 import os
+import collections
+
 from dataspot.scripts.script_grouper import ScriptGrouper
 from dataspot.relationships.relationships_director import RelationshipsDirector
 from dataspot.relationships.writer.text_file_writer import TextFileWriter
+
+FLAG_WRITE = True   # only extract_sql update this variable
 
 # Steps:
 # 1. send sql to teradata to query the first used table
@@ -24,11 +28,15 @@ def extract_sql(table_name):
         cur = conn.cursor()
         cur.execute(sql)
         scripts_path = os.path.join(os.path.abspath('../../'), 'examples/usercase1/')
-        print("script_path", scripts_path)
-        with open(scripts_path+table_name+".sql", "a", newline='') as f:
-            f.write("#DATASPOT-TERADATA\n")
-            for row in cur:
-                print(row[0], file=f)
+        sql_file_path = scripts_path+table_name+".sql"
+        if not os.path.exists(sql_file_path):
+            print("write to file: ", sql_file_path)
+            global FLAG_WRITE 
+            FLAG_WRITE = True
+            with open(sql_file_path, "a", newline='') as f:
+                f.write("#DATASPOT-TERADATA\n")
+                for row in cur:
+                    print(row[0], file=f)
 
 
 # Use Dataspot parser to build relationship
@@ -39,9 +47,7 @@ def build_relationship():
     # All scripts are first grouped based on the #Dataspot tag. Error will occur when a script is not tagged or is
     # tagged with an unsupported type
     scripts_path = os.path.join(os.path.abspath('../../'), 'examples/usercase1')
-    print("script_path", scripts_path)
     scripts = ScriptGrouper.group(scripts_path=scripts_path)
-    print("scripts", scripts)
 
     # The relationships variable is a dictionary containing the object-name as key, and the object-sources represented
     # in a list, as the key's value
@@ -53,34 +59,43 @@ def build_relationship():
     return relationships
 
 
-# Step 3: # 3. use dataspot visual to plot the data lineage structure (if possible)
-# Initiation: pick only one table TODO: expand
-extract_sql("mi_vm_bmd.vtrainset_wc_std")        # this works so far
-build_relationship()
+def breadth_first_search(graph, root): 
+    visited, queue = set(), collections.deque([root])
+    while queue: 
+        vertex = queue.popleft()
+        print("popleft vertex", vertex)
+        # # explore one node and update relationships
+        # extract_sql(vertex)
+        # graph = build_relationship()
+        print("graph", graph)
+        try:
+            for neighbour in graph[vertex]: 
+                if neighbour not in visited: 
+                    visited.add(neighbour) 
+                    queue.append(neighbour)
+        except KeyError as e:
+            print(e)
+            continue
+    return visited
 
-table_name = "mi_vm_bmd.vcustomer_engagement_scores"
-while len(relationships) > 0:
-    try:
-        extract_sql(table_name)
-    except pyodbc.Error as e:
-        print(e)
-        break
-
+if __name__ == '__main__':
+    # Step 3: # 3. use dataspot visual to plot the data lineage structure (if possible)
+    # Initiation: pick only one table TODO: expand
+    train_table = "mi_vm_bmd.vtrainset_wc_std"  # root
+    extract_sql(train_table)        
     relationships = build_relationship()
-    try:
-        table_name = relationships[table_name][0]
-        print("new relationships", relationships)
-        print("table name", table_name)
-        print("---------------\n")
-    except KeyError as e:
-        print("keyerror as: ", e)
-        print("relationships values", relationships.values())
-        print("table_name", table_name)
-        # when source table is also source for another table
-        if table_name in [x for v in relationships.values() for x in v]:
-            print("find in values")
-            # continue  # TODO: wait for Patrick reply
-            break
-        else:
-            print("this is the end!")
-            break  
+
+    while FLAG_WRITE == True:
+        visited = breadth_first_search(relationships, train_table)
+        print("visited", visited)
+        for table_name in visited:
+            FLAG_WRITE = False
+            try:
+                extract_sql(table_name)
+            except pyodbc.Error as e:
+                print(e)
+                print("%s is table not view, end" % table_name )
+                continue
+            relationships = build_relationship()
+            print("flag is ", FLAG_WRITE)
+
