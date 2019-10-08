@@ -31,7 +31,7 @@ class TextFileWriter:
         else:
             relationships_file = title + '.' + extension
 
-        with open(os.path.join(scripts_path, relationships_file), 'w') as results:
+        with open(os.path.join(scripts_path, relationships_file), 'a') as results:
             results.write(json.dumps(data))
 
         relationships_path = os.path.join(scripts_path, relationships_file)
